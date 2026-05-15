@@ -1,0 +1,76 @@
+import QRCode from "qrcode";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { formatSaleHours, fullAddress, saleUrl, socialCopy } from "@/lib/format";
+import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import type { Sale } from "@/lib/types";
+
+const shareSaleColumns =
+  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ manage?: string }>;
+};
+
+async function getSale(slug: string) {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await getSupabaseAdmin()
+    .from("sales")
+    .select(shareSaleColumns)
+    .eq("slug", slug)
+    .eq("visibility_status", "public")
+    .single();
+  if (error || !data) return null;
+  return data as Sale;
+}
+
+export default async function SharePage({ params, searchParams }: Props) {
+  const { slug } = await params;
+  const query = await searchParams;
+  const sale = await getSale(slug);
+  if (!sale) notFound();
+
+  const url = saleUrl(sale.slug);
+  const qr = await QRCode.toDataURL(url, { margin: 1, width: 280 });
+  const copy = socialCopy(sale, url);
+  const manageLink = query.manage ? `/saletrail/manage/${query.manage}` : null;
+
+  return (
+    <main className="page">
+      <section className="stack">
+        <p className="eyebrow">Share kit</p>
+        <h1>{sale.title}</h1>
+        <p>Use these materials to manually share the listing anywhere you choose.</p>
+        {manageLink ? (
+          <div className="notice good">
+            Private manage link: <Link href={manageLink}>{manageLink}</Link>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="grid two">
+        <div className="flyer">
+          <p className="eyebrow">SaleTrail by Localized.life</p>
+          <h2>{sale.title}</h2>
+          <p className="whitespace">{formatSaleHours(sale)}</p>
+          <p>{fullAddress(sale)}</p>
+          {sale.description ? <p>{sale.description}</p> : null}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={qr} alt="QR code for SaleTrail listing" />
+          <p className="short-url">{url}</p>
+        </div>
+
+        <div className="stack">
+          <h2>Copy and paste</h2>
+          {Object.entries(copy).map(([name, text]) => (
+            <label key={name}>
+              {name.replace(/([A-Z])/g, " $1")}
+              <textarea readOnly rows={name === "outreach" ? 8 : 6} value={text} />
+            </label>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
