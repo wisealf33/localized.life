@@ -78,6 +78,26 @@ h2 {
   padding: 48px 0 32px;
 }
 
+.front-page {
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  gap: 28px;
+}
+
+.front-band {
+  display: grid;
+  gap: 10px;
+  max-width: 680px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+
+.text-link {
+  color: var(--primary);
+  font-weight: 850;
+}
+
 .lede {
   color: var(--muted);
   font-size: 1.08rem;
