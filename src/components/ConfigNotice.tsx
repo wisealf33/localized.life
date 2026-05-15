@@ -1,6 +1,7 @@
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export function ConfigNotice() {
+  if (process.env.NODE_ENV === "production") return null;
   if (isSupabaseConfigured) return null;
 
   return (
