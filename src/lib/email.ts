@@ -74,7 +74,7 @@ export async function sendClaimInstructionsEmail({
       <p>Your claim request for <strong>${safeTitle}</strong> is in the admin review queue.</p>
       <p>To finish the claim, copy and post this public message on Facebook:</p>
       <pre style="white-space: pre-wrap; background: #f7f4ee; border: 1px solid #ddd5c7; border-radius: 8px; padding: 14px;">${safeMessage}</pre>
-      <p><strong>Step 1:</strong> Post or comment in Localized Will County Garage Sales &amp; SaleTrail.</p>
+      <p><strong>Step 1:</strong> Create a new post in Localized Will County Garage Sales &amp; SaleTrail.</p>
       ${groupUrl ? `<p><a href="${groupUrl}">Post to the local Localized Facebook group</a></p>` : ""}
       <p><strong>Optional:</strong> You can also comment on the original Facebook garage sale post to promote your SaleTrail listing.</p>
       ${sourceUrl ? `<p><a href="${sourceUrl}">Open original Facebook post</a></p>` : ""}
@@ -91,7 +91,7 @@ export async function sendClaimInstructionsEmail({
     "",
     message,
     "",
-    "Step 1: Post or comment in Localized Will County Garage Sales & SaleTrail.",
+    "Step 1: Create a new post in Localized Will County Garage Sales & SaleTrail.",
     groupUrl ? `Localized Will County Garage Sales & SaleTrail: ${groupUrl}` : "",
     "",
     "Optional: You can also comment on the original Facebook garage sale post to promote your SaleTrail listing.",

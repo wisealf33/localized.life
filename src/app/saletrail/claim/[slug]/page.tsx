@@ -44,8 +44,8 @@ export default async function ClaimPage({ params, searchParams }: Props) {
         <p className="eyebrow">Claim request submitted</p>
         <h1>Finish your claim on Facebook</h1>
         <p className="lede">
-          Copy the message below, then post it in the Localized.life Facebook group. You can also paste it as a comment
-          on your original garage sale post to promote the listing.
+          Copy the message below, then make a new post in the Localized.life Facebook group. You can also paste it as a
+          comment on your original garage sale post to promote the listing.
         </p>
         <section className="panel stack">
           <div className="notice">
@@ -70,7 +70,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             <div className="card">
               <p className="eyebrow">Next step</p>
               <h2>Post in Localized Will County Garage Sales & SaleTrail</h2>
-              <p>Open the local Facebook group, paste the message as a post or comment, then come back when finished.</p>
+              <p>Open the local Facebook group and create a new post with this message so admin can find it easily.</p>
               {localizedGroupUrl ? (
                 <a className="button primary" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
                   Post to the local Localized Facebook group
