@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
+import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, saleSharePath } from "@/lib/format";
 import { submitListingRequest } from "@/lib/actions";
@@ -74,29 +75,12 @@ export default async function SalePage({ params, searchParams }: Props) {
 
   return (
     <main className="page narrow">
-      <nav className="listing-nav" aria-label="Listing navigation">
-        <Link className="listing-wordmark" href="/">
-          Localized.life
-        </Link>
-        <div className="listing-nav-links">
-          <Link className="quiet-link" href="/saletrail">
-            All listings
-          </Link>
-          <Link className="quiet-link" href="/">
-            Home
-          </Link>
-        </div>
-      </nav>
+      <SiteHeader />
 
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}
 
       <section className="stack">
-        <div className="card-top">
-          <StatusBadge sale={sale} />
-          <Link className="button" href="/saletrail/route">
-            View route
-          </Link>
-        </div>
+        <StatusBadge sale={sale} />
         <h1>{sale.title}</h1>
         <p className="lede whitespace">{formatSaleHours(sale)}</p>
         <p>

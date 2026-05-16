@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SaleForm } from "@/components/SaleForm";
+import { SiteHeader } from "@/components/SiteHeader";
 import { adminLogin, adminLogout, isAdminAuthenticated } from "@/lib/admin";
 import { approveClaim, createCommunitySale, rejectClaim, resolveListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -38,6 +39,7 @@ export default async function AdminPage({ searchParams }: Props) {
 
   return (
     <main className="page">
+      <SiteHeader />
       <section className="stack">
         <p className="eyebrow">Admin</p>
         <h1>SaleTrail quick add and manual review</h1>

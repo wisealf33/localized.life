@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyIconButton } from "@/components/CopyIconButton";
+import { SiteHeader } from "@/components/SiteHeader";
 import { submitClaimRequest } from "@/lib/actions";
 import { listingId, publicClaimMessageForSale, salePath } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -41,6 +42,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
   if (query.submitted) {
     return (
       <main className="page narrow">
+        <SiteHeader />
         <p className="eyebrow">Claim request submitted</p>
         <h1>Finish your claim on Facebook</h1>
         <p className="lede">
@@ -107,6 +109,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
 
   return (
     <main className="page narrow">
+      <SiteHeader />
       <p className="eyebrow">Claim listing</p>
       <h1>{sale.title}</h1>
       <p className="lede">

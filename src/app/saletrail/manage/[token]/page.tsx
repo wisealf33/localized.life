@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { hashSecret } from "@/lib/tokens";
 import { SaleForm } from "@/components/SaleForm";
+import { SiteHeader } from "@/components/SiteHeader";
 import { updateManagedSale } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -27,6 +28,7 @@ export default async function ManagePage({ params }: Props) {
 
   return (
     <main className="page narrow">
+      <SiteHeader />
       <p className="eyebrow">Private manage link</p>
       <h1>Edit listing</h1>
       <p className="lede">Anyone with this private link can edit, cancel, or end this sale.</p>

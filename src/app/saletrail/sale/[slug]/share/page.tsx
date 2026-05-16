@@ -2,6 +2,7 @@ import QRCode from "qrcode";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShareActions } from "@/components/ShareActions";
+import { SiteHeader } from "@/components/SiteHeader";
 import { formatSaleHours, fullAddress, salePath, saleUrl, socialCopy } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -52,6 +53,7 @@ export default async function SharePage({ params, searchParams }: Props) {
 
   return (
     <main className="page">
+      <SiteHeader />
       <section className="stack">
         <p className="eyebrow">Share kit</p>
         <h1>{sale.title}</h1>

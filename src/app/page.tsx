@@ -1,19 +1,10 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export default function Home() {
   return (
     <main className="front-shell">
-      <nav className="front-nav" aria-label="Localized.life">
-        <Link className="front-wordmark" href="/">
-          Localized.life
-        </Link>
-        <div className="front-nav-links">
-          <Link href="/saletrail">SaleTrail</Link>
-          <Link className="button primary compact-button" href="/saletrail/new">
-            List a sale
-          </Link>
-        </div>
-      </nav>
+      <SiteHeader active="home" />
 
       <section className="front-hero">
         <div className="front-copy">

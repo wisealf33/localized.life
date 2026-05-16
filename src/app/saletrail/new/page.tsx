@@ -1,10 +1,12 @@
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaleForm } from "@/components/SaleForm";
+import { SiteHeader } from "@/components/SiteHeader";
 import { createSellerSale } from "@/lib/actions";
 
 export default function NewSalePage() {
   return (
     <main className="page narrow">
+      <SiteHeader active="list" />
       <ConfigNotice />
       <p className="eyebrow">SaleTrail by Localized.life</p>
       <h1>Create a garage sale listing</h1>

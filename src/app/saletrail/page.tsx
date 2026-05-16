@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConfigNotice } from "@/components/ConfigNotice";
+import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -92,6 +93,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
 
   return (
     <main className="page">
+      <SiteHeader active="find" />
       <ConfigNotice />
       <section className="hero">
         <p className="eyebrow">SaleTrail by Localized.life</p>
@@ -100,14 +102,6 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           A clean directory for local garage sales, including seller-created listings and clearly labeled
           community-added listings.
         </p>
-        <div className="toolbar">
-          <Link className="button primary" href="/saletrail/new">
-            Create a listing
-          </Link>
-          <Link className="button" href="/saletrail/route">
-            View route
-          </Link>
-        </div>
       </section>
 
       <section className="panel">
