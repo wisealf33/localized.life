@@ -86,6 +86,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const safePage = Math.min(currentPage, totalPages);
   const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
   const resultEnd = Math.min(safePage * perPage, total);
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
   const feedbackEmail = process.env.NEXT_PUBLIC_FEEDBACK_EMAIL || "claims@localized.life";
   const feedbackHref = `mailto:${feedbackEmail}?subject=${encodeURIComponent("SaleTrail feedback")}`;
 
@@ -196,9 +197,23 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           ) : (
             <span className="button disabled">Previous</span>
           )}
-          <span className="muted">
-            Page {safePage} of {totalPages}
-          </span>
+          <div className="pagination-pages" aria-label={`Page ${safePage} of ${totalPages}`}>
+            {pageNumbers.map((pageNumber) =>
+              pageNumber === safePage ? (
+                <span className="page-link active" aria-current="page" key={pageNumber}>
+                  {pageNumber}
+                </span>
+              ) : (
+                <Link
+                  className="page-link"
+                  href={directoryUrl({ q: params.q, date: params.date, perPage, page: pageNumber })}
+                  key={pageNumber}
+                >
+                  {pageNumber}
+                </Link>
+              ),
+            )}
+          </div>
           {safePage < totalPages ? (
             <Link className="button" href={directoryUrl({ q: params.q, date: params.date, perPage, page: safePage + 1 })}>
               Next
