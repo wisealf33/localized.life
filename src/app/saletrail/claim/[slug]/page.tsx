@@ -68,7 +68,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
           </div>
           <div className="grid two">
             <div className="card">
-              <p className="eyebrow">Option 1</p>
+              <p className="eyebrow">Next step</p>
               <h2>Post in the Localized.life group</h2>
               <p>Open the local Facebook group, paste the message as a post or comment, then come back when finished.</p>
               {localizedGroupUrl ? (
