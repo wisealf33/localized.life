@@ -112,13 +112,16 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 </a>
               </p>
               {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
-              {canClaim(sale) ? (
-                <div className="toolbar">
-                  <Link className="button" href={`/saletrail/claim/${sale.slug}`}>
+              <div className="card-actions">
+                <Link className="button primary" href={`/saletrail/sale/${sale.slug}`}>
+                  View listing
+                </Link>
+                {canClaim(sale) ? (
+                  <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
                     Claim listing
                   </Link>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </article>
           ))
         )}

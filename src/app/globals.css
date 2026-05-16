@@ -178,6 +178,29 @@ h2 {
   justify-content: flex-start;
 }
 
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.card-actions .button {
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.quiet-link {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.quiet-link:hover {
+  color: var(--primary);
+}
+
 .empty {
   padding: 28px;
   text-align: center;
@@ -476,6 +499,7 @@ code {
 
   .card-top,
   .toolbar,
+  .card-actions,
   .inline-form {
     align-items: stretch;
     flex-direction: column;
