@@ -43,17 +43,41 @@ export function mapSearchUrl(sale: Pick<Sale, "address_line" | "city" | "state" 
   return `https://www.google.com/maps/search/?${params.toString()}`;
 }
 
-export function saleUrl(slug: string) {
+export function urlSegment(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export function listingCode(slug: string) {
+  return slug.split("-").filter(Boolean).at(-1) || slug;
+}
+
+export function salePath(sale: Pick<Sale, "slug" | "city" | "state">) {
+  return `/saletrail/sales/${urlSegment(sale.state)}/${urlSegment(sale.city)}/${listingCode(sale.slug)}`;
+}
+
+export function saleSharePath(sale: Pick<Sale, "slug" | "city" | "state">) {
+  return `${salePath(sale)}/share`;
+}
+
+export function saleUrl(sale: Pick<Sale, "slug" | "city" | "state"> | string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  return `${baseUrl.replace(/\/$/, "")}/saletrail/sale/${slug}`;
+  if (typeof sale === "string") return `${baseUrl.replace(/\/$/, "")}/saletrail/sale/${sale}`;
+  return `${baseUrl.replace(/\/$/, "")}${salePath(sale)}`;
 }
 
 export function listingId(slug: string) {
-  return slug;
+  return listingCode(slug);
 }
 
 export function publicClaimMessage(slug: string) {
   return `I’m claiming this garage sale listing on Localized.life so shoppers can view details, updates, and save it to their SaleTrail route:\n${saleUrl(slug)}\nSaleTrail Listing ID: ${listingId(slug)}`;
+}
+
+export function publicClaimMessageForSale(sale: Pick<Sale, "slug" | "city" | "state">) {
+  return `I’m claiming this garage sale listing on Localized.life so shoppers can view details, updates, and save it to their SaleTrail route:\n${saleUrl(sale)}\nSaleTrail Listing ID: ${listingId(sale.slug)}`;
 }
 
 export function claimUrl(slug: string) {

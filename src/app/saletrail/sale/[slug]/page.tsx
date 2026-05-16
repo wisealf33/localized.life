@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatSaleHours, fullAddress, mapSearchUrl } from "@/lib/format";
+import { formatSaleHours, fullAddress, mapSearchUrl, saleSharePath } from "@/lib/format";
 import { submitListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -132,7 +132,7 @@ export default async function SalePage({ params, searchParams }: Props) {
               startsAt: sale.starts_at,
             }}
           />
-          <Link className="button" href={`/saletrail/sale/${sale.slug}/share`}>
+          <Link className="button" href={saleSharePath(sale)}>
             Share kit
           </Link>
           {sale.claim_status !== "claimed" ? (

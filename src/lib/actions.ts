@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
 import { sendClaimApprovedEmail, sendClaimInstructionsEmail } from "./email";
-import { categoryOptions } from "./format";
+import { categoryOptions, salePath, saleSharePath } from "./format";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
 import type { ListingRequestType, SaleStatus } from "./types";
@@ -174,7 +174,7 @@ export async function createSellerSale(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail");
-  redirect(`/saletrail/sale/${slug}/share?manage=${manageToken}`);
+  redirect(`${saleSharePath({ slug, city: String(insertPayload.city), state: String(insertPayload.state) })}?manage=${manageToken}`);
 }
 
 export async function createCommunitySale(formData: FormData) {
@@ -208,7 +208,7 @@ export async function createCommunitySale(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail");
-  redirect(`/saletrail/sale/${slug}`);
+  redirect(salePath({ slug, city: required(formData, "city"), state: required(formData, "state").toUpperCase() }));
 }
 
 export async function updateManagedSale(formData: FormData) {
@@ -220,14 +220,14 @@ export async function updateManagedSale(formData: FormData) {
 
   let { data: sale, error: findError } = await supabase
     .from("sales")
-    .select("slug, photo_urls")
+    .select("slug, city, state, photo_urls")
     .eq("manage_token_hash", tokenHash)
     .single();
 
   if (findError?.message.includes("photo_urls")) {
     const fallback = await supabase
       .from("sales")
-      .select("slug")
+      .select("slug, city, state")
       .eq("manage_token_hash", tokenHash)
       .single();
     sale = fallback.data ? { ...fallback.data, photo_urls: [] } : null;
@@ -262,8 +262,8 @@ export async function updateManagedSale(formData: FormData) {
     .eq("manage_token_hash", tokenHash);
 
   if (error) throw new Error(error.message);
-  revalidatePath(`/saletrail/sale/${sale.slug}`);
-  redirect(`/saletrail/sale/${sale.slug}`);
+  revalidatePath(salePath(sale));
+  redirect(salePath({ slug: sale.slug, city: required(formData, "city"), state: required(formData, "state").toUpperCase() }));
 }
 
 export async function submitClaimRequest(formData: FormData) {
@@ -273,7 +273,7 @@ export async function submitClaimRequest(formData: FormData) {
 
   const { data: sale, error: saleError } = await supabase
     .from("sales")
-    .select("id, title, slug, source_url")
+    .select("id, title, slug, city, state, source_url")
     .eq("slug", slug)
     .eq("visibility_status", "public")
     .single();
@@ -304,9 +304,11 @@ export async function submitClaimRequest(formData: FormData) {
     claimantName,
     listingTitle: sale.title,
     slug: sale.slug,
+    city: sale.city,
+    state: sale.state,
     sourceUrl: sale.source_url,
   });
-  revalidatePath(`/saletrail/sale/${slug}`);
+  revalidatePath(salePath(sale));
   redirect(`/saletrail/claim/${slug}?submitted=1&email=${emailResult.sent ? "sent" : "setup"}`);
 }
 
@@ -317,7 +319,7 @@ export async function submitListingRequest(formData: FormData) {
 
   const { data: sale, error: saleError } = await supabase
     .from("sales")
-    .select("id")
+    .select("id, slug, city, state")
     .eq("slug", slug)
     .eq("visibility_status", "public")
     .single();
@@ -334,7 +336,7 @@ export async function submitListingRequest(formData: FormData) {
   });
 
   if (error) throw new Error(error.message);
-  redirect(`/saletrail/sale/${slug}?request=received`);
+  redirect(`${salePath(sale)}?request=received`);
 }
 
 export async function approveClaim(formData: FormData) {
@@ -369,6 +371,8 @@ export async function approveClaim(formData: FormData) {
       claimantName: request.name,
       listingTitle: request.sales?.title || "your garage sale",
       slug: request.sales?.slug || "",
+      city: request.sales?.city || "",
+      state: request.sales?.state || "",
       manageToken,
     });
   }

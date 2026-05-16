@@ -2,7 +2,7 @@ import QRCode from "qrcode";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShareActions } from "@/components/ShareActions";
-import { formatSaleHours, fullAddress, saleUrl, socialCopy } from "@/lib/format";
+import { formatSaleHours, fullAddress, salePath, saleUrl, socialCopy } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
@@ -45,7 +45,7 @@ export default async function SharePage({ params, searchParams }: Props) {
   const sale = await getSale(slug);
   if (!sale) notFound();
 
-  const url = saleUrl(sale.slug);
+  const url = saleUrl(sale);
   const qr = await QRCode.toDataURL(url, { margin: 1, width: 280 });
   const copy = socialCopy(sale, url);
   const manageLink = query.manage ? `/saletrail/manage/${query.manage}` : null;
@@ -57,7 +57,7 @@ export default async function SharePage({ params, searchParams }: Props) {
         <h1>{sale.title}</h1>
         <p>Use these materials to manually share the listing anywhere you choose.</p>
         <div className="toolbar">
-          <Link className="button" href={`/saletrail/sale/${sale.slug}`}>
+          <Link className="button" href={salePath(sale)}>
             Back to listing
           </Link>
         </div>

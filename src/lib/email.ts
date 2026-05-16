@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { publicClaimMessage, saleUrl } from "./format";
+import { publicClaimMessageForSale, saleUrl } from "./format";
 
 const defaultLocalizedGroupUrl = "https://www.facebook.com/groups/955521984061525";
 
@@ -8,6 +8,8 @@ type ClaimInstructionsEmail = {
   claimantName: string;
   listingTitle: string;
   slug: string;
+  city: string;
+  state: string;
   sourceUrl: string | null;
 };
 
@@ -16,6 +18,8 @@ type ClaimApprovedEmail = {
   claimantName: string;
   listingTitle: string;
   slug: string;
+  city: string;
+  state: string;
   manageToken: string;
 };
 
@@ -57,12 +61,14 @@ export async function sendClaimInstructionsEmail({
   claimantName,
   listingTitle,
   slug,
+  city,
+  state,
   sourceUrl,
 }: ClaimInstructionsEmail) {
   const client = emailClient();
   if (!client) return { sent: false, reason: "Email is not configured." };
 
-  const message = publicClaimMessage(slug);
+  const message = publicClaimMessageForSale({ slug, city, state });
   const groupUrl = localizedGroupUrl();
   const safeName = escapeHtml(claimantName);
   const safeTitle = escapeHtml(listingTitle);
@@ -123,12 +129,14 @@ export async function sendClaimApprovedEmail({
   claimantName,
   listingTitle,
   slug,
+  city,
+  state,
   manageToken,
 }: ClaimApprovedEmail) {
   const client = emailClient();
   if (!client) return { sent: false, reason: "Email is not configured." };
 
-  const listingUrl = saleUrl(slug);
+  const listingUrl = saleUrl({ slug, city, state });
   const privateManageUrl = manageUrl(manageToken);
   const safeName = escapeHtml(claimantName);
   const safeTitle = escapeHtml(listingTitle);

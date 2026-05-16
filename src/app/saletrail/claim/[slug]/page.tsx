@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyIconButton } from "@/components/CopyIconButton";
 import { submitClaimRequest } from "@/lib/actions";
-import { listingId, publicClaimMessage } from "@/lib/format";
+import { listingId, publicClaimMessageForSale, salePath } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
@@ -34,7 +34,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
   const sale = await getSale(slug);
   if (!sale) notFound();
 
-  const message = publicClaimMessage(sale.slug);
+  const message = publicClaimMessageForSale(sale);
   const publicListingId = listingId(sale.slug);
   const localizedGroupUrl = process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL || defaultLocalizedGroupUrl;
 
@@ -93,7 +93,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             </div>
           </div>
           <div className="toolbar">
-            <Link className="button primary" href={`/saletrail/sale/${sale.slug}`}>
+            <Link className="button primary" href={salePath(sale)}>
               Done
             </Link>
           </div>

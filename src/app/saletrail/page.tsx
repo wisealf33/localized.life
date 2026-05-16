@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatSaleHours, fullAddress, mapSearchUrl } from "@/lib/format";
+import { formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
@@ -103,7 +103,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 <span className="muted">{sale.city}, {sale.state}</span>
               </div>
               <h2>
-                <Link href={`/saletrail/sale/${sale.slug}`}>{sale.title}</Link>
+                <Link href={salePath(sale)}>{sale.title}</Link>
               </h2>
               <p>{formatSaleHours(sale)}</p>
               <p className="muted">
@@ -113,7 +113,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
               </p>
               {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
               <div className="card-actions">
-                <Link className="button primary" href={`/saletrail/sale/${sale.slug}`}>
+                <Link className="button primary" href={salePath(sale)}>
                   View listing
                 </Link>
                 {canClaim(sale) ? (
