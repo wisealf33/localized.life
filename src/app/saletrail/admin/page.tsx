@@ -90,7 +90,8 @@ export default async function AdminPage({ searchParams }: Props) {
                   <div>
                     <p className="eyebrow">Listing ID: {claim.claim_code}</p>
                     <h3>{claim.sales?.title}</h3>
-                    <p>{claim.name} · {claim.claimant_email || claim.contact} · {claim.relationship}</p>
+                    <p>{claim.name} · {claim.claimant_email || claim.contact}</p>
+                    <p>Claim type: original Facebook poster</p>
                     {claim.facebook_profile_name ? <p>Facebook: {claim.facebook_profile_name}</p> : null}
                     {claim.verification_method ? <p>Public method: {claim.verification_method}</p> : null}
                     {claim.wants_updates ? <p>Opted into updates</p> : null}

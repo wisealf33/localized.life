@@ -41,7 +41,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
         <h1>Post the public claim message</h1>
         <p className="lede">
           Your request is in the admin review queue. To finish the claim, publicly post the message below so an admin
-          can confirm that the person claiming the listing is connected to the original sale.
+          can confirm the original Facebook poster is claiming the listing.
         </p>
         <section className="panel stack">
           <div className="notice">
@@ -113,15 +113,10 @@ export default async function ClaimPage({ params, searchParams }: Props) {
           Facebook profile name
           <input name="facebook_profile_name" required />
         </label>
-        <label>
-          Relationship to sale
-          <select name="relationship" required>
-            <option value="organizer">Organizer</option>
-            <option value="household_member">Household member</option>
-            <option value="helper">Helper</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
+        <div className="notice">
+          Claims are currently for the original Facebook poster only, because admin verifies by matching the public
+          Facebook name/profile with the original post.
+        </div>
         <label>
           Optional note
           <textarea name="message" rows={4} placeholder="Anything admin should know before reviewing?" />

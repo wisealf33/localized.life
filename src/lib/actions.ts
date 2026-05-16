@@ -285,7 +285,7 @@ export async function submitClaimRequest(formData: FormData) {
     contact: required(formData, "claimant_email"),
     claimant_email: required(formData, "claimant_email"),
     facebook_profile_name: required(formData, "facebook_profile_name"),
-    relationship: required(formData, "relationship"),
+    relationship: "original_poster",
     message: value(formData, "message"),
     claim_code: listingId,
     verification_method: null,
