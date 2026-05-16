@@ -314,6 +314,14 @@ textarea {
   display: contents;
 }
 
+.hidden {
+  display: none;
+}
+
+.compact-button {
+  width: fit-content;
+}
+
 .schedule-check {
   margin-top: 4px;
 }
