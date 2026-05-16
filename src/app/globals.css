@@ -631,6 +631,19 @@ textarea {
   background: transparent;
 }
 
+.button.danger {
+  border-color: #fecaca;
+  background: #ffffff;
+  color: #b42318;
+  box-shadow: none;
+}
+
+.button.danger:hover {
+  border-color: #fca5a5;
+  background: #fff1f2;
+  color: #991b1b;
+}
+
 .icon-button {
   display: inline-flex;
   width: 38px;

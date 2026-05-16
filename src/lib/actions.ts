@@ -376,6 +376,36 @@ export async function approveClaim(formData: FormData) {
   redirect(`/saletrail/admin?approved=${requestId}&manage=${manageToken}`);
 }
 
+export async function rejectClaim(formData: FormData) {
+  await requireAdmin();
+
+  const supabase = getSupabaseAdmin();
+  const requestId = required(formData, "request_id");
+  const { data: request, error: requestError } = await supabase
+    .from("claim_requests")
+    .select("sale_id")
+    .eq("id", requestId)
+    .single();
+
+  if (requestError || !request) throw new Error("Claim request was not found.");
+
+  const { error } = await supabase.from("claim_requests").update({ status: "rejected" }).eq("id", requestId);
+  if (error) throw new Error(error.message);
+
+  const { count } = await supabase
+    .from("claim_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("sale_id", request.sale_id)
+    .eq("status", "pending");
+
+  if (!count) {
+    await supabase.from("sales").update({ claim_status: "unclaimed" }).eq("id", request.sale_id).eq("claim_status", "claim_pending");
+  }
+
+  revalidatePath("/saletrail/admin");
+  redirect("/saletrail/admin?updated=1");
+}
+
 export async function resolveListingRequest(formData: FormData) {
   await requireAdmin();
   const supabase = getSupabaseAdmin();

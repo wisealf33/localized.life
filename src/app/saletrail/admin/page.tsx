@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SaleForm } from "@/components/SaleForm";
 import { adminLogin, adminLogout, isAdminAuthenticated } from "@/lib/admin";
-import { approveClaim, createCommunitySale, resolveListingRequest } from "@/lib/actions";
+import { approveClaim, createCommunitySale, rejectClaim, resolveListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { ClaimRequest, ListingRequest } from "@/lib/types";
 
@@ -97,12 +97,20 @@ export default async function AdminPage({ searchParams }: Props) {
                     {claim.wants_updates ? <p>Opted into updates</p> : null}
                     {claim.message ? <p>{claim.message}</p> : null}
                   </div>
-                  <form action={approveClaim} className="inline-form">
-                    <input type="hidden" name="request_id" value={claim.id} />
-                    <button className="button primary" type="submit">
-                      Approve
-                    </button>
-                  </form>
+                  <div className="inline-form">
+                    <form action={approveClaim}>
+                      <input type="hidden" name="request_id" value={claim.id} />
+                      <button className="button primary" type="submit">
+                        Approve
+                      </button>
+                    </form>
+                    <form action={rejectClaim}>
+                      <input type="hidden" name="request_id" value={claim.id} />
+                      <button className="button danger" type="submit">
+                        Decline
+                      </button>
+                    </form>
+                  </div>
                 </article>
               ))}
 
