@@ -22,11 +22,64 @@ function required(formData: FormData, key: string) {
   return next;
 }
 
-function localDateTime(formData: FormData, key: string) {
-  const next = required(formData, key);
-  const date = new Date(next);
-  if (Number.isNaN(date.getTime())) throw new Error(`Invalid ${key}`);
+function asIsoLocalDateTime(dateValue: string, timeValue: string) {
+  const date = new Date(`${dateValue}T${timeValue}`);
+  if (Number.isNaN(date.getTime())) throw new Error("Invalid sale day or time.");
   return date.toISOString();
+}
+
+function formatScheduleDate(dateValue: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${dateValue}T12:00`));
+}
+
+function formatScheduleTime(timeValue: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: timeValue.endsWith(":00") ? undefined : "2-digit",
+  }).format(new Date(`2026-01-01T${timeValue}`));
+}
+
+function buildSchedule(formData: FormData) {
+  const rows = [0, 1, 2, 3, 4]
+    .map((row) => {
+      const date = value(formData, `schedule_date_${row}`);
+      if (!date) return null;
+      const start = value(formData, `schedule_start_${row}`) || "08:00";
+      const end = value(formData, `schedule_end_${row}`) || "14:00";
+      return {
+        date,
+        start,
+        end,
+        startsAt: asIsoLocalDateTime(date, start),
+        endsAt: asIsoLocalDateTime(date, end),
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
+  if (rows.length === 0) throw new Error("Add at least one sale day.");
+  if (rows.some((row) => row.endsAt <= row.startsAt)) {
+    throw new Error("Each sale day needs an end time after its start time.");
+  }
+
+  const uncertain = formData.get("schedule_uncertain") === "on";
+  const note = value(formData, "schedule_note");
+  const lines = rows.map((row) => {
+    const prefix = uncertain ? "Possible: " : "";
+    return `${prefix}${formatScheduleDate(row.date)} ${formatScheduleTime(row.start)}-${formatScheduleTime(row.end)}`;
+  });
+
+  if (note) lines.push(note);
+
+  return {
+    starts_at: rows[0].startsAt,
+    ends_at: rows[rows.length - 1].endsAt,
+    sale_schedule: lines.join("\n"),
+  };
 }
 
 function normalizeCategories(formData: FormData) {
@@ -38,6 +91,7 @@ export async function createSellerSale(formData: FormData) {
   const title = required(formData, "title");
   const slug = slugifyTitle(title);
   const manageToken = randomToken();
+  const schedule = buildSchedule(formData);
 
   const { error } = await supabase.from("sales").insert({
     slug,
@@ -47,9 +101,9 @@ export async function createSellerSale(formData: FormData) {
     city: required(formData, "city"),
     state: required(formData, "state").toUpperCase(),
     zip: required(formData, "zip"),
-    starts_at: localDateTime(formData, "starts_at"),
-    ends_at: localDateTime(formData, "ends_at"),
-    sale_schedule: required(formData, "sale_schedule"),
+    starts_at: schedule.starts_at,
+    ends_at: schedule.ends_at,
+    sale_schedule: schedule.sale_schedule,
     categories: normalizeCategories(formData),
     status: "active",
     source_type: "seller_created",
@@ -69,6 +123,7 @@ export async function createCommunitySale(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const title = required(formData, "title");
   const slug = slugifyTitle(title);
+  const schedule = buildSchedule(formData);
 
   const { error } = await supabase.from("sales").insert({
     slug,
@@ -78,9 +133,9 @@ export async function createCommunitySale(formData: FormData) {
     city: required(formData, "city"),
     state: required(formData, "state").toUpperCase(),
     zip: required(formData, "zip"),
-    starts_at: localDateTime(formData, "starts_at"),
-    ends_at: localDateTime(formData, "ends_at"),
-    sale_schedule: required(formData, "sale_schedule"),
+    starts_at: schedule.starts_at,
+    ends_at: schedule.ends_at,
+    sale_schedule: schedule.sale_schedule,
     categories: normalizeCategories(formData),
     status: "active",
     source_type: "community_added",
@@ -101,6 +156,7 @@ export async function updateManagedSale(formData: FormData) {
   const token = required(formData, "manage_token");
   const tokenHash = hashSecret(token);
   const status = required(formData, "status") as SaleStatus;
+  const schedule = buildSchedule(formData);
 
   const { data: sale, error: findError } = await supabase
     .from("sales")
@@ -119,9 +175,9 @@ export async function updateManagedSale(formData: FormData) {
       city: required(formData, "city"),
       state: required(formData, "state").toUpperCase(),
       zip: required(formData, "zip"),
-      starts_at: localDateTime(formData, "starts_at"),
-      ends_at: localDateTime(formData, "ends_at"),
-      sale_schedule: required(formData, "sale_schedule"),
+      starts_at: schedule.starts_at,
+      ends_at: schedule.ends_at,
+      sale_schedule: schedule.sale_schedule,
       categories: normalizeCategories(formData),
       status,
       updated_at: new Date().toISOString(),

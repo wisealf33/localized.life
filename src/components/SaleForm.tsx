@@ -8,9 +8,16 @@ type SaleFormProps = {
   admin?: boolean;
 };
 
-function localInputValue(value?: string) {
+const scheduleRows = [0, 1, 2, 3, 4];
+
+function localDateValue(value?: string) {
   if (!value) return "";
-  return value.slice(0, 16);
+  return value.slice(0, 10);
+}
+
+function localTimeValue(value?: string, fallback = "08:00") {
+  if (!value) return fallback;
+  return value.slice(11, 16) || fallback;
 }
 
 export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) {
@@ -44,27 +51,51 @@ export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) 
         <input name="zip" required defaultValue={sale?.zip} inputMode="numeric" />
       </label>
 
-      <div className="grid two">
-        <label>
-          Search start
-          <input name="starts_at" type="datetime-local" required defaultValue={localInputValue(sale?.starts_at)} />
+      <fieldset className="schedule-fieldset">
+        <legend>Sale days and hours</legend>
+        <p className="helper">Add each sale day separately. Times default to common garage sale hours.</p>
+        <div className="schedule-grid">
+          <span>Date</span>
+          <span>Starts</span>
+          <span>Ends</span>
+          {scheduleRows.map((row) => (
+            <div className="schedule-row" key={row}>
+              <input
+                name={`schedule_date_${row}`}
+                aria-label={`Sale date ${row + 1}`}
+                type="date"
+                required={row === 0}
+                defaultValue={row === 0 ? localDateValue(sale?.starts_at) : ""}
+              />
+              <input
+                name={`schedule_start_${row}`}
+                aria-label={`Start time ${row + 1}`}
+                type="time"
+                defaultValue={row === 0 ? localTimeValue(sale?.starts_at) : "08:00"}
+              />
+              <input
+                name={`schedule_end_${row}`}
+                aria-label={`End time ${row + 1}`}
+                type="time"
+                defaultValue={row === 0 ? localTimeValue(sale?.ends_at, "14:00") : "14:00"}
+              />
+            </div>
+          ))}
+        </div>
+        <label className="check schedule-check">
+          <input type="checkbox" name="schedule_uncertain" defaultChecked={sale?.sale_schedule?.includes("not confirmed")} />
+          Dates or hours are not fully confirmed
         </label>
         <label>
-          Search end
-          <input name="ends_at" type="datetime-local" required defaultValue={localInputValue(sale?.ends_at)} />
+          Schedule note
+          <textarea
+            name="schedule_note"
+            rows={2}
+            defaultValue={sale?.sale_schedule?.includes("not confirmed") ? sale.sale_schedule : ""}
+            placeholder="Optional: exact day(s) and hours are not confirmed. Message the poster for details."
+          />
         </label>
-      </div>
-
-      <label>
-        Public sale hours
-        <textarea
-          name="sale_schedule"
-          rows={3}
-          required
-          defaultValue={sale?.sale_schedule || ""}
-          placeholder={"Friday 8 AM-2 PM\nSaturday 8 AM-2 PM"}
-        />
-      </label>
+      </fieldset>
 
       <fieldset>
         <legend>Categories</legend>

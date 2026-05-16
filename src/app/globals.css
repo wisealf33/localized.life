@@ -239,6 +239,13 @@ fieldset {
   font-weight: 700;
 }
 
+.helper {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 fieldset {
   margin: 0;
   border: 0;
@@ -283,6 +290,32 @@ textarea {
 
 .check input {
   width: auto;
+}
+
+.schedule-fieldset {
+  gap: 10px;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(88px, 0.7fr) minmax(88px, 0.7fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.schedule-grid > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.schedule-row {
+  display: contents;
+}
+
+.schedule-check {
+  margin-top: 4px;
 }
 
 .button {
