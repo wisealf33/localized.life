@@ -57,7 +57,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
     <main className="page">
       <ConfigNotice />
       <section className="hero">
-        <p className="eyebrow">SaleTrail by Localized.Life</p>
+        <p className="eyebrow">SaleTrail by Localized.life</p>
         <h1>Find garage sales and build a simple route.</h1>
         <p>
           A clean directory for local garage sales, including seller-created listings and clearly labeled

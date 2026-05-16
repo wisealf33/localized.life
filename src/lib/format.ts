@@ -53,7 +53,7 @@ export function listingId(slug: string) {
 }
 
 export function publicClaimMessage(slug: string) {
-  return `I’m claiming this garage sale listing on Localized.Life so shoppers can view details, updates, and save it to their SaleTrail route:\n${saleUrl(slug)}\nSaleTrail Listing ID: ${listingId(slug)}`;
+  return `I’m claiming this garage sale listing on Localized.life so shoppers can view details, updates, and save it to their SaleTrail route:\n${saleUrl(slug)}\nSaleTrail Listing ID: ${listingId(slug)}`;
 }
 
 export function claimUrl(slug: string) {
@@ -82,7 +82,7 @@ export function socialCopy(sale: Sale, url: string) {
 
   return {
     publicPost,
-    outreach: `Hi! I saw your garage sale information and added a clean listing for it on SaleTrail by Localized.Life so shoppers can find the details, save it, and add it to a route.\n\nHere is the listing:\n${url}\n\nIf this is your sale, you can claim it and update or correct anything here:\n${claimUrl(sale.slug)}\n\nIf you would rather not have it listed, no problem. You can request removal from the listing page.`,
-    groupComment: `I added this to SaleTrail by Localized.Life so people can save it and add it to a garage sale route:\n\n${url}\n\nOrganizer can claim, correct, or request removal from the listing page.`,
+    outreach: `Hi! I saw your garage sale information and added a clean listing for it on SaleTrail by Localized.life so shoppers can find the details, save it, and add it to a route.\n\nHere is the listing:\n${url}\n\nIf this is your sale, you can claim it and update or correct anything here:\n${claimUrl(sale.slug)}\n\nIf you would rather not have it listed, no problem. You can request removal from the listing page.`,
+    groupComment: `I added this to SaleTrail by Localized.life so people can save it and add it to a garage sale route:\n\n${url}\n\nOrganizer can claim, correct, or request removal from the listing page.`,
   };
 }

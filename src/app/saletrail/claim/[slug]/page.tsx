@@ -44,7 +44,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
         <p className="eyebrow">Claim request submitted</p>
         <h1>Finish your claim on Facebook</h1>
         <p className="lede">
-          Copy the message below, then make a new post in the Localized.Life Facebook group. You can also paste it as a
+          Copy the message below, then make a new post in the Localized.life Facebook group. You can also paste it as a
           comment on your original garage sale post to promote the listing.
         </p>
         <section className="panel stack">
@@ -76,7 +76,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
                   Post to Localized Facebook group
                 </a>
               ) : (
-                <div className="notice">The Localized.Life group link has not been added yet.</div>
+                <div className="notice">The Localized.life group link has not been added yet.</div>
               )}
             </div>
             <div className="card claim-step-card">
