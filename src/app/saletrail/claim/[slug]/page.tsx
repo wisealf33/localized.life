@@ -66,7 +66,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             <textarea id="public-claim-message" readOnly rows={5} value={message} />
             <CopyIconButton text={message} label="Copy public claim message" />
           </div>
-          <div className="grid two">
+          <div className="grid two claim-step-grid">
             <div className="card claim-step-card primary-step">
               <p className="eyebrow">Next step</p>
               <h2>Post in Localized Will County Garage Sales & SaleTrail</h2>

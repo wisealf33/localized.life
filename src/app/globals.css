@@ -107,7 +107,7 @@ h2 {
 .eyebrow {
   margin-bottom: 6px;
   color: var(--accent);
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -160,34 +160,52 @@ h2 {
   padding: 18px;
 }
 
+.claim-step-grid {
+  align-items: stretch;
+}
+
 .claim-step-card {
-  justify-items: center;
-  gap: 14px;
-  padding: 22px;
-  text-align: center;
+  align-content: start;
+  gap: 16px;
+  padding: 24px;
+  border-color: #d7cbb9;
+  background: #fffefa;
 }
 
 .claim-step-card h2 {
-  max-width: 360px;
   margin-bottom: 0;
-  font-size: 1.45rem;
-  line-height: 1.18;
+  font-size: 1.5rem;
+  line-height: 1.16;
 }
 
 .claim-step-card p:not(.eyebrow) {
-  max-width: 390px;
   line-height: 1.45;
 }
 
 .claim-step-card .button {
+  justify-self: center;
   width: 100%;
   max-width: 330px;
   min-height: 46px;
+  margin-top: 4px;
 }
 
 .claim-step-card.primary-step {
-  border-color: #b8d2c8;
-  background: #fbfffc;
+  border-color: #98c5b7;
+  background: linear-gradient(180deg, #fbfffc 0%, #f4fbf7 100%);
+  box-shadow: inset 4px 0 0 var(--primary);
+}
+
+.claim-step-card .eyebrow {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #f5efe4;
+}
+
+.claim-step-card.primary-step .eyebrow {
+  background: var(--good);
+  color: var(--good-text);
 }
 
 .compact {
