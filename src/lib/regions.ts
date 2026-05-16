@@ -1,0 +1,88 @@
+import type { Sale } from "./types";
+
+type RegionSale = Pick<Sale, "city" | "state">;
+
+type FacebookDestination = {
+  county: string;
+  state: string;
+  name: string;
+  url: string;
+  isDedicated: boolean;
+};
+
+type OpenRegion = FacebookDestination & {
+  cities: string[];
+};
+
+const defaultWillCountyGroupUrl = "https://www.facebook.com/groups/955521984061525";
+const defaultGeneralFacebookUrl = "https://www.localized.life";
+
+const openRegions: OpenRegion[] = [
+  {
+    county: "Will County",
+    state: "IL",
+    name: "Localized Will County Garage Sales & SaleTrail",
+    url: process.env.NEXT_PUBLIC_WILL_COUNTY_FACEBOOK_GROUP_URL ||
+      process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL ||
+      defaultWillCountyGroupUrl,
+    isDedicated: true,
+    cities: [
+      "beecher",
+      "bolingbrook",
+      "channahon",
+      "crest hill",
+      "elwood",
+      "frankfort",
+      "homer glen",
+      "joliet",
+      "lockport",
+      "manhattan",
+      "minooka",
+      "mokena",
+      "monee",
+      "naperville",
+      "new lenox",
+      "peotone",
+      "plainfield",
+      "romeoville",
+      "shorewood",
+      "wilmington",
+    ],
+  },
+];
+
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function regionDestinationForSale(sale: RegionSale): FacebookDestination {
+  const city = normalize(sale.city);
+  const state = normalize(sale.state);
+  const region = openRegions.find((item) => normalize(item.state) === state && item.cities.includes(city));
+
+  if (region) return region;
+
+  return {
+    county: `${sale.city} area`,
+    state: sale.state,
+    name: "Localized.life",
+    url: process.env.NEXT_PUBLIC_GENERAL_LOCALIZED_FACEBOOK_URL || defaultGeneralFacebookUrl,
+    isDedicated: false,
+  };
+}
+
+export function dedicatedAreaShareNote(sale: RegionSale) {
+  const destination = regionDestinationForSale(sale);
+  if (destination.isDedicated) return "";
+
+  return `\n\nHelp grow SaleTrail in the ${destination.county} — if more local sales get listed, a dedicated Localized group can be opened for this area.`;
+}
+
+export function facebookDestinationInstruction(sale: RegionSale) {
+  const destination = regionDestinationForSale(sale);
+  if (destination.isDedicated) {
+    return `Post in ${destination.name}.`;
+  }
+
+  return `Post in ${destination.name}. This area does not have a dedicated Localized SaleTrail group yet, so help grow SaleTrail in the ${destination.county}.`;
+}

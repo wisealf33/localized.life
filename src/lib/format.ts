@@ -1,4 +1,5 @@
 import type { ClaimStatus, Sale, SaleSourceType } from "./types";
+import { dedicatedAreaShareNote } from "./regions";
 
 export const categoryOptions = [
   "Furniture",
@@ -102,7 +103,7 @@ export function socialCopy(sale: Sale, url: string) {
   const when = formatSaleHours(sale);
   const address = fullAddress(sale);
   const categories = sale.categories?.length ? `\nItems: ${sale.categories.join(", ")}` : "";
-  const publicPost = `Garage sale: ${sale.title}\n\n${when}\n${address}${categories}\n\n${sale.description || ""}\n\nDetails, map, and route save link: ${url}`;
+  const publicPost = `Garage sale: ${sale.title}\n\n${when}\n${address}${categories}\n\n${sale.description || ""}\n\nDetails, map, and route save link: ${url}${dedicatedAreaShareNote(sale)}`;
 
   return {
     publicPost,

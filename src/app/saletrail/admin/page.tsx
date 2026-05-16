@@ -13,6 +13,7 @@ import {
   updateOutreachStatus,
 } from "@/lib/actions";
 import { claimUrl, formatSaleHours, fullAddress, salePath, saleUrl } from "@/lib/format";
+import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { ClaimRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
 
@@ -70,11 +71,15 @@ function outreachMessages(sale: Sale) {
   const saleClaimUrl = claimUrl(sale.slug);
   const when = formatSaleHours(sale);
   const location = fullAddress(sale);
+  const destination = regionDestinationForSale(sale);
+  const groupIntro = destination.isDedicated
+    ? `Share/post this in ${destination.name}.`
+    : `Share/post this in ${destination.name}. This area does not have a dedicated Localized SaleTrail group yet, so help grow SaleTrail in the ${destination.county}.`;
 
   return {
     privateMessage: `Hi! I’m building SaleTrail by Localized.life, a local garage sale directory and route planner. I added a basic community listing for your sale so shoppers can find it, save it, and add it to a route.\n\nYou can view it here:\n${listingUrl}\n\nIf this is your sale, you can claim it, update details, add photos, and get better visibility:\n${saleClaimUrl}\n\nIf you’d rather not have it listed, you can request removal from the listing page.`,
     originalPostComment: `I added this sale to SaleTrail by Localized.life so shoppers can save it and add it to a garage sale route:\n${listingUrl}\n\nOrganizer can claim, update, or request removal from the listing page.`,
-    localizedGroupPost: `Community-added garage sale listing:\n${sale.title}\n${when}\n${location}\n\nView/save it on SaleTrail:\n${listingUrl}\n\nOrganizer can claim the listing to update details, add photos, and improve visibility.`,
+    localizedGroupPost: `${groupIntro}\n\nCommunity-added garage sale listing:\n${sale.title}\n${when}\n${location}\n\nView/save it on SaleTrail:\n${listingUrl}\n\nOrganizer can claim the listing to update details, add photos, and improve visibility.`,
   };
 }
 
@@ -172,6 +177,7 @@ export default async function AdminPage({ searchParams }: Props) {
             {outreach.map((sale) => {
               const messages = outreachMessages(sale);
               const outreachStatus: OutreachStatus = sale.outreach_status || "not_contacted";
+              const destination = regionDestinationForSale(sale);
 
               return (
                 <article className="card outreach-card" key={sale.id}>
@@ -216,6 +222,17 @@ export default async function AdminPage({ searchParams }: Props) {
                     <p>
                       <strong>Last outreach</strong>
                       {sale.outreach_last_at ? new Date(sale.outreach_last_at).toLocaleString() : "Not recorded"}
+                    </p>
+                    <p>
+                      <strong>Facebook destination</strong>
+                      {destination.url ? (
+                        <a className="text-link" href={destination.url} target="_blank" rel="noopener noreferrer">
+                          {destination.name}
+                        </a>
+                      ) : (
+                        destination.name
+                      )}
+                      <span>{facebookDestinationInstruction(sale)}</span>
                     </p>
                   </div>
 

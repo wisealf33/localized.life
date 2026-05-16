@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 import { publicClaimMessageForSale, saleUrl } from "./format";
-
-const defaultLocalizedGroupUrl = "https://www.facebook.com/groups/955521984061525";
+import { facebookDestinationInstruction, regionDestinationForSale } from "./regions";
 
 type ClaimInstructionsEmail = {
   claimantEmail: string;
@@ -43,14 +42,6 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
-function localizedGroupUrl() {
-  return (
-    process.env.SALETRAIL_LOCALIZED_FACEBOOK_GROUP_URL ||
-    process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL ||
-    defaultLocalizedGroupUrl
-  );
-}
-
 function manageUrl(token: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${baseUrl.replace(/\/$/, "")}/saletrail/manage/${token}`;
@@ -69,10 +60,13 @@ export async function sendClaimInstructionsEmail({
   if (!client) return { sent: false, reason: "Email is not configured." };
 
   const message = publicClaimMessageForSale({ slug, city, state });
-  const groupUrl = localizedGroupUrl();
+  const facebookDestination = regionDestinationForSale({ city, state });
+  const groupUrl = facebookDestination.url;
   const safeName = escapeHtml(claimantName);
   const safeTitle = escapeHtml(listingTitle);
   const safeMessage = escapeHtml(message);
+  const safeDestinationName = escapeHtml(facebookDestination.name);
+  const safeDestinationInstruction = escapeHtml(facebookDestinationInstruction({ city, state }));
   const html = `
     <div style="font-family: Arial, sans-serif; color: #20201d; line-height: 1.5;">
       <h1 style="font-size: 24px;">Finish your SaleTrail claim</h1>
@@ -80,8 +74,8 @@ export async function sendClaimInstructionsEmail({
       <p>Your claim request for <strong>${safeTitle}</strong> is in the admin review queue.</p>
       <p>To finish the claim, copy and post this public message on Facebook:</p>
       <pre style="white-space: pre-wrap; background: #f8fbff; border: 1px solid #d8e3f0; border-radius: 12px; padding: 14px;">${safeMessage}</pre>
-      <p><strong>Step 1:</strong> Create a new post in Localized Will County Garage Sales &amp; SaleTrail.</p>
-      ${groupUrl ? `<p><a href="${groupUrl}">Post to the local Localized Facebook group</a></p>` : ""}
+      <p><strong>Step 1:</strong> ${safeDestinationInstruction} Create a new post with the message so admin can find it easily.</p>
+      ${groupUrl ? `<p><a href="${groupUrl}">Open ${safeDestinationName}</a></p>` : ""}
       <p><strong>Optional:</strong> You can also comment on the original Facebook garage sale post to promote your SaleTrail listing.</p>
       ${sourceUrl ? `<p><a href="${sourceUrl}">Open original Facebook post</a></p>` : ""}
       <p>After admin approval, you will receive a private manage/edit link. Do not post that private link publicly.</p>
@@ -97,8 +91,8 @@ export async function sendClaimInstructionsEmail({
     "",
     message,
     "",
-    "Step 1: Create a new post in Localized Will County Garage Sales & SaleTrail.",
-    groupUrl ? `Localized Will County Garage Sales & SaleTrail: ${groupUrl}` : "",
+    `Step 1: ${facebookDestinationInstruction({ city, state })} Create a new post with the message so admin can find it easily.`,
+    groupUrl ? `${facebookDestination.name}: ${groupUrl}` : "",
     "",
     "Optional: You can also comment on the original Facebook garage sale post to promote your SaleTrail listing.",
     sourceUrl ? `Original post: ${sourceUrl}` : "",

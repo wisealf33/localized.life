@@ -4,10 +4,9 @@ import { CopyIconButton } from "@/components/CopyIconButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { submitClaimRequest } from "@/lib/actions";
 import { listingId, publicClaimMessageForSale, salePath } from "@/lib/format";
+import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
-
-const defaultLocalizedGroupUrl = "https://www.facebook.com/groups/955521984061525";
 
 const claimSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, source_url, claim_status, visibility_status, claimed_at, created_at, updated_at";
@@ -37,7 +36,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
 
   const message = publicClaimMessageForSale(sale);
   const publicListingId = listingId(sale.slug);
-  const localizedGroupUrl = process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL || defaultLocalizedGroupUrl;
+  const facebookDestination = regionDestinationForSale(sale);
 
   if (query.submitted) {
     return (
@@ -46,7 +45,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
         <p className="eyebrow">Claim request submitted</p>
         <h1>Finish your claim on Facebook</h1>
         <p className="lede">
-          Copy the message below, then make a new post in the Localized.life Facebook group. You can also paste it as a
+          Copy the message below, then make a new Facebook post where admin can find it. You can also paste it as a
           comment on your original garage sale post to promote the listing.
         </p>
         <section className="panel stack">
@@ -71,14 +70,14 @@ export default async function ClaimPage({ params, searchParams }: Props) {
           <div className="grid two claim-step-grid">
             <div className="card claim-step-card primary-step">
               <p className="eyebrow">Next step</p>
-              <h2>Post in Localized Will County Garage Sales & SaleTrail</h2>
-              <p>Open the local Facebook group and create a new post with this message so admin can find it easily.</p>
-              {localizedGroupUrl ? (
-                <a className="button primary" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
-                  Post to Localized Facebook group
+              <h2>Post in {facebookDestination.name}</h2>
+              <p>{facebookDestinationInstruction(sale)} Create a new post with this message so admin can find it easily.</p>
+              {facebookDestination.url ? (
+                <a className="button primary" href={facebookDestination.url} target="_blank" rel="noopener noreferrer">
+                  Open Facebook destination
                 </a>
               ) : (
-                <div className="notice">The Localized.life group link has not been added yet.</div>
+                <div className="notice">The Localized.life Facebook link has not been added yet.</div>
               )}
             </div>
             <div className="card claim-step-card">
