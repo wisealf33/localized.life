@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 import { publicClaimMessage, saleUrl } from "./format";
 
+const defaultLocalizedGroupUrl = "https://www.facebook.com/groups/955521984061525";
+
 type ClaimInstructionsEmail = {
   claimantEmail: string;
   claimantName: string;
@@ -38,7 +40,11 @@ function escapeHtml(value: string) {
 }
 
 function localizedGroupUrl() {
-  return process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL || null;
+  return (
+    process.env.SALETRAIL_LOCALIZED_FACEBOOK_GROUP_URL ||
+    process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL ||
+    defaultLocalizedGroupUrl
+  );
 }
 
 function manageUrl(token: string) {

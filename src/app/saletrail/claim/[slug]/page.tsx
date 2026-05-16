@@ -6,6 +6,8 @@ import { listingId, publicClaimMessage } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
+const defaultLocalizedGroupUrl = "https://www.facebook.com/groups/955521984061525";
+
 const claimSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, source_url, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
@@ -34,7 +36,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
 
   const message = publicClaimMessage(sale.slug);
   const publicListingId = listingId(sale.slug);
-  const localizedGroupUrl = process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL;
+  const localizedGroupUrl = process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL || defaultLocalizedGroupUrl;
 
   if (query.submitted) {
     return (
@@ -83,7 +85,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
               <p>Open the local Facebook group, paste the message as a post or comment, then come back when finished.</p>
               {localizedGroupUrl ? (
                 <a className="button primary" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
-                  Open Localized.life group
+                  Open Will County Facebook group
                 </a>
               ) : (
                 <div className="notice">The Localized.life group link has not been added yet.</div>
