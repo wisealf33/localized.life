@@ -307,6 +307,57 @@ h2 {
   margin-top: 20px;
 }
 
+.directory-controls,
+.pagination,
+.feedback-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.per-page-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+
+.per-page-form label {
+  min-width: 170px;
+}
+
+.pagination {
+  justify-content: center;
+}
+
+.button.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.feedback-panel {
+  margin-top: 34px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 24px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.feedback-panel h2 {
+  margin-bottom: 8px;
+}
+
+.feedback-panel p:last-child {
+  max-width: 680px;
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .panel,
 .card,
 .empty,
@@ -769,6 +820,9 @@ code {
   .card-top,
   .toolbar,
   .card-actions,
+  .directory-controls,
+  .pagination,
+  .feedback-panel,
   .inline-form {
     align-items: stretch;
     flex-direction: column;

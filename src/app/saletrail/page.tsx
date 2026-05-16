@@ -9,21 +9,46 @@ const publicSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
 type Props = {
-  searchParams: Promise<{ q?: string; date?: string }>;
+  searchParams: Promise<{ q?: string; date?: string; page?: string; perPage?: string }>;
 };
 
-async function getSales(q?: string, date?: string) {
-  if (!isSupabaseConfigured) return [];
+const pageSizes = [10, 20, 50];
+
+function numberParam(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+}
+
+function pageSizeParam(value: string | undefined) {
+  const parsed = numberParam(value, 10);
+  return pageSizes.includes(parsed) ? parsed : 10;
+}
+
+function directoryUrl(params: { q?: string; date?: string; page?: number; perPage?: number }) {
+  const next = new URLSearchParams();
+  if (params.q) next.set("q", params.q);
+  if (params.date) next.set("date", params.date);
+  if (params.perPage && params.perPage !== 10) next.set("perPage", String(params.perPage));
+  if (params.page && params.page > 1) next.set("page", String(params.page));
+  const query = next.toString();
+  return query ? `/saletrail?${query}` : "/saletrail";
+}
+
+async function getSales(q?: string, date?: string, page = 1, perPage = 10) {
+  if (!isSupabaseConfigured) return { sales: [], total: 0 };
 
   const supabase = getSupabaseAdmin();
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
   let query = supabase
     .from("sales")
-    .select(publicSaleColumns)
+    .select(publicSaleColumns, { count: "exact" })
     .eq("visibility_status", "public")
     .eq("status", "active")
+    .order("source_type", { ascending: false })
     .order("claim_status", { ascending: true })
     .order("starts_at", { ascending: true })
-    .limit(50);
+    .range(from, to);
 
   if (q) {
     query = query.or(`city.ilike.%${q}%,state.ilike.%${q}%,zip.ilike.%${q}%,title.ilike.%${q}%`);
@@ -33,9 +58,12 @@ async function getSales(q?: string, date?: string) {
     query = query.gte("starts_at", `${date}T00:00:00`).lte("starts_at", `${date}T23:59:59`);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw new Error(error.message);
-  return ((data as Sale[]) || []).sort((a, b) => visibilityRank(a) - visibilityRank(b));
+  return {
+    sales: ((data as Sale[]) || []).sort((a, b) => visibilityRank(a) - visibilityRank(b)),
+    total: count || 0,
+  };
 }
 
 function visibilityRank(sale: Pick<Sale, "source_type" | "claim_status">) {
@@ -51,7 +79,15 @@ function canClaim(sale: Pick<Sale, "source_type" | "claim_status">) {
 
 export default async function SaleTrailHome({ searchParams }: Props) {
   const params = await searchParams;
-  const sales = await getSales(params.q, params.date);
+  const perPage = pageSizeParam(params.perPage);
+  const currentPage = numberParam(params.page, 1);
+  const { sales, total } = await getSales(params.q, params.date, currentPage, perPage);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
+  const resultEnd = Math.min(safePage * perPage, total);
+  const feedbackEmail = process.env.NEXT_PUBLIC_FEEDBACK_EMAIL || "claims@localized.life";
+  const feedbackHref = `mailto:${feedbackEmail}?subject=${encodeURIComponent("SaleTrail feedback")}`;
 
   return (
     <main className="page">
@@ -83,8 +119,32 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             Date
             <input name="date" type="date" defaultValue={params.date || ""} />
           </label>
+          <input name="perPage" type="hidden" value={perPage} />
           <button className="button primary" type="submit">
             Search
+          </button>
+        </form>
+      </section>
+
+      <section className="directory-controls">
+        <p className="muted">
+          {total === 0 ? "No listings to show." : `Showing ${resultStart}-${resultEnd} of ${total} listings.`}
+        </p>
+        <form className="per-page-form">
+          {params.q ? <input name="q" type="hidden" value={params.q} /> : null}
+          {params.date ? <input name="date" type="hidden" value={params.date} /> : null}
+          <label>
+            Listings per page
+            <select name="perPage" defaultValue={perPage}>
+              {pageSizes.map((size) => (
+                <option value={size} key={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="button" type="submit">
+            Apply
           </button>
         </form>
       </section>
@@ -125,6 +185,42 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             </article>
           ))
         )}
+      </section>
+
+      {totalPages > 1 ? (
+        <nav className="pagination" aria-label="Listings pages">
+          {safePage > 1 ? (
+            <Link className="button" href={directoryUrl({ q: params.q, date: params.date, perPage, page: safePage - 1 })}>
+              Previous
+            </Link>
+          ) : (
+            <span className="button disabled">Previous</span>
+          )}
+          <span className="muted">
+            Page {safePage} of {totalPages}
+          </span>
+          {safePage < totalPages ? (
+            <Link className="button" href={directoryUrl({ q: params.q, date: params.date, perPage, page: safePage + 1 })}>
+              Next
+            </Link>
+          ) : (
+            <span className="button disabled">Next</span>
+          )}
+        </nav>
+      ) : null}
+
+      <section className="feedback-panel">
+        <div>
+          <p className="eyebrow">New and growing</p>
+          <h2>Help shape SaleTrail</h2>
+          <p>
+            This is a new fast-growing website, and features are being added daily. Request a feature or report a bug so
+            we know what to improve next.
+          </p>
+        </div>
+        <a className="button primary" href={feedbackHref}>
+          Request a feature or report a bug
+        </a>
       </section>
     </main>
   );
