@@ -4,9 +4,11 @@
   --muted: #68655d;
   --panel: #fffdf8;
   --line: #ddd5c7;
+  --line-strong: #cbbda9;
   --primary: #176b5b;
   --primary-dark: #0f4d41;
   --accent: #b8452e;
+  --accent-soft: #f6e7df;
   --good: #e7f4ee;
   --good-text: #11513f;
   --watch: #fff1d6;
@@ -53,13 +55,13 @@ p {
 
 h1 {
   max-width: 780px;
-  font-size: clamp(2.25rem, 5vw, 4.5rem);
-  line-height: 1;
+  font-size: clamp(2.45rem, 5vw, 4.8rem);
+  line-height: 0.98;
   letter-spacing: 0;
 }
 
 h2 {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
 }
 
 .page {
@@ -78,19 +80,108 @@ h2 {
   padding: 48px 0 32px;
 }
 
-.front-page {
+.front-shell {
+  width: min(1180px, calc(100% - 32px));
   min-height: 100vh;
+  margin: 0 auto;
+  padding: 42px 0 64px;
   display: grid;
   align-content: center;
-  gap: 28px;
 }
 
-.front-band {
+.front-hero {
   display: grid;
-  gap: 10px;
-  max-width: 680px;
-  border-top: 1px solid var(--line);
-  padding-top: 24px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 36px;
+  align-items: center;
+}
+
+.front-copy {
+  display: grid;
+  gap: 22px;
+  max-width: 760px;
+}
+
+.front-copy h1 {
+  margin-bottom: 0;
+}
+
+.front-product-card {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 28px;
+  background: var(--panel);
+  box-shadow: 0 20px 50px rgb(56 45 31 / 10%);
+}
+
+.front-product-card h2 {
+  margin-bottom: 0;
+  font-size: 2rem;
+}
+
+.route-preview {
+  position: relative;
+  min-height: 96px;
+  border: 1px solid #cfe0d7;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, transparent 0 46%, #d5c8b5 46% 48%, transparent 48% 100%),
+    linear-gradient(0deg, transparent 0 48%, #d5c8b5 48% 50%, transparent 50% 100%),
+    #eef7f2;
+  overflow: hidden;
+}
+
+.route-preview::before {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 52%;
+  border-top: 4px solid var(--primary);
+  transform: rotate(-11deg);
+  transform-origin: center;
+}
+
+.route-preview span {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 4px 12px rgb(32 32 29 / 18%);
+}
+
+.route-preview span:nth-child(1) {
+  left: 18%;
+  top: 58%;
+}
+
+.route-preview span:nth-child(2) {
+  left: 48%;
+  top: 42%;
+}
+
+.route-preview span:nth-child(3) {
+  right: 18%;
+  top: 32%;
+}
+
+.mini-list {
+  display: grid;
+  gap: 8px;
+  margin: 2px 0 4px;
+}
+
+.mini-list span {
+  border-left: 4px solid var(--primary);
+  padding: 9px 12px;
+  background: #f4fbf7;
+  color: var(--primary-dark);
+  font-weight: 800;
 }
 
 .text-link {
@@ -105,10 +196,14 @@ h2 {
 }
 
 .eyebrow {
+  width: fit-content;
   margin-bottom: 6px;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: var(--accent-soft);
   color: var(--accent);
-  font-size: 0.86rem;
-  font-weight: 800;
+  font-size: 0.95rem;
+  font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -151,13 +246,15 @@ h2 {
 }
 
 .panel {
-  padding: 20px;
+  padding: 22px;
+  box-shadow: 0 10px 26px rgb(56 45 31 / 6%);
 }
 
 .card {
   display: grid;
   gap: 10px;
-  padding: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 26px rgb(56 45 31 / 5%);
 }
 
 .claim-step-grid {
@@ -167,7 +264,7 @@ h2 {
 .claim-step-card {
   align-content: start;
   gap: 16px;
-  padding: 24px;
+  padding: 26px;
   border-color: #d7cbb9;
   background: #fffefa;
 }
@@ -197,9 +294,8 @@ h2 {
 }
 
 .claim-step-card .eyebrow {
-  width: fit-content;
-  border-radius: 999px;
-  padding: 5px 9px;
+  margin-bottom: 0;
+  padding: 7px 11px;
   background: #f5efe4;
 }
 
@@ -413,17 +509,18 @@ textarea {
 
 .button {
   display: inline-flex;
-  min-height: 42px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 11px 16px;
   background: #ffffff;
   color: var(--foreground);
-  font-weight: 800;
+  font-weight: 900;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: 0 2px 0 rgb(32 32 29 / 6%);
 }
 
 .button.primary {
@@ -541,8 +638,13 @@ code {
 @media (max-width: 760px) {
   .two,
   .search,
+  .front-hero,
   .compact {
     grid-template-columns: 1fr;
+  }
+
+  .front-shell {
+    padding: 28px 0 48px;
   }
 
   .card-top,
