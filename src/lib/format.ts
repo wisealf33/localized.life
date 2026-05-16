@@ -48,6 +48,14 @@ export function saleUrl(slug: string) {
   return `${baseUrl.replace(/\/$/, "")}/saletrail/sale/${slug}`;
 }
 
+export function listingId(slug: string) {
+  return slug;
+}
+
+export function publicClaimMessage(slug: string) {
+  return `I’m claiming this garage sale listing on Localized.life so shoppers can view details, updates, and save it to their SaleTrail route:\n${saleUrl(slug)}\nSaleTrail Listing ID: ${listingId(slug)}`;
+}
+
 export function claimUrl(slug: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${baseUrl.replace(/\/$/, "")}/saletrail/claim/${slug}`;

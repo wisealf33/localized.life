@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -26,6 +27,29 @@ async function getSale(slug: string) {
 
   if (error || !data) return null;
   return data as Sale;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const sale = await getSale(slug);
+  if (!sale) {
+    return {
+      title: "Garage Sale Listing | SaleTrail",
+    };
+  }
+
+  const title = `${sale.title} in ${sale.city}, ${sale.state} | SaleTrail`;
+  const description = `${sale.title} in ${sale.city}, ${sale.state}. ${formatSaleHours(sale).replace(/\n/g, " ")} Address: ${fullAddress(sale)}.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+    },
+  };
 }
 
 export default async function SalePage({ params, searchParams }: Props) {

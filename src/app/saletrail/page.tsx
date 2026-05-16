@@ -35,7 +35,14 @@ async function getSales(q?: string, date?: string) {
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return data as Sale[];
+  return ((data as Sale[]) || []).sort((a, b) => visibilityRank(a) - visibilityRank(b));
+}
+
+function visibilityRank(sale: Pick<Sale, "source_type" | "claim_status">) {
+  if (sale.source_type === "seller_created") return 0;
+  if (sale.claim_status === "claimed") return 1;
+  if (sale.claim_status === "claim_pending") return 2;
+  return 3;
 }
 
 export default async function SaleTrailHome({ searchParams }: Props) {

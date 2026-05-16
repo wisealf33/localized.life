@@ -47,7 +47,9 @@ export default async function AdminPage({ searchParams }: Props) {
         </p>
         {params.manage ? (
           <div className="notice good">
-            Claim approved. Private manage link: <Link href={`/saletrail/manage/${params.manage}`}>open manage page</Link>
+            Claim approved. Private manage/edit link:{" "}
+            <Link href={`/saletrail/manage/${params.manage}`}>open private manage page</Link>. Send this only to the
+            approved organizer. It should not be posted publicly.
           </div>
         ) : null}
         {enabled ? (
@@ -86,9 +88,12 @@ export default async function AdminPage({ searchParams }: Props) {
               {claims.map((claim) => (
                 <article className="card compact" key={claim.id}>
                   <div>
-                    <p className="eyebrow">{claim.claim_code}</p>
+                    <p className="eyebrow">Listing ID: {claim.claim_code}</p>
                     <h3>{claim.sales?.title}</h3>
-                    <p>{claim.name} · {claim.contact} · {claim.relationship}</p>
+                    <p>{claim.name} · {claim.claimant_email || claim.contact} · {claim.relationship}</p>
+                    {claim.facebook_profile_name ? <p>Facebook: {claim.facebook_profile_name}</p> : null}
+                    {claim.verification_method ? <p>Public method: {claim.verification_method}</p> : null}
+                    {claim.wants_updates ? <p>Opted into updates</p> : null}
                     {claim.message ? <p>{claim.message}</p> : null}
                   </div>
                   <form action={approveClaim} className="inline-form">

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
 import { categoryOptions } from "./format";
 import { getSupabaseAdmin } from "./supabase";
-import { claimCode, hashSecret, randomToken, slugifyTitle } from "./tokens";
+import { hashSecret, randomToken, slugifyTitle } from "./tokens";
 import type { ListingRequestType, SaleStatus } from "./types";
 
 function value(formData: FormData, key: string) {
@@ -192,7 +192,11 @@ export async function updateManagedSale(formData: FormData) {
 export async function submitClaimRequest(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const slug = required(formData, "slug");
-  const code = claimCode();
+  const listingId = slug;
+  const verificationMethod = required(formData, "verification_method");
+  if (!["original_post_comment", "localized_group_post"].includes(verificationMethod)) {
+    throw new Error("Choose a public posting method.");
+  }
 
   const { data: sale, error: saleError } = await supabase
     .from("sales")
@@ -206,10 +210,14 @@ export async function submitClaimRequest(formData: FormData) {
   const { error } = await supabase.from("claim_requests").insert({
     sale_id: sale.id,
     name: required(formData, "name"),
-    contact: required(formData, "contact"),
+    contact: required(formData, "claimant_email"),
+    claimant_email: required(formData, "claimant_email"),
+    facebook_profile_name: required(formData, "facebook_profile_name"),
     relationship: required(formData, "relationship"),
     message: value(formData, "message"),
-    claim_code: code,
+    claim_code: listingId,
+    verification_method: verificationMethod,
+    wants_updates: formData.get("wants_updates") === "on",
     status: "pending",
   });
 
@@ -217,7 +225,7 @@ export async function submitClaimRequest(formData: FormData) {
 
   await supabase.from("sales").update({ claim_status: "claim_pending" }).eq("id", sale.id);
   revalidatePath(`/saletrail/sale/${slug}`);
-  redirect(`/saletrail/claim/${slug}?code=${code}`);
+  redirect(`/saletrail/claim/${slug}?submitted=1`);
 }
 
 export async function submitListingRequest(formData: FormData) {

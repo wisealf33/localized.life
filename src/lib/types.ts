@@ -3,6 +3,7 @@ export type ClaimStatus = "unclaimed" | "claim_pending" | "claimed";
 export type SaleStatus = "active" | "cancelled" | "ended";
 export type VisibilityStatus = "public" | "hidden" | "removed";
 export type ListingRequestType = "correction" | "removal";
+export type ClaimVerificationMethod = "original_post_comment" | "localized_group_post";
 
 export type Sale = {
   id: string;
@@ -38,9 +39,13 @@ export type ClaimRequest = {
   sale_id: string;
   name: string;
   contact: string;
+  claimant_email: string | null;
+  facebook_profile_name: string | null;
   relationship: string;
   message: string | null;
   claim_code: string;
+  verification_method: ClaimVerificationMethod | null;
+  wants_updates: boolean | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
   sales?: Pick<Sale, "title" | "slug" | "city" | "state"> | null;

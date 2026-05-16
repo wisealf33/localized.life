@@ -34,12 +34,22 @@ create table if not exists public.claim_requests (
   sale_id uuid not null references public.sales(id) on delete cascade,
   name text not null,
   contact text not null,
+  claimant_email text,
+  facebook_profile_name text,
   relationship text not null,
   message text,
   claim_code text not null,
+  verification_method text check (verification_method in ('original_post_comment', 'localized_group_post')),
+  wants_updates boolean not null default false,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_at timestamptz not null default now()
 );
+
+alter table public.claim_requests
+  add column if not exists claimant_email text,
+  add column if not exists facebook_profile_name text,
+  add column if not exists verification_method text check (verification_method in ('original_post_comment', 'localized_group_post')),
+  add column if not exists wants_updates boolean not null default false;
 
 create table if not exists public.listing_requests (
   id uuid primary key default gen_random_uuid(),
