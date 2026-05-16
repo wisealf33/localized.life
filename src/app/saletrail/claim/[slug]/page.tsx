@@ -122,10 +122,6 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             <option value="other">Other</option>
           </select>
         </label>
-        <label className="check">
-          <input type="checkbox" name="wants_updates" />
-          Send me occasional Localized.life / SaleTrail updates
-        </label>
         <label>
           Optional note
           <textarea name="message" rows={4} placeholder="Anything admin should know before reviewing?" />

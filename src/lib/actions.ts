@@ -289,7 +289,7 @@ export async function submitClaimRequest(formData: FormData) {
     message: value(formData, "message"),
     claim_code: listingId,
     verification_method: null,
-    wants_updates: formData.get("wants_updates") === "on",
+    wants_updates: false,
     status: "pending",
   });
 

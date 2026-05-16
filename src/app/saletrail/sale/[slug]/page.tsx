@@ -109,6 +109,10 @@ export default async function SalePage({ params, searchParams }: Props) {
               claimed by the organizer. Details may change. Are you the organizer? You can claim, correct, or request
               removal of this listing.
             </p>
+            <p>
+              Claiming asks for a public Facebook post/comment so admin can confirm the organizer. Correction and
+              removal requests are reviewed privately through the form below.
+            </p>
             {sale.source_url ? (
               <p>
                 <a className="text-link" href={sale.source_url} target="_blank" rel="noopener noreferrer">
@@ -141,6 +145,10 @@ export default async function SalePage({ params, searchParams }: Props) {
 
       <section className="panel">
         <h2>Suggest a correction or request removal</h2>
+        <p className="muted">
+          Use this private request if details are wrong or if you want the listing removed. Admin may contact you through
+          the contact info you provide to confirm before making changes.
+        </p>
         <form action={submitListingRequest} className="form">
           <input type="hidden" name="slug" value={sale.slug} />
           <label>
