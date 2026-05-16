@@ -7,7 +7,7 @@ import { sendClaimApprovedEmail, sendClaimInstructionsEmail } from "./email";
 import { categoryOptions, salePath, saleSharePath } from "./format";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
-import type { ListingRequestType, SaleStatus } from "./types";
+import type { ListingRequestType, OutreachStatus, SaleStatus } from "./types";
 
 const photoBucket = "saletrail-photos";
 const maxPhotos = 2;
@@ -16,6 +16,17 @@ const allowedPhotoTypes = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
   ["image/webp", "webp"],
+]);
+
+const outreachStatuses = new Set<OutreachStatus>([
+  "not_contacted",
+  "message_sent",
+  "comment_posted",
+  "localized_group_posted",
+  "follow_up_needed",
+  "claimed",
+  "do_not_contact",
+  "removed",
 ]);
 
 function value(formData: FormData, key: string) {
@@ -202,8 +213,11 @@ export async function createCommunitySale(formData: FormData) {
     claim_status: "unclaimed",
     visibility_status: "public",
     source_notes: value(formData, "source_notes"),
+    source_platform: value(formData, "source_platform"),
     source_url: value(formData, "source_url"),
+    source_poster_name: value(formData, "source_poster_name"),
     raw_source_text: value(formData, "raw_source_text"),
+    outreach_status: "not_contacted",
   });
 
   if (error) throw new Error(error.message);
@@ -357,6 +371,8 @@ export async function approveClaim(formData: FormData) {
     .from("sales")
     .update({
       claim_status: "claimed",
+      outreach_status: "claimed",
+      outreach_last_at: new Date().toISOString(),
       manage_token_hash: hashSecret(manageToken),
       claimed_at: new Date().toISOString(),
       claimed_by_name: request.name,
@@ -418,5 +434,33 @@ export async function resolveListingRequest(formData: FormData) {
   const { error } = await supabase.from("listing_requests").update({ status }).eq("id", requestId);
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail/admin");
+  redirect("/saletrail/admin?updated=1");
+}
+
+export async function updateOutreachStatus(formData: FormData) {
+  await requireAdmin();
+
+  const supabase = getSupabaseAdmin();
+  const saleId = required(formData, "sale_id");
+  const status = required(formData, "outreach_status") as OutreachStatus;
+  if (!outreachStatuses.has(status)) throw new Error("Invalid outreach status.");
+
+  const updatePayload: Record<string, unknown> = {
+    outreach_status: status,
+    outreach_last_at: new Date().toISOString(),
+  };
+  const notes = value(formData, "outreach_notes");
+  if (notes) updatePayload.outreach_notes = notes;
+  if (status === "removed") updatePayload.visibility_status = "removed";
+
+  const { error } = await supabase
+    .from("sales")
+    .update(updatePayload)
+    .eq("id", saleId)
+    .eq("source_type", "community_added");
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  revalidatePath("/saletrail");
   redirect("/saletrail/admin?updated=1");
 }

@@ -95,16 +95,26 @@ export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) 
 
       {admin ? (
         <>
+          <div className="grid two">
+            <label>
+              Source platform
+              <input name="source_platform" placeholder="Facebook, Craigslist, flyer, sign, direct tip" />
+            </label>
+            <label>
+              Source poster name
+              <input name="source_poster_name" placeholder="Private admin reference" />
+            </label>
+          </div>
+          <label>
+            Source URL
+            <input name="source_url" placeholder="Optional source link" />
+          </label>
           <label>
             Raw source text
             <textarea name="raw_source_text" rows={7} placeholder="Paste the public post, flyer text, or tip here." />
           </label>
           <label>
-            Source URL or note
-            <input name="source_url" placeholder="Optional private admin reference" />
-          </label>
-          <label>
-            Admin notes
+            Source notes
             <textarea name="source_notes" rows={3} />
           </label>
         </>

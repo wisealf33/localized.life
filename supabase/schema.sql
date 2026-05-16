@@ -19,8 +19,24 @@ create table if not exists public.sales (
   claim_status text not null default 'unclaimed' check (claim_status in ('unclaimed', 'claim_pending', 'claimed')),
   visibility_status text not null default 'public' check (visibility_status in ('public', 'hidden', 'removed')),
   source_notes text,
+  source_platform text,
   source_url text,
+  source_poster_name text,
   raw_source_text text,
+  outreach_status text not null default 'not_contacted' check (
+    outreach_status in (
+      'not_contacted',
+      'message_sent',
+      'comment_posted',
+      'localized_group_posted',
+      'follow_up_needed',
+      'claimed',
+      'do_not_contact',
+      'removed'
+    )
+  ),
+  outreach_last_at timestamptz,
+  outreach_notes text,
   manage_token_hash text unique,
   claimed_at timestamptz,
   claimed_by_name text,
@@ -32,6 +48,30 @@ create table if not exists public.sales (
 
 alter table public.sales
   add column if not exists photo_urls text[] not null default '{}';
+
+alter table public.sales
+  add column if not exists source_platform text,
+  add column if not exists source_poster_name text,
+  add column if not exists outreach_status text not null default 'not_contacted',
+  add column if not exists outreach_last_at timestamptz,
+  add column if not exists outreach_notes text;
+
+alter table public.sales
+  drop constraint if exists sales_outreach_status_check;
+
+alter table public.sales
+  add constraint sales_outreach_status_check check (
+    outreach_status in (
+      'not_contacted',
+      'message_sent',
+      'comment_posted',
+      'localized_group_posted',
+      'follow_up_needed',
+      'claimed',
+      'do_not_contact',
+      'removed'
+    )
+  );
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
@@ -84,6 +124,9 @@ create index if not exists sales_public_search_idx
 
 create index if not exists sales_claim_visibility_idx
   on public.sales (claim_status, source_type);
+
+create index if not exists sales_outreach_queue_idx
+  on public.sales (source_type, claim_status, outreach_status, starts_at);
 
 create index if not exists claim_requests_status_idx
   on public.claim_requests (status, created_at desc);

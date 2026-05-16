@@ -321,6 +321,78 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-sections {
+  display: grid;
+  gap: 24px;
+}
+
+.outreach-card {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-meta-grid p {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fbfdff;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.admin-meta-grid strong {
+  color: var(--foreground);
+  font-size: 0.82rem;
+}
+
+.admin-details {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fbfdff;
+}
+
+.admin-details summary {
+  color: var(--primary-dark);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.outreach-copy textarea {
+  min-height: 176px;
+}
+
+.outreach-note-form,
+.outreach-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+
+.outreach-note-form label {
+  flex: 1 1 340px;
+}
+
+.outreach-actions .button {
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
 .list {
   display: grid;
   gap: 16px;
@@ -848,10 +920,12 @@ code {
 
 @media (max-width: 760px) {
   .two,
+  .three,
   .search,
   .front-hero,
   .tool-card-grid,
-  .compact {
+  .compact,
+  .admin-meta-grid {
     grid-template-columns: 1fr;
   }
 
@@ -888,6 +962,8 @@ code {
   .directory-controls,
   .pagination,
   .feedback-panel,
+  .outreach-note-form,
+  .outreach-actions,
   .inline-form {
     align-items: stretch;
     flex-direction: column;

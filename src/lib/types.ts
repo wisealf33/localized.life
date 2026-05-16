@@ -4,6 +4,15 @@ export type SaleStatus = "active" | "cancelled" | "ended";
 export type VisibilityStatus = "public" | "hidden" | "removed";
 export type ListingRequestType = "correction" | "removal";
 export type ClaimVerificationMethod = "original_post_comment" | "localized_group_post";
+export type OutreachStatus =
+  | "not_contacted"
+  | "message_sent"
+  | "comment_posted"
+  | "localized_group_posted"
+  | "follow_up_needed"
+  | "claimed"
+  | "do_not_contact"
+  | "removed";
 
 export type Sale = {
   id: string;
@@ -24,8 +33,13 @@ export type Sale = {
   claim_status: ClaimStatus;
   visibility_status: VisibilityStatus;
   source_notes: string | null;
+  source_platform: string | null;
   source_url: string | null;
+  source_poster_name: string | null;
   raw_source_text: string | null;
+  outreach_status: OutreachStatus | null;
+  outreach_last_at: string | null;
+  outreach_notes: string | null;
   manage_token_hash: string | null;
   claimed_at: string | null;
   claimed_by_name: string | null;
