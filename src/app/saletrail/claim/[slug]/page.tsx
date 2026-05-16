@@ -67,19 +67,19 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             <CopyIconButton text={message} label="Copy public claim message" />
           </div>
           <div className="grid two">
-            <div className="card">
+            <div className="card claim-step-card primary-step">
               <p className="eyebrow">Next step</p>
               <h2>Post in Localized Will County Garage Sales & SaleTrail</h2>
               <p>Open the local Facebook group and create a new post with this message so admin can find it easily.</p>
               {localizedGroupUrl ? (
                 <a className="button primary" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
-                  Post to the local Localized Facebook group
+                  Post to Localized Facebook group
                 </a>
               ) : (
                 <div className="notice">The Localized.life group link has not been added yet.</div>
               )}
             </div>
-            <div className="card">
+            <div className="card claim-step-card">
               <p className="eyebrow">Optional</p>
               <h2>Promote it on the original post</h2>
               <p>You can also paste the message as a comment on your original Facebook sale post so shoppers there can save it.</p>

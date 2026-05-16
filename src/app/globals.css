@@ -160,6 +160,36 @@ h2 {
   padding: 18px;
 }
 
+.claim-step-card {
+  justify-items: center;
+  gap: 14px;
+  padding: 22px;
+  text-align: center;
+}
+
+.claim-step-card h2 {
+  max-width: 360px;
+  margin-bottom: 0;
+  font-size: 1.45rem;
+  line-height: 1.18;
+}
+
+.claim-step-card p:not(.eyebrow) {
+  max-width: 390px;
+  line-height: 1.45;
+}
+
+.claim-step-card .button {
+  width: 100%;
+  max-width: 330px;
+  min-height: 46px;
+}
+
+.claim-step-card.primary-step {
+  border-color: #b8d2c8;
+  background: #fbfffc;
+}
+
 .compact {
   grid-template-columns: 1fr auto;
   align-items: start;
