@@ -106,6 +106,46 @@ h2 {
   margin-bottom: 0;
 }
 
+.brand-mark {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  box-shadow: 0 8px 22px rgb(56 45 31 / 6%);
+}
+
+.brand-symbol {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 950;
+}
+
+.brand-mark strong,
+.brand-mark small {
+  display: block;
+}
+
+.brand-mark strong {
+  font-size: 1.05rem;
+}
+
+.brand-mark small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
 .front-product-card {
   display: grid;
   gap: 18px;
@@ -134,7 +174,21 @@ h2 {
   padding: 12px 0;
   background: transparent;
   color: var(--primary-dark);
-  font-weight: 800;
+}
+
+.mini-list strong,
+.mini-list small {
+  display: block;
+}
+
+.mini-list strong {
+  font-weight: 900;
+}
+
+.mini-list small {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .text-link {

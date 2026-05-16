@@ -5,10 +5,18 @@ export default function Home() {
     <main className="front-shell">
       <section className="front-hero">
         <div className="front-copy">
-          <p className="eyebrow">Localized.life</p>
-          <h1>Simple local tools, starting with garage sales.</h1>
+          <div className="brand-mark">
+            <span className="brand-symbol">L</span>
+            <span>
+              <strong>Localized.life</strong>
+              <small>Useful tools for real neighborhoods</small>
+            </span>
+          </div>
+          <p className="eyebrow">First local tool now live</p>
+          <h1>Make local information easier to find, share, and use.</h1>
           <p className="lede">
-            SaleTrail turns scattered garage sale posts into clean listings shoppers can find, save, and route.
+            Localized.life is a home for practical neighborhood tools. The first one, SaleTrail, helps garage sale
+            posts become clean listings shoppers can actually organize into a route.
           </p>
           <div className="toolbar">
             <Link className="button primary" href="/saletrail">
@@ -23,11 +31,20 @@ export default function Home() {
         <div className="front-product-card">
           <p className="eyebrow">Now live</p>
           <h2>SaleTrail</h2>
-          <p>Find local garage sales, view community-added listings, save stops, and open a simple Google Maps route.</p>
+          <p>A clean garage sale directory for shoppers, sellers, and community-added local tips.</p>
           <div className="mini-list">
-            <span>Community-added listings</span>
-            <span>Claim and update flow</span>
-            <span>Save-to-route tools</span>
+            <span>
+              <strong>Find nearby sales</strong>
+              <small>Search local listings without digging through scattered posts.</small>
+            </span>
+            <span>
+              <strong>Claim your sale</strong>
+              <small>Organizers can take over community-added listings and keep details accurate.</small>
+            </span>
+            <span>
+              <strong>Build a simple route</strong>
+              <small>Save stops and open the route in Google Maps.</small>
+            </span>
           </div>
           <Link className="button primary" href="/saletrail">
             Go to garage sales
