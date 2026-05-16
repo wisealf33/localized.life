@@ -36,7 +36,9 @@ export function saleOgImageUrl(sale: OgSale) {
   const countyPath = `/og/${urlSegment(destination.county)}.jpg`;
   if (publicFileExists(countyPath)) return absolutePublicUrl(countyPath);
 
-  return absolutePublicUrl(defaultOgPath);
+  if (publicFileExists(defaultOgPath)) return absolutePublicUrl(defaultOgPath);
+
+  return null;
 }
 
 export function saleCanonicalUrl(sale: Pick<Sale, "slug" | "city" | "state">) {

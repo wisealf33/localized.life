@@ -61,6 +61,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = `${titleLocation}. ${formatSaleHours(sale).replace(/\n/g, " ")} Address: ${fullAddress(sale)}.`;
   const url = saleCanonicalUrl(sale);
   const image = saleOgImageUrl(sale);
+  const imageMetadata = image
+    ? [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${sale.title} in ${sale.city}, ${sale.state}`,
+        },
+      ]
+    : undefined;
 
   return {
     title,
@@ -73,21 +83,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url,
       siteName: "SaleTrail by Localized.life",
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: `${sale.title} in ${sale.city}, ${sale.state}`,
-        },
-      ],
+      images: imageMetadata,
       type: "article",
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [image],
+      images: image ? [image] : undefined,
     },
   };
 }
