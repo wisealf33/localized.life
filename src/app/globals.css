@@ -84,9 +84,10 @@ h2 {
   width: min(1180px, calc(100% - 32px));
   min-height: 100vh;
   margin: 0 auto;
-  padding: 42px 0 64px;
+  padding: 34px 0 64px;
   display: grid;
   align-content: center;
+  gap: 42px;
 }
 
 .front-hero {
@@ -106,44 +107,33 @@ h2 {
   margin-bottom: 0;
 }
 
-.brand-mark {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: var(--panel);
-  box-shadow: 0 8px 22px rgb(56 45 31 / 6%);
-}
-
-.brand-symbol {
-  display: inline-grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--primary);
-  color: #ffffff;
-  font-size: 1.35rem;
+.front-wordmark {
+  margin-bottom: 4px;
+  color: var(--foreground);
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
   font-weight: 950;
+  line-height: 1;
 }
 
-.brand-mark strong,
-.brand-mark small {
+.front-wordmark::after {
+  content: "";
   display: block;
+  width: 72px;
+  height: 5px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: var(--accent);
 }
 
-.brand-mark strong {
-  font-size: 1.05rem;
-}
-
-.brand-mark small {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 700;
+.front-badge {
+  width: fit-content;
+  margin-bottom: 0;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 900;
 }
 
 .front-product-card {
@@ -174,21 +164,24 @@ h2 {
   padding: 12px 0;
   background: transparent;
   color: var(--primary-dark);
-}
-
-.mini-list strong,
-.mini-list small {
-  display: block;
-}
-
-.mini-list strong {
   font-weight: 900;
 }
 
-.mini-list small {
-  margin-top: 4px;
+.front-about {
+  max-width: 760px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+
+.front-about h2 {
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+}
+
+.front-about p {
   color: var(--muted);
-  line-height: 1.35;
+  font-size: 1.04rem;
+  line-height: 1.65;
 }
 
 .text-link {

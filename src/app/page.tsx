@@ -5,51 +5,48 @@ export default function Home() {
     <main className="front-shell">
       <section className="front-hero">
         <div className="front-copy">
-          <div className="brand-mark">
-            <span className="brand-symbol">L</span>
-            <span>
-              <strong>Localized.life</strong>
-              <small>Useful tools for real neighborhoods</small>
-            </span>
-          </div>
-          <p className="eyebrow">First local tool now live</p>
-          <h1>Make local information easier to find, share, and use.</h1>
+          <p className="front-wordmark">Localized.life</p>
+          <p className="front-badge">First local tool now live</p>
+          <h1>Local tools for real-world community.</h1>
           <p className="lede">
-            Localized.life is a home for practical neighborhood tools. The first one, SaleTrail, helps garage sale
-            posts become clean listings shoppers can actually organize into a route.
+            We&apos;re starting with SaleTrail — a garage sale directory that helps sellers create clean listings, share
+            them anywhere, and helps shoppers save sales to a simple route.
           </p>
           <div className="toolbar">
             <Link className="button primary" href="/saletrail">
-              Open SaleTrail
+              Find garage sales
             </Link>
             <Link className="button" href="/saletrail/new">
-              Create a listing
+              List a garage sale
             </Link>
           </div>
         </div>
 
         <div className="front-product-card">
-          <p className="eyebrow">Now live</p>
+          <p className="front-badge">Now live</p>
           <h2>SaleTrail</h2>
-          <p>A clean garage sale directory for shoppers, sellers, and community-added local tips.</p>
+          <p>
+            Create a garage sale listing, generate a flyer with a QR code, share it to Facebook, Nextdoor, or
+            Craigslist, and help shoppers add your sale to their route.
+          </p>
           <div className="mini-list">
-            <span>
-              <strong>Find nearby sales</strong>
-              <small>Search local listings without digging through scattered posts.</small>
-            </span>
-            <span>
-              <strong>Claim your sale</strong>
-              <small>Organizers can take over community-added listings and keep details accurate.</small>
-            </span>
-            <span>
-              <strong>Build a simple route</strong>
-              <small>Save stops and open the route in Google Maps.</small>
-            </span>
+            <span>Find nearby garage sales</span>
+            <span>Create a free listing</span>
+            <span>Share with a flyer and QR code</span>
+            <span>Save sales to a route</span>
           </div>
           <Link className="button primary" href="/saletrail">
-            Go to garage sales
+            Open SaleTrail
           </Link>
         </div>
+      </section>
+
+      <section className="front-about">
+        <h2>What is Localized.life?</h2>
+        <p>
+          Localized.life is a growing home for practical local tools — starting with garage sales, then expanding toward
+          gardens, tools, food, services, events, and local exchange.
+        </p>
       </section>
     </main>
   );
