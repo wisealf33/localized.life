@@ -335,10 +335,18 @@ h2 {
   gap: 18px;
 }
 
+.outreach-card.completed {
+  box-shadow: none;
+}
+
 .admin-meta-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.admin-meta-grid.primary-meta {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
 }
 
 .admin-meta-grid p {
@@ -372,8 +380,17 @@ h2 {
   cursor: pointer;
 }
 
+.completed-outreach {
+  background: #ffffff;
+}
+
+.completed-outreach > summary {
+  font-size: 1.05rem;
+}
+
 .outreach-copy textarea {
-  min-height: 176px;
+  min-height: 210px;
+  white-space: pre-wrap;
 }
 
 .outreach-note-form,
@@ -391,6 +408,15 @@ h2 {
 .outreach-actions .button {
   min-height: 40px;
   padding: 8px 12px;
+}
+
+.outreach-actions.simplified {
+  align-items: center;
+}
+
+.outreach-actions.simplified form:first-child .button {
+  min-height: 46px;
+  padding-inline: 18px;
 }
 
 .list {

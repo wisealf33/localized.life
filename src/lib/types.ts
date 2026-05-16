@@ -10,6 +10,7 @@ export type OutreachStatus =
   | "comment_posted"
   | "localized_group_posted"
   | "follow_up_needed"
+  | "outreach_complete"
   | "claimed"
   | "do_not_contact"
   | "removed";

@@ -30,10 +30,21 @@ const outreachStatusLabels: Record<OutreachStatus, string> = {
   comment_posted: "Commented on original post",
   localized_group_posted: "Posted in Localized group",
   follow_up_needed: "Follow-up needed",
+  outreach_complete: "Outreach complete",
   claimed: "Claimed",
   do_not_contact: "Do not contact",
   removed: "Removed",
 };
+
+const completedOutreachStatuses = new Set<OutreachStatus>([
+  "message_sent",
+  "comment_posted",
+  "localized_group_posted",
+  "outreach_complete",
+  "do_not_contact",
+  "removed",
+  "claimed",
+]);
 
 async function getQueues(enabled: boolean) {
   if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [] };
@@ -77,7 +88,7 @@ function outreachMessages(sale: Sale) {
     : `Share/post this in ${destination.name}. This area does not have a dedicated Localized SaleTrail group yet, so help grow SaleTrail in the ${destination.county}.`;
 
   return {
-    privateMessage: `Hi! I’m building SaleTrail by Localized.life, a local garage sale directory and route planner. I added a basic community listing for your sale so shoppers can find it, save it, and add it to a route.\n\nYou can view it here:\n${listingUrl}\n\nIf this is your sale, you can claim it, update details, add photos, and get better visibility:\n${saleClaimUrl}\n\nIf you’d rather not have it listed, you can request removal from the listing page.`,
+    privateMessage: `Hi! I’m building SaleTrail by Localized.life, a garage sale directory and route planner.\n\nI added a basic community listing for your sale so shoppers can find it, save it, and add it to a route.\n\nYou can view it here:\n${listingUrl}\n\nIf this is your sale, you can claim it, update details, add photos, and get better visibility:\n${saleClaimUrl}\n\nIf you’d rather not have it listed, you can request removal from the listing page.`,
     originalPostComment: `I added this sale to SaleTrail by Localized.life so shoppers can save it and add it to a garage sale route:\n${listingUrl}\n\nOrganizer can claim, update, or request removal from the listing page.`,
     localizedGroupPost: `${groupIntro}\n\nCommunity-added garage sale listing:\n${sale.title}\n${when}\n${location}\n\nView/save it on SaleTrail:\n${listingUrl}\n\nOrganizer can claim the listing to update details, add photos, and improve visibility.`,
   };
@@ -87,16 +98,21 @@ function OutreachStatusButton({
   saleId,
   status,
   children,
+  primary = false,
 }: {
   saleId: string;
   status: OutreachStatus;
   children: ReactNode;
+  primary?: boolean;
 }) {
+  const className =
+    status === "do_not_contact" || status === "removed" ? "button danger" : primary ? "button primary" : "button";
+
   return (
     <form action={updateOutreachStatus}>
       <input type="hidden" name="sale_id" value={saleId} />
       <input type="hidden" name="outreach_status" value={status} />
-      <button className={status === "do_not_contact" || status === "removed" ? "button danger" : "button"} type="submit">
+      <button className={className} type="submit">
         {children}
       </button>
     </form>
@@ -113,10 +129,132 @@ function CopyOutreach({ label, text }: { label: string; text: string }) {
   );
 }
 
+function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boolean }) {
+  const messages = outreachMessages(sale);
+  const outreachStatus: OutreachStatus = sale.outreach_status || "not_contacted";
+  const destination = regionDestinationForSale(sale);
+  const destinationName = destination.isDedicated ? destination.name : "General Localized.life group/page";
+
+  return (
+    <article className={completed ? "card outreach-card completed" : "card outreach-card"}>
+      <div className="card-top">
+        <div>
+          <StatusBadge sale={sale} />
+          <h3>{sale.title}</h3>
+          <p className="muted">
+            {sale.city}, {sale.state} · <span className="whitespace">{formatSaleHours(sale)}</span>
+          </p>
+        </div>
+        <span className="badge plain">{outreachStatusLabels[outreachStatus]}</span>
+      </div>
+
+      <div className="admin-meta-grid primary-meta">
+        <p>
+          <strong>Public listing</strong>
+          <Link className="text-link" href={salePath(sale)} target="_blank" rel="noopener noreferrer">
+            {saleUrl(sale)}
+          </Link>
+        </p>
+        <p>
+          <strong>Facebook destination</strong>
+          {destination.url ? (
+            <a className="text-link" href={destination.url} target="_blank" rel="noopener noreferrer">
+              {destinationName}
+            </a>
+          ) : (
+            destinationName
+          )}
+          <span>{facebookDestinationInstruction(sale)}</span>
+        </p>
+      </div>
+
+      <details className="admin-details">
+        <summary>Source and outreach notes</summary>
+        <div className="admin-meta-grid">
+          <p>
+            <strong>Source platform</strong>
+            {sale.source_platform || "Not saved"}
+          </p>
+          <p>
+            <strong>Source poster</strong>
+            {sale.source_poster_name || "Not saved"}
+          </p>
+          <p>
+            <strong>Claim status</strong>
+            {sale.claim_status}
+          </p>
+          {sale.source_url ? (
+            <p>
+              <strong>Source URL</strong>
+              <a className="text-link" href={sale.source_url} target="_blank" rel="noopener noreferrer">
+                Open source
+              </a>
+            </p>
+          ) : null}
+          <p>
+            <strong>Last outreach</strong>
+            {sale.outreach_last_at ? new Date(sale.outreach_last_at).toLocaleString() : "Not recorded"}
+          </p>
+        </div>
+        {sale.source_notes ? <p className="whitespace">{sale.source_notes}</p> : null}
+        {sale.raw_source_text ? <p className="whitespace">{sale.raw_source_text}</p> : null}
+        {sale.outreach_notes ? <p className="whitespace">Outreach notes: {sale.outreach_notes}</p> : null}
+      </details>
+
+      {!completed ? (
+        <>
+          <div className="grid two">
+            <CopyOutreach label="Private message" text={messages.privateMessage} />
+            <CopyOutreach label="Localized group post/comment" text={messages.localizedGroupPost} />
+          </div>
+
+          <details className="admin-details">
+            <summary>More copy options</summary>
+            <CopyOutreach label="Original-post comment" text={messages.originalPostComment} />
+          </details>
+
+          <form action={updateOutreachStatus} className="outreach-note-form">
+            <input type="hidden" name="sale_id" value={sale.id} />
+            <input type="hidden" name="outreach_status" value={outreachStatus} />
+            <label>
+              Outreach note
+              <textarea name="outreach_notes" rows={2} defaultValue={sale.outreach_notes || ""} />
+            </label>
+            <button className="button" type="submit">
+              Save note
+            </button>
+          </form>
+
+          <div className="outreach-actions simplified">
+            <OutreachStatusButton primary saleId={sale.id} status="outreach_complete">
+              Mark outreach complete
+            </OutreachStatusButton>
+            <OutreachStatusButton saleId={sale.id} status="follow_up_needed">
+              Needs follow-up
+            </OutreachStatusButton>
+            <OutreachStatusButton saleId={sale.id} status="do_not_contact">
+              Do not contact
+            </OutreachStatusButton>
+            <OutreachStatusButton saleId={sale.id} status="removed">
+              Remove/hide listing
+            </OutreachStatusButton>
+          </div>
+        </>
+      ) : null}
+    </article>
+  );
+}
+
 export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
   const enabled = await isAdminAuthenticated();
   const { outreach, claims, requests } = await getQueues(enabled);
+  const activeOutreach = outreach.filter(
+    (sale) => !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
+  );
+  const completedOutreach = outreach.filter((sale) =>
+    completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
+  );
 
   return (
     <main className="page">
@@ -173,122 +311,22 @@ export default async function AdminPage({ searchParams }: Props) {
                 and track what you did outside the app.
               </p>
             </div>
-            {outreach.length === 0 ? <p className="muted">No community-added listings need outreach.</p> : null}
-            {outreach.map((sale) => {
-              const messages = outreachMessages(sale);
-              const outreachStatus: OutreachStatus = sale.outreach_status || "not_contacted";
-              const destination = regionDestinationForSale(sale);
+            <h3>Outreach needed</h3>
+            {activeOutreach.length === 0 ? <p className="muted">No active outreach items.</p> : null}
+            {activeOutreach.map((sale) => (
+              <OutreachCard key={sale.id} sale={sale} />
+            ))}
 
-              return (
-                <article className="card outreach-card" key={sale.id}>
-                  <div className="card-top">
-                    <div>
-                      <StatusBadge sale={sale} />
-                      <h3>{sale.title}</h3>
-                      <p className="muted">
-                        {sale.city}, {sale.state} · <span className="whitespace">{formatSaleHours(sale)}</span>
-                      </p>
-                    </div>
-                    <span className="badge plain">{outreachStatusLabels[outreachStatus]}</span>
-                  </div>
-
-                  <div className="admin-meta-grid">
-                    <p>
-                      <strong>Public listing</strong>
-                      <Link className="text-link" href={salePath(sale)} target="_blank" rel="noopener noreferrer">
-                        {saleUrl(sale)}
-                      </Link>
-                    </p>
-                    <p>
-                      <strong>Source platform</strong>
-                      {sale.source_platform || "Not saved"}
-                    </p>
-                    <p>
-                      <strong>Source poster</strong>
-                      {sale.source_poster_name || "Not saved"}
-                    </p>
-                    <p>
-                      <strong>Claim status</strong>
-                      {sale.claim_status}
-                    </p>
-                    {sale.source_url ? (
-                      <p>
-                        <strong>Source URL</strong>
-                        <a className="text-link" href={sale.source_url} target="_blank" rel="noopener noreferrer">
-                          Open source
-                        </a>
-                      </p>
-                    ) : null}
-                    <p>
-                      <strong>Last outreach</strong>
-                      {sale.outreach_last_at ? new Date(sale.outreach_last_at).toLocaleString() : "Not recorded"}
-                    </p>
-                    <p>
-                      <strong>Facebook destination</strong>
-                      {destination.url ? (
-                        <a className="text-link" href={destination.url} target="_blank" rel="noopener noreferrer">
-                          {destination.name}
-                        </a>
-                      ) : (
-                        destination.name
-                      )}
-                      <span>{facebookDestinationInstruction(sale)}</span>
-                    </p>
-                  </div>
-
-                  {sale.source_notes || sale.raw_source_text || sale.outreach_notes ? (
-                    <details className="admin-details">
-                      <summary>Source and outreach notes</summary>
-                      {sale.source_notes ? <p className="whitespace">{sale.source_notes}</p> : null}
-                      {sale.raw_source_text ? <p className="whitespace">{sale.raw_source_text}</p> : null}
-                      {sale.outreach_notes ? <p className="whitespace">Outreach notes: {sale.outreach_notes}</p> : null}
-                    </details>
-                  ) : null}
-
-                  <div className="grid three">
-                    <CopyOutreach label="Private message" text={messages.privateMessage} />
-                    <CopyOutreach label="Original-post comment" text={messages.originalPostComment} />
-                    <CopyOutreach label="Localized group post/comment" text={messages.localizedGroupPost} />
-                  </div>
-
-                  <form action={updateOutreachStatus} className="outreach-note-form">
-                    <input type="hidden" name="sale_id" value={sale.id} />
-                    <input type="hidden" name="outreach_status" value={outreachStatus} />
-                    <label>
-                      Outreach note
-                      <textarea name="outreach_notes" rows={2} defaultValue={sale.outreach_notes || ""} />
-                    </label>
-                    <button className="button" type="submit">
-                      Save note
-                    </button>
-                  </form>
-
-                  <div className="outreach-actions">
-                    <OutreachStatusButton saleId={sale.id} status="not_contacted">
-                      Mark not contacted
-                    </OutreachStatusButton>
-                    <OutreachStatusButton saleId={sale.id} status="message_sent">
-                      Mark message sent
-                    </OutreachStatusButton>
-                    <OutreachStatusButton saleId={sale.id} status="comment_posted">
-                      Mark comment posted
-                    </OutreachStatusButton>
-                    <OutreachStatusButton saleId={sale.id} status="localized_group_posted">
-                      Mark group posted
-                    </OutreachStatusButton>
-                    <OutreachStatusButton saleId={sale.id} status="follow_up_needed">
-                      Mark follow-up needed
-                    </OutreachStatusButton>
-                    <OutreachStatusButton saleId={sale.id} status="do_not_contact">
-                      Mark do not contact
-                    </OutreachStatusButton>
-                    <OutreachStatusButton saleId={sale.id} status="removed">
-                      Mark removed
-                    </OutreachStatusButton>
-                  </div>
-                </article>
-              );
-            })}
+            {completedOutreach.length ? (
+              <details className="admin-details completed-outreach">
+                <summary>Completed outreach ({completedOutreach.length})</summary>
+                <div className="stack">
+                  {completedOutreach.map((sale) => (
+                    <OutreachCard completed key={sale.id} sale={sale} />
+                  ))}
+                </div>
+              </details>
+            ) : null}
           </section>
 
           <section className="grid two">
