@@ -5,7 +5,7 @@ export default function Home() {
     <main className="front-shell">
       <section className="front-hero">
         <div className="front-copy">
-          <p className="front-wordmark">Localized.life</p>
+          <p className="front-wordmark">Localized.Life</p>
           <p className="front-badge">First local tool now live</p>
           <h1>Local tools for real-world community.</h1>
           <p className="lede">
@@ -42,9 +42,9 @@ export default function Home() {
       </section>
 
       <section className="front-about">
-        <h2>What is Localized.life?</h2>
+        <h2>What is Localized.Life?</h2>
         <p>
-          Localized.life is a growing home for practical local tools — starting with garage sales, then expanding toward
+          Localized.Life is a growing home for practical local tools — starting with garage sales, then expanding toward
           gardens, tools, food, services, events, and local exchange.
         </p>
       </section>

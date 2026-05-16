@@ -70,7 +70,7 @@ export default async function SharePage({ params, searchParams }: Props) {
 
       <section className="grid two">
         <div className="flyer">
-          <p className="eyebrow">SaleTrail by Localized.life</p>
+          <p className="eyebrow">SaleTrail by Localized.Life</p>
           <h2>{sale.title}</h2>
           <p className="whitespace">{formatSaleHours(sale)}</p>
           <p>{fullAddress(sale)}</p>

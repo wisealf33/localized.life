@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaleTrail by Localized.life",
-  description: "Garage sale directory and route planning by Localized.life.",
+  title: "SaleTrail by Localized.Life",
+  description: "Garage sale directory and route planning by Localized.Life.",
 };
 
 export default function RootLayout({

@@ -1,4 +1,4 @@
-# SaleTrail by Localized.life
+# SaleTrail by Localized.Life
 
 Launch 1 garage sale directory and simple route builder.
 
