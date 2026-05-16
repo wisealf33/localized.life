@@ -369,6 +369,48 @@ textarea {
   background: transparent;
 }
 
+.icon-button {
+  display: inline-flex;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--foreground);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.copy-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.copy-line p {
+  margin: 0;
+}
+
+.copy-field {
+  position: relative;
+  display: grid;
+  gap: 7px;
+}
+
+.copy-field .icon-button {
+  position: absolute;
+  top: 28px;
+  right: 8px;
+}
+
+.copy-field textarea {
+  padding-right: 54px;
+}
+
 .tags {
   color: var(--accent);
   font-weight: 750;

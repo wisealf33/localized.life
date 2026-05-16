@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { CopyIconButton } from "@/components/CopyIconButton";
 import { submitClaimRequest } from "@/lib/actions";
 import { listingId, publicClaimMessage } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const claimSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, source_url, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -33,54 +35,81 @@ export default async function ClaimPage({ params, searchParams }: Props) {
   const message = publicClaimMessage(sale.slug);
   const publicListingId = listingId(sale.slug);
   const localizedGroupUrl = process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL;
+  const emailInstructions = [
+    "Finish your SaleTrail listing claim by copying and posting this public message on Facebook:",
+    "",
+    message,
+    "",
+    sale.source_url ? `Original Facebook post: ${sale.source_url}` : "Original Facebook post: open it from where you found the sale.",
+    localizedGroupUrl ? `Localized.life Facebook group: ${localizedGroupUrl}` : "Localized.life Facebook group: coming soon.",
+    "",
+    "After admin approval, you will receive a private manage/edit link. Do not post that private link publicly.",
+  ].join("\n");
+  const emailHref = `mailto:?subject=${encodeURIComponent("SaleTrail listing claim instructions")}&body=${encodeURIComponent(
+    emailInstructions,
+  )}`;
 
   if (query.submitted) {
     return (
       <main className="page narrow">
         <p className="eyebrow">Claim request submitted</p>
-        <h1>Post the public claim message</h1>
+        <h1>Finish your claim on Facebook</h1>
         <p className="lede">
-          Your request is in the admin review queue. To finish the claim, publicly post the message below so an admin
-          can confirm the original Facebook poster is claiming the listing.
+          Copy the message below, then post it in one of the two Facebook places. Admin will review the public post and
+          approve the claim if it matches the original poster.
         </p>
         <section className="panel stack">
           <div className="notice">
-            This SaleTrail Listing ID is public and safe to post. The private manage/edit link is different and is only
-            sent or shown after admin approval.
+            The SaleTrail Listing ID is public and safe to post. The private manage/edit link is different and should
+            only be used after admin approval.
           </div>
-          <p>
-            SaleTrail Listing ID: <strong>{publicListingId}</strong>
-          </p>
-          <label>
-            Public claim/share message
-            <textarea readOnly rows={5} value={message} />
-          </label>
+          <div className="copy-line">
+            <p>
+              SaleTrail Listing ID: <strong>{publicListingId}</strong>
+            </p>
+            <CopyIconButton text={publicListingId} label="Copy Listing ID" />
+          </div>
+          <div className="copy-field">
+            <label htmlFor="public-claim-message">Public message to post</label>
+            <textarea id="public-claim-message" readOnly rows={5} value={message} />
+            <CopyIconButton text={message} label="Copy public claim message" />
+          </div>
           <div className="grid two">
             <div className="card">
               <p className="eyebrow">Option 1</p>
               <h2>Comment on the original post</h2>
-              <p>
-                Paste the message as a comment on the original Facebook garage sale post. This is the clearest way to
-                show you can speak from the original sale context.
-              </p>
+              <p>Open the original Facebook sale post, paste the message as a comment, then come back when finished.</p>
+              {sale.source_url ? (
+                <a className="button primary" href={sale.source_url} target="_blank" rel="noopener noreferrer">
+                  Open original Facebook post
+                </a>
+              ) : (
+                <div className="notice">This listing does not have the original Facebook link saved yet.</div>
+              )}
             </div>
             <div className="card">
               <p className="eyebrow">Option 2</p>
-              <h2>Post in the Localized group</h2>
-              <p>
-                Paste the message in the appropriate Localized.life local Facebook group. Admin will check that public
-                post/comment before approving.
-              </p>
+              <h2>Post in the Localized.life group</h2>
+              <p>Open the local Facebook group, paste the message as a post or comment, then come back when finished.</p>
               {localizedGroupUrl ? (
-                <a className="button" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
-                  Open Localized group
+                <a className="button primary" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
+                  Open Localized.life group
                 </a>
-              ) : null}
+              ) : (
+                <div className="notice">The Localized.life group link has not been added yet.</div>
+              )}
             </div>
           </div>
+          <div className="toolbar">
+            <a className="button" href={emailHref}>
+              Email these instructions
+            </a>
+            <Link className="button primary" href={`/saletrail/sale/${sale.slug}`}>
+              Done
+            </Link>
+          </div>
           <div className="notice good">
-            After admin approval, the listing becomes claimed and the organizer receives a private manage/edit link. Do
-            not post that private link publicly.
+            After admin approval, the listing becomes claimed and the organizer receives a private manage/edit link.
           </div>
         </section>
       </main>
