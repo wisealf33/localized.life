@@ -24,11 +24,6 @@ export default function Home() {
           <p className="eyebrow">Now live</p>
           <h2>SaleTrail</h2>
           <p>Find local garage sales, view community-added listings, save stops, and open a simple Google Maps route.</p>
-          <div className="route-preview" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
           <div className="mini-list">
             <span>Community-added listings</span>
             <span>Claim and update flow</span>
