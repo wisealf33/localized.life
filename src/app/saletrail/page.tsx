@@ -45,6 +45,10 @@ function visibilityRank(sale: Pick<Sale, "source_type" | "claim_status">) {
   return 3;
 }
 
+function canClaim(sale: Pick<Sale, "source_type" | "claim_status">) {
+  return sale.source_type === "community_added" && sale.claim_status !== "claimed";
+}
+
 export default async function SaleTrailHome({ searchParams }: Props) {
   const params = await searchParams;
   const sales = await getSales(params.q, params.date);
@@ -108,6 +112,13 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 </a>
               </p>
               {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+              {canClaim(sale) ? (
+                <div className="toolbar">
+                  <Link className="button" href={`/saletrail/claim/${sale.slug}`}>
+                    Claim listing
+                  </Link>
+                </div>
+              ) : null}
             </article>
           ))
         )}
