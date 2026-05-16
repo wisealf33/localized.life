@@ -78,11 +78,10 @@ export function socialCopy(sale: Sale, url: string) {
   const when = formatSaleHours(sale);
   const address = fullAddress(sale);
   const categories = sale.categories?.length ? `\nItems: ${sale.categories.join(", ")}` : "";
+  const publicPost = `Garage sale: ${sale.title}\n\n${when}\n${address}${categories}\n\n${sale.description || ""}\n\nDetails, map, and route save link: ${url}`;
 
   return {
-    facebook: `Garage sale: ${sale.title}\n\n${when}\n${address}${categories}\n\n${sale.description || ""}\n\nDetails and route save link: ${url}`,
-    nextdoor: `Hi neighbors, sharing this garage sale listing for ${sale.city}.\n\n${sale.title}\n${when}\n${address}${categories}\n\nDetails: ${url}`,
-    craigslist: `${sale.title}\n\nDate/time: ${when}\nLocation: ${address}${categories}\n\n${sale.description || ""}\n\nMore details: ${url}`,
+    publicPost,
     outreach: `Hi! I saw your garage sale information and added a clean listing for it on SaleTrail by Localized.life so shoppers can find the details, save it, and add it to a route.\n\nHere is the listing:\n${url}\n\nIf this is your sale, you can claim it and update or correct anything here:\n${claimUrl(sale.slug)}\n\nIf you would rather not have it listed, no problem. You can request removal from the listing page.`,
     groupComment: `I added this to SaleTrail by Localized.life so people can save it and add it to a garage sale route:\n\n${url}\n\nOrganizer can claim, correct, or request removal from the listing page.`,
   };

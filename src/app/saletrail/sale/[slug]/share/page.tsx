@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShareActions } from "@/components/ShareActions";
 import { formatSaleHours, fullAddress, saleUrl, socialCopy } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -55,6 +56,11 @@ export default async function SharePage({ params, searchParams }: Props) {
         <p className="eyebrow">Share kit</p>
         <h1>{sale.title}</h1>
         <p>Use these materials to manually share the listing anywhere you choose.</p>
+        <div className="toolbar">
+          <Link className="button" href={`/saletrail/sale/${sale.slug}`}>
+            Back to listing
+          </Link>
+        </div>
         {manageLink ? (
           <div className="notice good">
             Private manage link: <Link href={manageLink}>{manageLink}</Link>
@@ -78,15 +84,13 @@ export default async function SharePage({ params, searchParams }: Props) {
           <p className="short-url">{url}</p>
         </div>
 
-        <div className="stack">
-          <h2>Copy and paste</h2>
-          {Object.entries(copy).map(([name, text]) => (
-            <label key={name}>
-              {name.replace(/([A-Z])/g, " $1")}
-              <textarea readOnly rows={name === "outreach" ? 8 : 6} value={text} />
-            </label>
-          ))}
-        </div>
+        <ShareActions
+          listingUrl={url}
+          title={sale.title}
+          postText={copy.publicPost}
+          outreachText={copy.outreach}
+          groupCommentText={copy.groupComment}
+        />
       </section>
     </main>
   );
