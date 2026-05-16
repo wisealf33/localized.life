@@ -307,6 +307,28 @@ h2 {
   margin-top: 20px;
 }
 
+.listing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.listing-wordmark {
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.listing-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .directory-controls,
 .pagination,
 .feedback-panel {
@@ -840,7 +862,17 @@ code {
     flex-direction: column;
   }
 
+  .listing-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .front-nav-links {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .listing-nav-links {
     width: 100%;
     justify-content: space-between;
   }

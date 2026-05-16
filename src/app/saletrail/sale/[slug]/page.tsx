@@ -74,6 +74,20 @@ export default async function SalePage({ params, searchParams }: Props) {
 
   return (
     <main className="page narrow">
+      <nav className="listing-nav" aria-label="Listing navigation">
+        <Link className="listing-wordmark" href="/">
+          Localized.life
+        </Link>
+        <div className="listing-nav-links">
+          <Link className="quiet-link" href="/saletrail">
+            All listings
+          </Link>
+          <Link className="quiet-link" href="/">
+            Home
+          </Link>
+        </div>
+      </nav>
+
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}
 
       <section className="stack">
