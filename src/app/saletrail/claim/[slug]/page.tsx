@@ -69,11 +69,11 @@ export default async function ClaimPage({ params, searchParams }: Props) {
           <div className="grid two">
             <div className="card">
               <p className="eyebrow">Next step</p>
-              <h2>Post in the Localized.life group</h2>
+              <h2>Post in Localized Will County Garage Sales & SaleTrail</h2>
               <p>Open the local Facebook group, paste the message as a post or comment, then come back when finished.</p>
               {localizedGroupUrl ? (
                 <a className="button primary" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
-                  Open Will County Facebook group
+                  Post to the local Localized Facebook group
                 </a>
               ) : (
                 <div className="notice">The Localized.life group link has not been added yet.</div>
