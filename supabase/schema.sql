@@ -12,6 +12,7 @@ create table if not exists public.sales (
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   sale_schedule text,
+  photo_urls text[] not null default '{}',
   categories text[] default '{}',
   status text not null default 'active' check (status in ('active', 'cancelled', 'ended')),
   source_type text not null default 'seller_created' check (source_type in ('seller_created', 'community_added', 'admin_added')),
@@ -28,6 +29,22 @@ create table if not exists public.sales (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.sales
+  add column if not exists photo_urls text[] not null default '{}';
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'saletrail-photos',
+  'saletrail-photos',
+  true,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 create table if not exists public.claim_requests (
   id uuid primary key default gen_random_uuid(),

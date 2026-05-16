@@ -6,6 +6,8 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const shareSaleColumns =
+  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+const shareSaleColumnsWithoutPhotos =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
 type Props = {
@@ -15,12 +17,23 @@ type Props = {
 
 async function getSale(slug: string) {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await getSupabaseAdmin()
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
     .from("sales")
     .select(shareSaleColumns)
     .eq("slug", slug)
     .eq("visibility_status", "public")
     .single();
+  if (error?.message.includes("photo_urls")) {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("sales")
+      .select(shareSaleColumnsWithoutPhotos)
+      .eq("slug", slug)
+      .eq("visibility_status", "public")
+      .single();
+    if (fallbackError || !fallbackData) return null;
+    return { ...fallbackData, photo_urls: [] } as unknown as Sale;
+  }
   if (error || !data) return null;
   return data as Sale;
 }
@@ -55,6 +68,10 @@ export default async function SharePage({ params, searchParams }: Props) {
           <h2>{sale.title}</h2>
           <p className="whitespace">{formatSaleHours(sale)}</p>
           <p>{fullAddress(sale)}</p>
+          {sale.photo_urls?.[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="flyer-photo" src={sale.photo_urls[0]} alt={`${sale.title} photo`} />
+          ) : null}
           {sale.description ? <p>{sale.description}</p> : null}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={qr} alt="QR code for SaleTrail listing" />

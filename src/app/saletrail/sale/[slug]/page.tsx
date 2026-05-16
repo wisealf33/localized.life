@@ -9,6 +9,8 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const publicSaleColumns =
+  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+const publicSaleColumnsWithoutPhotos =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
 
 type Props = {
@@ -18,12 +20,24 @@ type Props = {
 
 async function getSale(slug: string) {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await getSupabaseAdmin()
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
     .from("sales")
     .select(publicSaleColumns)
     .eq("slug", slug)
     .eq("visibility_status", "public")
     .single();
+
+  if (error?.message.includes("photo_urls")) {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("sales")
+      .select(publicSaleColumnsWithoutPhotos)
+      .eq("slug", slug)
+      .eq("visibility_status", "public")
+      .single();
+    if (fallbackError || !fallbackData) return null;
+    return { ...fallbackData, photo_urls: [] } as unknown as Sale;
+  }
 
   if (error || !data) return null;
   return data as Sale;
@@ -78,6 +92,14 @@ export default async function SalePage({ params, searchParams }: Props) {
         </p>
         {sale.status !== "active" ? <div className="notice">This sale is marked {sale.status}.</div> : null}
         {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+        {sale.photo_urls?.length ? (
+          <div className="photo-grid">
+            {sale.photo_urls.slice(0, 2).map((url) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={url} alt={`${sale.title} photo`} key={url} />
+            ))}
+          </div>
+        ) : null}
         {sale.description ? <p>{sale.description}</p> : null}
 
         {sale.source_type !== "seller_created" && sale.claim_status !== "claimed" ? (

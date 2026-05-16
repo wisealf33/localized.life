@@ -10,8 +10,10 @@ type SaleFormProps = {
 };
 
 export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) {
+  const allowPhotos = !admin;
+
   return (
-    <form action={action} className="form">
+    <form action={action} className="form" encType="multipart/form-data">
       {token ? <input type="hidden" name="manage_token" value={token} /> : null}
 
       <label>
@@ -63,6 +65,22 @@ export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) 
         Description
         <textarea name="description" rows={5} defaultValue={sale?.description || ""} />
       </label>
+
+      {allowPhotos ? (
+        <fieldset>
+          <legend>Photos</legend>
+          <p className="helper">Optional. Add up to 2 photos. JPG, PNG, or WebP, max 5 MB each.</p>
+          {sale?.photo_urls?.length ? (
+            <div className="photo-grid">
+              {sale.photo_urls.slice(0, 2).map((url) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={url} alt={`${sale.title} photo`} key={url} />
+              ))}
+            </div>
+          ) : null}
+          <input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple />
+        </fieldset>
+      ) : null}
 
       {sale ? (
         <label>

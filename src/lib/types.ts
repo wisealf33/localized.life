@@ -17,6 +17,7 @@ export type Sale = {
   starts_at: string;
   ends_at: string;
   sale_schedule: string | null;
+  photo_urls: string[] | null;
   categories: string[] | null;
   status: SaleStatus;
   source_type: SaleSourceType;

@@ -8,6 +8,15 @@ import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
 import type { ListingRequestType, SaleStatus } from "./types";
 
+const photoBucket = "saletrail-photos";
+const maxPhotos = 2;
+const maxPhotoBytes = 5 * 1024 * 1024;
+const allowedPhotoTypes = new Map([
+  ["image/jpeg", "jpg"],
+  ["image/png", "png"],
+  ["image/webp", "webp"],
+]);
+
 function value(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
@@ -86,14 +95,60 @@ function normalizeCategories(formData: FormData) {
   return values(formData, "categories").filter((category) => categoryOptions.includes(category));
 }
 
+function photoFiles(formData: FormData) {
+  return formData
+    .getAll("photos")
+    .filter((item): item is File => item instanceof File && item.size > 0);
+}
+
+async function uploadPhotos(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  slug: string,
+  formData: FormData,
+  existingUrls: string[] = [],
+) {
+  const files = photoFiles(formData);
+  if (files.length === 0) return existingUrls.slice(0, maxPhotos);
+  if (existingUrls.length + files.length > maxPhotos) {
+    throw new Error("Each listing can have up to 2 photos.");
+  }
+
+  const uploadedUrls: string[] = [];
+
+  for (const file of files) {
+    const extension = allowedPhotoTypes.get(file.type);
+    if (!extension) {
+      throw new Error("Photos must be JPG, PNG, or WebP files.");
+    }
+
+    if (file.size > maxPhotoBytes) {
+      throw new Error("Each photo must be 5 MB or smaller.");
+    }
+
+    const path = `${slug}/${randomToken(8)}.${extension}`;
+    const { error } = await supabase.storage.from(photoBucket).upload(path, await file.arrayBuffer(), {
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (error) throw new Error(error.message);
+
+    const { data } = supabase.storage.from(photoBucket).getPublicUrl(path);
+    uploadedUrls.push(data.publicUrl);
+  }
+
+  return [...existingUrls, ...uploadedUrls].slice(0, maxPhotos);
+}
+
 export async function createSellerSale(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const title = required(formData, "title");
   const slug = slugifyTitle(title);
   const manageToken = randomToken();
   const schedule = buildSchedule(formData);
+  const photoUrls = await uploadPhotos(supabase, slug, formData);
 
-  const { error } = await supabase.from("sales").insert({
+  const insertPayload: Record<string, unknown> = {
     slug,
     title,
     description: value(formData, "description"),
@@ -110,7 +165,11 @@ export async function createSellerSale(formData: FormData) {
     claim_status: "claimed",
     visibility_status: "public",
     manage_token_hash: hashSecret(manageToken),
-  });
+  };
+
+  if (photoUrls.length > 0) insertPayload.photo_urls = photoUrls;
+
+  const { error } = await supabase.from("sales").insert(insertPayload);
 
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail");
@@ -158,30 +217,47 @@ export async function updateManagedSale(formData: FormData) {
   const status = required(formData, "status") as SaleStatus;
   const schedule = buildSchedule(formData);
 
-  const { data: sale, error: findError } = await supabase
+  let { data: sale, error: findError } = await supabase
     .from("sales")
-    .select("slug")
+    .select("slug, photo_urls")
     .eq("manage_token_hash", tokenHash)
     .single();
 
+  if (findError?.message.includes("photo_urls")) {
+    const fallback = await supabase
+      .from("sales")
+      .select("slug")
+      .eq("manage_token_hash", tokenHash)
+      .single();
+    sale = fallback.data ? { ...fallback.data, photo_urls: [] } : null;
+    findError = fallback.error;
+  }
+
   if (findError || !sale) throw new Error("Manage link was not found.");
+  const photoUrls = await uploadPhotos(supabase, sale.slug, formData, sale.photo_urls || []);
+
+  const updatePayload: Record<string, unknown> = {
+    title: required(formData, "title"),
+    description: value(formData, "description"),
+    address_line: required(formData, "address_line"),
+    city: required(formData, "city"),
+    state: required(formData, "state").toUpperCase(),
+    zip: required(formData, "zip"),
+    starts_at: schedule.starts_at,
+    ends_at: schedule.ends_at,
+    sale_schedule: schedule.sale_schedule,
+    categories: normalizeCategories(formData),
+    status,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (photoFiles(formData).length > 0 || (sale.photo_urls || []).length > 0) {
+    updatePayload.photo_urls = photoUrls;
+  }
 
   const { error } = await supabase
     .from("sales")
-    .update({
-      title: required(formData, "title"),
-      description: value(formData, "description"),
-      address_line: required(formData, "address_line"),
-      city: required(formData, "city"),
-      state: required(formData, "state").toUpperCase(),
-      zip: required(formData, "zip"),
-      starts_at: schedule.starts_at,
-      ends_at: schedule.ends_at,
-      sale_schedule: schedule.sale_schedule,
-      categories: normalizeCategories(formData),
-      status,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("manage_token_hash", tokenHash);
 
   if (error) throw new Error(error.message);
