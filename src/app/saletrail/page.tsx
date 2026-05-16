@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatSaleHours, fullAddress } from "@/lib/format";
+import { formatSaleHours, fullAddress, mapSearchUrl } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
@@ -95,7 +95,11 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 <Link href={`/saletrail/sale/${sale.slug}`}>{sale.title}</Link>
               </h2>
               <p>{formatSaleHours(sale)}</p>
-              <p className="muted">{fullAddress(sale)}</p>
+              <p className="muted">
+                <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+                  {fullAddress(sale)}
+                </a>
+              </p>
               {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
             </article>
           ))

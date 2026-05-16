@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatSaleHours, fullAddress } from "@/lib/format";
+import { formatSaleHours, fullAddress, mapSearchUrl } from "@/lib/format";
 import { submitListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -47,7 +47,11 @@ export default async function SalePage({ params, searchParams }: Props) {
         </div>
         <h1>{sale.title}</h1>
         <p className="lede whitespace">{formatSaleHours(sale)}</p>
-        <p>{fullAddress(sale)}</p>
+        <p>
+          <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+            {fullAddress(sale)}
+          </a>
+        </p>
         {sale.status !== "active" ? <div className="notice">This sale is marked {sale.status}.</div> : null}
         {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
         {sale.description ? <p>{sale.description}</p> : null}

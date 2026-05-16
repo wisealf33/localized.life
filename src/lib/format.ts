@@ -35,6 +35,14 @@ export function fullAddress(sale: Pick<Sale, "address_line" | "city" | "state" |
   return `${sale.address_line}, ${sale.city}, ${sale.state} ${sale.zip}`;
 }
 
+export function mapSearchUrl(sale: Pick<Sale, "address_line" | "city" | "state" | "zip">) {
+  const params = new URLSearchParams({
+    api: "1",
+    query: fullAddress(sale),
+  });
+  return `https://www.google.com/maps/search/?${params.toString()}`;
+}
+
 export function saleUrl(slug: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${baseUrl.replace(/\/$/, "")}/saletrail/sale/${slug}`;
