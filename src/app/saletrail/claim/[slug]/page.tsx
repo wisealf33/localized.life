@@ -11,7 +11,7 @@ const claimSaleColumns =
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ submitted?: string }>;
+  searchParams: Promise<{ submitted?: string; email?: string }>;
 };
 
 async function getSale(slug: string) {
@@ -35,19 +35,6 @@ export default async function ClaimPage({ params, searchParams }: Props) {
   const message = publicClaimMessage(sale.slug);
   const publicListingId = listingId(sale.slug);
   const localizedGroupUrl = process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL;
-  const emailInstructions = [
-    "Finish your SaleTrail listing claim by copying and posting this public message on Facebook:",
-    "",
-    message,
-    "",
-    sale.source_url ? `Original Facebook post: ${sale.source_url}` : "Original Facebook post: open it from where you found the sale.",
-    localizedGroupUrl ? `Localized.life Facebook group: ${localizedGroupUrl}` : "Localized.life Facebook group: coming soon.",
-    "",
-    "After admin approval, you will receive a private manage/edit link. Do not post that private link publicly.",
-  ].join("\n");
-  const emailHref = `mailto:?subject=${encodeURIComponent("SaleTrail listing claim instructions")}&body=${encodeURIComponent(
-    emailInstructions,
-  )}`;
 
   if (query.submitted) {
     return (
@@ -62,6 +49,9 @@ export default async function ClaimPage({ params, searchParams }: Props) {
           <div className="notice">
             The SaleTrail Listing ID is public and safe to post. The private manage/edit link is different and should
             only be used after admin approval.
+            {query.email === "sent"
+              ? " These instructions were also emailed to the address you submitted."
+              : " Email delivery is being set up, so keep this page open until you finish posting."}
           </div>
           <div className="copy-line">
             <p>
@@ -101,9 +91,6 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             </div>
           </div>
           <div className="toolbar">
-            <a className="button" href={emailHref}>
-              Email these instructions
-            </a>
             <Link className="button primary" href={`/saletrail/sale/${sale.slug}`}>
               Done
             </Link>

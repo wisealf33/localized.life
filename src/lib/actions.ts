@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
+import { sendClaimApprovedEmail, sendClaimInstructionsEmail } from "./email";
 import { categoryOptions } from "./format";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
@@ -272,18 +273,20 @@ export async function submitClaimRequest(formData: FormData) {
 
   const { data: sale, error: saleError } = await supabase
     .from("sales")
-    .select("id")
+    .select("id, title, slug, source_url")
     .eq("slug", slug)
     .eq("visibility_status", "public")
     .single();
 
   if (saleError || !sale) throw new Error("Sale was not found.");
+  const claimantEmail = required(formData, "claimant_email");
+  const claimantName = required(formData, "name");
 
   const { error } = await supabase.from("claim_requests").insert({
     sale_id: sale.id,
-    name: required(formData, "name"),
-    contact: required(formData, "claimant_email"),
-    claimant_email: required(formData, "claimant_email"),
+    name: claimantName,
+    contact: claimantEmail,
+    claimant_email: claimantEmail,
     facebook_profile_name: required(formData, "facebook_profile_name"),
     relationship: "original_poster",
     message: value(formData, "message"),
@@ -296,8 +299,15 @@ export async function submitClaimRequest(formData: FormData) {
   if (error) throw new Error(error.message);
 
   await supabase.from("sales").update({ claim_status: "claim_pending" }).eq("id", sale.id);
+  const emailResult = await sendClaimInstructionsEmail({
+    claimantEmail,
+    claimantName,
+    listingTitle: sale.title,
+    slug: sale.slug,
+    sourceUrl: sale.source_url,
+  });
   revalidatePath(`/saletrail/sale/${slug}`);
-  redirect(`/saletrail/claim/${slug}?submitted=1`);
+  redirect(`/saletrail/claim/${slug}?submitted=1&email=${emailResult.sent ? "sent" : "setup"}`);
 }
 
 export async function submitListingRequest(formData: FormData) {
@@ -353,6 +363,15 @@ export async function approveClaim(formData: FormData) {
     .eq("id", request.sale_id);
 
   await supabase.from("claim_requests").update({ status: "approved" }).eq("id", requestId);
+  if (request.claimant_email) {
+    await sendClaimApprovedEmail({
+      claimantEmail: request.claimant_email,
+      claimantName: request.name,
+      listingTitle: request.sales?.title || "your garage sale",
+      slug: request.sales?.slug || "",
+      manageToken,
+    });
+  }
   revalidatePath("/saletrail/admin");
   redirect(`/saletrail/admin?approved=${requestId}&manage=${manageToken}`);
 }
