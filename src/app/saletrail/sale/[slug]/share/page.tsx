@@ -88,8 +88,6 @@ export default async function SharePage({ params, searchParams }: Props) {
           listingUrl={url}
           title={sale.title}
           postText={copy.publicPost}
-          outreachText={copy.outreach}
-          groupCommentText={copy.groupComment}
         />
       </section>
     </main>

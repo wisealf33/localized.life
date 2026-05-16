@@ -3,8 +3,6 @@
 type ShareActionsProps = {
   listingUrl: string;
   postText: string;
-  outreachText: string;
-  groupCommentText: string;
   title: string;
 };
 
@@ -12,7 +10,7 @@ async function copyText(text: string) {
   await navigator.clipboard.writeText(text);
 }
 
-export function ShareActions({ listingUrl, postText, outreachText, groupCommentText, title }: ShareActionsProps) {
+export function ShareActions({ listingUrl, postText, title }: ShareActionsProps) {
   async function nativeShare() {
     if (!navigator.share) {
       await copyText(postText);
@@ -44,22 +42,6 @@ export function ShareActions({ listingUrl, postText, outreachText, groupCommentT
       </label>
       <button className="button" type="button" onClick={() => copyText(postText)}>
         Copy post text
-      </button>
-
-      <label>
-        Organizer outreach
-        <textarea readOnly rows={8} value={outreachText} />
-      </label>
-      <button className="button" type="button" onClick={() => copyText(outreachText)}>
-        Copy outreach message
-      </button>
-
-      <label>
-        Group comment
-        <textarea readOnly rows={5} value={groupCommentText} />
-      </label>
-      <button className="button" type="button" onClick={() => copyText(groupCommentText)}>
-        Copy group comment
       </button>
     </div>
   );
