@@ -8,7 +8,7 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const publicSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -53,10 +53,19 @@ export default async function SalePage({ params, searchParams }: Props) {
         {sale.description ? <p>{sale.description}</p> : null}
 
         {sale.source_type !== "seller_created" && sale.claim_status !== "claimed" ? (
-          <div className="notice">
-            This listing was added from publicly available or community-submitted information and has not yet been
-            claimed by the organizer. Details may change. Are you the organizer? You can claim, correct, or request
-            removal of this listing.
+          <div className="notice stack small-gap">
+            <p>
+              This listing was added from publicly available or community-submitted information and has not yet been
+              claimed by the organizer. Details may change. Are you the organizer? You can claim, correct, or request
+              removal of this listing.
+            </p>
+            {sale.source_url ? (
+              <p>
+                <a className="text-link" href={sale.source_url} target="_blank" rel="noopener noreferrer">
+                  View original post
+                </a>
+              </p>
+            ) : null}
           </div>
         ) : null}
 

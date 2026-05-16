@@ -122,6 +122,10 @@ h2 {
   gap: 18px;
 }
 
+.small-gap {
+  gap: 8px;
+}
+
 .grid {
   display: grid;
   gap: 18px;
