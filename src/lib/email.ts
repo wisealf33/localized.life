@@ -74,10 +74,10 @@ export async function sendClaimInstructionsEmail({
       <p>Your claim request for <strong>${safeTitle}</strong> is in the admin review queue.</p>
       <p>To finish the claim, copy and post this public message on Facebook:</p>
       <pre style="white-space: pre-wrap; background: #f7f4ee; border: 1px solid #ddd5c7; border-radius: 8px; padding: 14px;">${safeMessage}</pre>
-      <p><strong>Option 1:</strong> Comment on the original Facebook garage sale post.</p>
-      ${sourceUrl ? `<p><a href="${sourceUrl}">Open original Facebook post</a></p>` : ""}
-      <p><strong>Option 2:</strong> Post or comment in the Localized.life Facebook group.</p>
+      <p><strong>Step 1:</strong> Post or comment in the Localized.life Facebook group.</p>
       ${groupUrl ? `<p><a href="${groupUrl}">Open Localized.life Facebook group</a></p>` : ""}
+      <p><strong>Optional:</strong> You can also comment on the original Facebook garage sale post to promote your SaleTrail listing.</p>
+      ${sourceUrl ? `<p><a href="${sourceUrl}">Open original Facebook post</a></p>` : ""}
       <p>After admin approval, you will receive a private manage/edit link. Do not post that private link publicly.</p>
     </div>
   `;
@@ -91,11 +91,11 @@ export async function sendClaimInstructionsEmail({
     "",
     message,
     "",
-    "Option 1: Comment on the original Facebook garage sale post.",
-    sourceUrl ? `Original post: ${sourceUrl}` : "",
-    "",
-    "Option 2: Post or comment in the Localized.life Facebook group.",
+    "Step 1: Post or comment in the Localized.life Facebook group.",
     groupUrl ? `Localized.life group: ${groupUrl}` : "",
+    "",
+    "Optional: You can also comment on the original Facebook garage sale post to promote your SaleTrail listing.",
+    sourceUrl ? `Original post: ${sourceUrl}` : "",
     "",
     "After admin approval, you will receive a private manage/edit link. Do not post that private link publicly.",
   ]

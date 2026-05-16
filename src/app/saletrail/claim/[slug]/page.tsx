@@ -44,8 +44,8 @@ export default async function ClaimPage({ params, searchParams }: Props) {
         <p className="eyebrow">Claim request submitted</p>
         <h1>Finish your claim on Facebook</h1>
         <p className="lede">
-          Copy the message below, then post it in one of the two Facebook places. Admin will review the public post and
-          approve the claim if it matches the original poster.
+          Copy the message below, then post it in the Localized.life Facebook group. You can also paste it as a comment
+          on your original garage sale post to promote the listing.
         </p>
         <section className="panel stack">
           <div className="notice">
@@ -69,18 +69,6 @@ export default async function ClaimPage({ params, searchParams }: Props) {
           <div className="grid two">
             <div className="card">
               <p className="eyebrow">Option 1</p>
-              <h2>Comment on the original post</h2>
-              <p>Open the original Facebook sale post, paste the message as a comment, then come back when finished.</p>
-              {sale.source_url ? (
-                <a className="button primary" href={sale.source_url} target="_blank" rel="noopener noreferrer">
-                  Open original Facebook post
-                </a>
-              ) : (
-                <div className="notice">This listing does not have the original Facebook link saved yet.</div>
-              )}
-            </div>
-            <div className="card">
-              <p className="eyebrow">Option 2</p>
               <h2>Post in the Localized.life group</h2>
               <p>Open the local Facebook group, paste the message as a post or comment, then come back when finished.</p>
               {localizedGroupUrl ? (
@@ -89,6 +77,18 @@ export default async function ClaimPage({ params, searchParams }: Props) {
                 </a>
               ) : (
                 <div className="notice">The Localized.life group link has not been added yet.</div>
+              )}
+            </div>
+            <div className="card">
+              <p className="eyebrow">Optional</p>
+              <h2>Promote it on the original post</h2>
+              <p>You can also paste the message as a comment on your original Facebook sale post so shoppers there can save it.</p>
+              {sale.source_url ? (
+                <a className="button" href={sale.source_url} target="_blank" rel="noopener noreferrer">
+                  Open original Facebook post
+                </a>
+              ) : (
+                <div className="notice">This listing does not have the original Facebook link saved yet.</div>
               )}
             </div>
           </div>
