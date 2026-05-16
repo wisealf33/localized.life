@@ -43,7 +43,7 @@ function escapeHtml(value: string) {
 }
 
 function manageUrl(token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life";
   return `${baseUrl.replace(/\/$/, "")}/saletrail/manage/${token}`;
 }
 

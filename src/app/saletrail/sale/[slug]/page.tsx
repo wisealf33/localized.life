@@ -5,6 +5,7 @@ import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, saleSharePath } from "@/lib/format";
+import { saleCanonicalUrl, saleOgImageUrl } from "@/lib/og";
 import { submitListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -53,16 +54,40 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${sale.title} in ${sale.city}, ${sale.state} | SaleTrail`;
-  const description = `${sale.title} in ${sale.city}, ${sale.state}. ${formatSaleHours(sale).replace(/\n/g, " ")} Address: ${fullAddress(sale)}.`;
+  const titleLocation = sale.title.toLowerCase().includes(sale.city.toLowerCase())
+    ? `${sale.title}, ${sale.state}`
+    : `${sale.title} in ${sale.city}, ${sale.state}`;
+  const title = `${titleLocation} | SaleTrail`;
+  const description = `${titleLocation}. ${formatSaleHours(sale).replace(/\n/g, " ")} Address: ${fullAddress(sale)}.`;
+  const url = saleCanonicalUrl(sale);
+  const image = saleOgImageUrl(sale);
 
   return {
     title,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title,
       description,
+      url,
+      siteName: "SaleTrail by Localized.life",
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${sale.title} in ${sale.city}, ${sale.state}`,
+        },
+      ],
       type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
     },
   };
 }

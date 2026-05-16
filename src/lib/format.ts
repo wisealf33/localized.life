@@ -64,7 +64,7 @@ export function saleSharePath(sale: Pick<Sale, "slug" | "city" | "state">) {
 }
 
 export function saleUrl(sale: Pick<Sale, "slug" | "city" | "state"> | string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life";
   if (typeof sale === "string") return `${baseUrl.replace(/\/$/, "")}/saletrail/sale/${sale}`;
   return `${baseUrl.replace(/\/$/, "")}${salePath(sale)}`;
 }
@@ -82,7 +82,7 @@ export function publicClaimMessageForSale(sale: Pick<Sale, "slug" | "city" | "st
 }
 
 export function claimUrl(slug: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life";
   return `${baseUrl.replace(/\/$/, "")}/saletrail/claim/${slug}`;
 }
 
