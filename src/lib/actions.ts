@@ -269,10 +269,6 @@ export async function submitClaimRequest(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const slug = required(formData, "slug");
   const listingId = slug;
-  const verificationMethod = required(formData, "verification_method");
-  if (!["original_post_comment", "localized_group_post"].includes(verificationMethod)) {
-    throw new Error("Choose a public posting method.");
-  }
 
   const { data: sale, error: saleError } = await supabase
     .from("sales")
@@ -292,7 +288,7 @@ export async function submitClaimRequest(formData: FormData) {
     relationship: required(formData, "relationship"),
     message: value(formData, "message"),
     claim_code: listingId,
-    verification_method: verificationMethod,
+    verification_method: null,
     wants_updates: formData.get("wants_updates") === "on",
     status: "pending",
   });

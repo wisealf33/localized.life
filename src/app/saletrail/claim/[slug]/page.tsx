@@ -32,6 +32,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
 
   const message = publicClaimMessage(sale.slug);
   const publicListingId = listingId(sale.slug);
+  const localizedGroupUrl = process.env.NEXT_PUBLIC_LOCALIZED_FACEBOOK_GROUP_URL;
 
   if (query.submitted) {
     return (
@@ -39,10 +40,14 @@ export default async function ClaimPage({ params, searchParams }: Props) {
         <p className="eyebrow">Claim request submitted</p>
         <h1>Post the public claim message</h1>
         <p className="lede">
-          This Listing ID is public. The private manage/edit link is separate and should only be used after admin
-          approval.
+          Your request is in the admin review queue. To finish the claim, publicly post the message below so an admin
+          can confirm that the person claiming the listing is connected to the original sale.
         </p>
         <section className="panel stack">
+          <div className="notice">
+            This SaleTrail Listing ID is public and safe to post. The private manage/edit link is different and is only
+            sent or shown after admin approval.
+          </div>
           <p>
             SaleTrail Listing ID: <strong>{publicListingId}</strong>
           </p>
@@ -50,9 +55,32 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             Public claim/share message
             <textarea readOnly rows={5} value={message} />
           </label>
+          <div className="grid two">
+            <div className="card">
+              <p className="eyebrow">Option 1</p>
+              <h2>Comment on the original post</h2>
+              <p>
+                Paste the message as a comment on the original Facebook garage sale post. This is the clearest way to
+                show you can speak from the original sale context.
+              </p>
+            </div>
+            <div className="card">
+              <p className="eyebrow">Option 2</p>
+              <h2>Post in the Localized group</h2>
+              <p>
+                Paste the message in the appropriate Localized.life local Facebook group. Admin will check that public
+                post/comment before approving.
+              </p>
+              {localizedGroupUrl ? (
+                <a className="button" href={localizedGroupUrl} target="_blank" rel="noopener noreferrer">
+                  Open Localized group
+                </a>
+              ) : null}
+            </div>
+          </div>
           <div className="notice good">
-            Post this message by commenting on the original Facebook garage sale post or by posting/commenting in the
-            appropriate Localized Facebook group. Admin will manually review the public post/comment before approving.
+            After admin approval, the listing becomes claimed and the organizer receives a private manage/edit link. Do
+            not post that private link publicly.
           </div>
         </section>
       </main>
@@ -64,11 +92,12 @@ export default async function ClaimPage({ params, searchParams }: Props) {
       <p className="eyebrow">Claim listing</p>
       <h1>{sale.title}</h1>
       <p className="lede">
-        Claiming is manually reviewed. If approved, the organizer receives a private manage/edit link. Do not post the
-        private manage link publicly.
+        Step 1: tell us who is claiming this listing. Step 2 will give you a public message to post on Facebook so admin
+        can manually confirm the claim.
       </p>
       <div className="notice">
-        SaleTrail Listing ID: <strong>{publicListingId}</strong>
+        SaleTrail Listing ID: <strong>{publicListingId}</strong>. This ID is public. The private manage/edit link is only
+        provided after approval.
       </div>
       <form action={submitClaimRequest} className="form">
         <input type="hidden" name="slug" value={sale.slug} />
@@ -93,13 +122,6 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             <option value="other">Other</option>
           </select>
         </label>
-        <label>
-          Where will you post the public claim message?
-          <select name="verification_method" required>
-            <option value="original_post_comment">Original Facebook garage sale post comment</option>
-            <option value="localized_group_post">Localized Facebook group post/comment</option>
-          </select>
-        </label>
         <label className="check">
           <input type="checkbox" name="wants_updates" />
           Send me occasional Localized.life / SaleTrail updates
@@ -108,12 +130,8 @@ export default async function ClaimPage({ params, searchParams }: Props) {
           Optional note
           <textarea name="message" rows={4} placeholder="Anything admin should know before reviewing?" />
         </label>
-        <label>
-          Public claim/share message
-          <textarea readOnly rows={5} value={message} />
-        </label>
         <button className="button primary" type="submit">
-          Submit claim request
+          Continue to claim instructions
         </button>
       </form>
     </main>
