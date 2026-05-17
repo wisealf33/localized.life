@@ -54,13 +54,21 @@ export default async function SharePage({ params, searchParams }: Props) {
   return (
     <main className="page">
       <SiteHeader />
-      <section className="stack">
-        <p className="eyebrow">Share kit</p>
-        <h1>{sale.title}</h1>
-        <p>Use these materials to manually share the listing anywhere you choose.</p>
-        <div className="toolbar">
+      <section className="hero compact-hero share-hero">
+        <div className="stack small-gap">
+          <p className="eyebrow">Share kit</p>
+          <h1>{sale.title}</h1>
+          <p>
+            Share the public listing, copy ready-to-post text, or use the flyer QR code to send shoppers back to
+            SaleTrail.
+          </p>
+        </div>
+        <div className="toolbar share-hero-actions">
           <Link className="button" href={salePath(sale)}>
             Back to listing
+          </Link>
+          <Link className="button" href="/saletrail/route">
+            My route
           </Link>
         </div>
         {manageLink ? (
@@ -70,27 +78,35 @@ export default async function SharePage({ params, searchParams }: Props) {
         ) : null}
       </section>
 
-      <section className="grid two">
-        <div className="flyer">
-          <p className="eyebrow">SaleTrail by Localized.life</p>
-          <h2>{sale.title}</h2>
-          <p className="whitespace">{formatSaleHours(sale)}</p>
-          <p>{fullAddress(sale)}</p>
-          {sale.photo_urls?.[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="flyer-photo" src={sale.photo_urls[0]} alt={`${sale.title} photo`} />
-          ) : null}
-          {sale.description ? <p>{sale.description}</p> : null}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qr} alt="QR code for SaleTrail listing" />
-          <p className="short-url">{url}</p>
-        </div>
-
+      <section className="share-layout">
         <ShareActions
           listingUrl={url}
           title={sale.title}
           postText={copy.publicPost}
         />
+        <aside className="flyer-panel">
+          <div className="flyer-panel-header">
+            <div>
+              <p className="eyebrow">Flyer preview</p>
+              <h2>QR flyer</h2>
+            </div>
+            <p className="muted">Print it or screenshot it.</p>
+          </div>
+          <div className="flyer">
+            <p className="eyebrow">SaleTrail by Localized.life</p>
+            <h2>{sale.title}</h2>
+            <p className="whitespace">{formatSaleHours(sale)}</p>
+            <p>{fullAddress(sale)}</p>
+            {sale.photo_urls?.[0] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="flyer-photo" src={sale.photo_urls[0]} alt={`${sale.title} photo`} />
+            ) : null}
+            {sale.description ? <p>{sale.description}</p> : null}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qr} alt="QR code for SaleTrail listing" />
+            <p className="short-url">{url}</p>
+          </div>
+        </aside>
       </section>
     </main>
   );
