@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BackToListingsButton } from "@/components/BackToListingsButton";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -133,6 +134,10 @@ export default async function SalePage({ params, searchParams }: Props) {
       <SiteHeader />
 
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}
+
+      <div className="listing-page-nav">
+        <BackToListingsButton />
+      </div>
 
       <section className="stack">
         <StatusBadge sale={sale} />

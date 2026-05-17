@@ -679,6 +679,11 @@ h2 {
   margin-bottom: 0;
 }
 
+.listing-page-nav {
+  display: flex;
+  margin-top: 18px;
+}
+
 .compact {
   grid-template-columns: 1fr auto;
   align-items: start;
