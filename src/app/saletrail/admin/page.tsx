@@ -130,6 +130,10 @@ function CopyOutreach({ label, text }: { label: string; text: string }) {
   );
 }
 
+function isExpired(sale: Pick<Sale, "ends_at">) {
+  return new Date(sale.ends_at).getTime() < Date.now();
+}
+
 function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boolean }) {
   const messages = outreachMessages(sale);
   const outreachStatus: OutreachStatus = sale.outreach_status || "not_contacted";
@@ -251,11 +255,12 @@ export default async function AdminPage({ searchParams }: Props) {
   const enabled = await isAdminAuthenticated();
   const { outreach, claims, requests } = await getQueues(enabled);
   const activeOutreach = outreach.filter(
-    (sale) => !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
+    (sale) => !isExpired(sale) && !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
-  const completedOutreach = outreach.filter((sale) =>
-    completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
+  const completedOutreach = outreach.filter(
+    (sale) => !isExpired(sale) && completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
+  const expiredOutreach = outreach.filter((sale) => isExpired(sale));
 
   return (
     <main className="page">
@@ -292,6 +297,7 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-claims">Claims ({claims.length})</a>
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
             <a href="#admin-outreach">Outreach ({activeOutreach.length})</a>
+            <a href="#admin-expired">Expired ({expiredOutreach.length})</a>
             <a href="#admin-batch">Batch add</a>
             <a href="#admin-quick-add">Quick add</a>
           </nav>
@@ -401,6 +407,21 @@ export default async function AdminPage({ searchParams }: Props) {
                 <summary>Completed outreach ({completedOutreach.length})</summary>
                 <div className="stack">
                   {completedOutreach.map((sale) => (
+                    <OutreachCard completed key={sale.id} sale={sale} />
+                  ))}
+                </div>
+              </details>
+            ) : null}
+
+            {expiredOutreach.length ? (
+              <details className="admin-details completed-outreach" id="admin-expired">
+                <summary>Expired outreach archive ({expiredOutreach.length})</summary>
+                <p className="muted">
+                  These listings ended already, so they are hidden from active outreach. Keep them briefly for review,
+                  then remove old unclaimed data during cleanup.
+                </p>
+                <div className="stack">
+                  {expiredOutreach.map((sale) => (
                     <OutreachCard completed key={sale.id} sale={sale} />
                   ))}
                 </div>
