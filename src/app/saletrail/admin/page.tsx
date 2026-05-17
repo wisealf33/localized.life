@@ -15,6 +15,7 @@ import {
 } from "@/lib/actions";
 import { claimUrl, formatSaleHours, fullAddress, salePath, saleUrl } from "@/lib/format";
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
+import { salePreviewImageNeed } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { ClaimRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
 
@@ -23,7 +24,10 @@ type Props = {
 };
 
 const outreachSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_platform, source_url, source_poster_name, source_notes, raw_source_text, outreach_status, outreach_last_at, outreach_notes, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_platform, source_url, source_poster_name, source_notes, raw_source_text, outreach_status, outreach_last_at, outreach_notes, claimed_at, created_at, updated_at";
+
+const photoNeedSaleColumns =
+  "id, slug, title, city, state, starts_at, ends_at, sale_schedule, photo_urls, status, source_type, claim_status, visibility_status";
 
 const outreachStatusLabels: Record<OutreachStatus, string> = {
   not_contacted: "Not contacted",
@@ -48,9 +52,9 @@ const completedOutreachStatuses = new Set<OutreachStatus>([
 ]);
 
 async function getQueues(enabled: boolean) {
-  if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [] };
+  if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [], photoSales: [] };
   const supabase = getSupabaseAdmin();
-  const [{ data: outreach }, { data: claims }, { data: requests }] = await Promise.all([
+  const [{ data: outreach }, { data: claims }, { data: requests }, { data: photoSales }] = await Promise.all([
     supabase
       .from("sales")
       .select(outreachSaleColumns)
@@ -69,12 +73,20 @@ async function getQueues(enabled: boolean) {
       .select("*, sales(title, slug, city, state)")
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("sales")
+      .select(photoNeedSaleColumns)
+      .eq("visibility_status", "public")
+      .eq("status", "active")
+      .gte("ends_at", new Date().toISOString())
+      .order("starts_at", { ascending: true }),
   ]);
 
   return {
     outreach: (outreach || []) as Sale[],
     claims: (claims || []) as ClaimRequest[],
     requests: (requests || []) as ListingRequest[],
+    photoSales: (photoSales || []) as Sale[],
   };
 }
 
@@ -132,6 +144,35 @@ function CopyOutreach({ label, text }: { label: string; text: string }) {
 
 function isExpired(sale: Pick<Sale, "ends_at">) {
   return new Date(sale.ends_at).getTime() < Date.now();
+}
+
+function photoNeeds(sales: Sale[]) {
+  const needs = new Map<
+    string,
+    {
+      scope: "town" | "county";
+      label: string;
+      filename: string;
+      publicPath: string;
+      sales: Sale[];
+    }
+  >();
+
+  for (const sale of sales) {
+    const need = salePreviewImageNeed(sale);
+    if (!need) continue;
+    const existing = needs.get(need.publicPath);
+    if (existing) {
+      existing.sales.push(sale);
+      continue;
+    }
+    needs.set(need.publicPath, { ...need, sales: [sale] });
+  }
+
+  return Array.from(needs.values()).sort((a, b) => {
+    if (a.scope !== b.scope) return a.scope === "town" ? -1 : 1;
+    return a.label.localeCompare(b.label);
+  });
 }
 
 function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boolean }) {
@@ -253,7 +294,7 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
 export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
   const enabled = await isAdminAuthenticated();
-  const { outreach, claims, requests } = await getQueues(enabled);
+  const { outreach, claims, requests, photoSales } = await getQueues(enabled);
   const activeOutreach = outreach.filter(
     (sale) => !isExpired(sale) && !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
@@ -261,6 +302,7 @@ export default async function AdminPage({ searchParams }: Props) {
     (sale) => !isExpired(sale) && completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
   const expiredOutreach = outreach.filter((sale) => isExpired(sale));
+  const missingPhotos = photoNeeds(photoSales);
 
   return (
     <main className="page">
@@ -296,6 +338,7 @@ export default async function AdminPage({ searchParams }: Props) {
           <nav className="admin-jump-nav" aria-label="Admin sections">
             <a href="#admin-claims">Claims ({claims.length})</a>
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
+            <a href="#admin-photo-needs">Photo needs ({missingPhotos.length})</a>
             <a href="#admin-outreach">Outreach ({activeOutreach.length})</a>
             <a href="#admin-expired">Expired ({expiredOutreach.length})</a>
             <a href="#admin-batch">Batch add</a>
@@ -385,6 +428,53 @@ export default async function AdminPage({ searchParams }: Props) {
                 </article>
               ))}
             </div>
+          </section>
+
+          <section className="panel stack" id="admin-photo-needs">
+            <div>
+              <p className="eyebrow">Branded image queue</p>
+              <h2>Photos to create</h2>
+              <p className="muted">
+                Active listings without organizer-uploaded photos use branded fallback images. Will County is the open
+                region, so it gets town images. Other areas use county images until that region is opened.
+              </p>
+            </div>
+            {missingPhotos.length === 0 ? (
+              <p className="muted">No missing fallback images for active listings.</p>
+            ) : (
+              <div className="grid two">
+                {missingPhotos.map((need) => (
+                  <article className="card photo-need-card" key={need.publicPath}>
+                    <div className="card-top">
+                      <div>
+                        <p className="eyebrow">{need.scope === "town" ? "Town image" : "County image"}</p>
+                        <h3>{need.label}</h3>
+                      </div>
+                      <span className="badge plain">{need.sales.length} listing{need.sales.length === 1 ? "" : "s"}</span>
+                    </div>
+                    <p>
+                      <strong>Create file:</strong> <code>{need.filename}</code>
+                    </p>
+                    <p>
+                      <strong>Add to:</strong> <code>public/og/{need.filename}</code>
+                    </p>
+                    <details className="admin-details">
+                      <summary>Listings using this image</summary>
+                      <ul className="plain-list">
+                        {need.sales.map((sale) => (
+                          <li key={sale.id}>
+                            <Link className="text-link" href={salePath(sale)} target="_blank" rel="noopener noreferrer">
+                              {sale.title}
+                            </Link>{" "}
+                            <span className="muted">({formatSaleHours(sale).replace(/\n/g, " ")})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className="panel stack" id="admin-outreach">

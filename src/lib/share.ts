@@ -11,10 +11,10 @@ function publicFileExists(publicPath: string) {
 }
 
 export function saleFallbackImagePath(sale: ShareImageSale) {
-  const cityPath = `/og/${urlSegment(sale.city)}.jpg`;
-  if (publicFileExists(cityPath)) return cityPath;
-
   const destination = regionDestinationForSale(sale);
+  const cityPath = `/og/${urlSegment(sale.city)}.jpg`;
+  if (destination.isDedicated && publicFileExists(cityPath)) return cityPath;
+
   const countyPath = `/og/${urlSegment(destination.county)}.jpg`;
   if (publicFileExists(countyPath)) return countyPath;
 
@@ -35,3 +35,31 @@ export function saleFlyerImage(sale: ShareImageSale) {
 }
 
 export const salePreviewImage = saleFlyerImage;
+
+export function salePreviewImageNeed(sale: ShareImageSale) {
+  if (sale.photo_urls?.find(Boolean)) return null;
+
+  const destination = regionDestinationForSale(sale);
+  const cityPath = `/og/${urlSegment(sale.city)}.jpg`;
+
+  if (destination.isDedicated && !publicFileExists(cityPath)) {
+    return {
+      scope: "town" as const,
+      label: `${sale.city}, ${sale.state}`,
+      filename: `${urlSegment(sale.city)}.jpg`,
+      publicPath: cityPath,
+    };
+  }
+
+  const countyPath = `/og/${urlSegment(destination.county)}.jpg`;
+  if (!publicFileExists(countyPath)) {
+    return {
+      scope: "county" as const,
+      label: `${destination.county}, ${destination.state}`,
+      filename: `${urlSegment(destination.county)}.jpg`,
+      publicPath: countyPath,
+    };
+  }
+
+  return null;
+}

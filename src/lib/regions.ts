@@ -14,6 +14,34 @@ type OpenRegion = FacebookDestination & {
   cities: string[];
 };
 
+const cityCounty: Record<string, string> = {
+  aurora: "Kane County",
+  beecher: "Will County",
+  bolingbrook: "Will County",
+  bradley: "Kankakee County",
+  "chicago heights": "Cook County",
+  channahon: "Will County",
+  "crest hill": "Will County",
+  elwood: "Will County",
+  frankfort: "Will County",
+  "homer glen": "Will County",
+  joliet: "Will County",
+  kankakee: "Kankakee County",
+  lockport: "Will County",
+  manhattan: "Will County",
+  minooka: "Grundy County",
+  mokena: "Will County",
+  monee: "Will County",
+  naperville: "DuPage County",
+  "new lenox": "Will County",
+  peotone: "Will County",
+  plainfield: "Will County",
+  romeoville: "Will County",
+  sandwich: "DeKalb County",
+  shorewood: "Will County",
+  wilmington: "Will County",
+};
+
 const defaultWillCountyGroupUrl = "https://www.facebook.com/groups/955521984061525";
 const defaultGeneralFacebookUrl = "https://www.localized.life";
 
@@ -55,6 +83,10 @@ function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
+export function countyForSale(sale: RegionSale) {
+  return cityCounty[normalize(sale.city)] || null;
+}
+
 export function regionDestinationForSale(sale: RegionSale): FacebookDestination {
   const city = normalize(sale.city);
   const state = normalize(sale.state);
@@ -63,7 +95,7 @@ export function regionDestinationForSale(sale: RegionSale): FacebookDestination 
   if (region) return region;
 
   return {
-    county: `${sale.city} area`,
+    county: countyForSale(sale) || `${sale.city} area`,
     state: sale.state,
     name: "Localized.life",
     url: process.env.NEXT_PUBLIC_GENERAL_LOCALIZED_FACEBOOK_URL || defaultGeneralFacebookUrl,
