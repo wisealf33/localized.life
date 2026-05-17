@@ -90,12 +90,15 @@ export function countyForSale(sale: RegionSale) {
 export function regionDestinationForSale(sale: RegionSale): FacebookDestination {
   const city = normalize(sale.city);
   const state = normalize(sale.state);
-  const region = openRegions.find((item) => normalize(item.state) === state && item.cities.includes(city));
+  const county = countyForSale(sale);
+  const region = openRegions.find(
+    (item) => normalize(item.state) === state && county === item.county && item.cities.includes(city),
+  );
 
   if (region) return region;
 
   return {
-    county: countyForSale(sale) || `${sale.city} area`,
+    county: county || `${sale.city} area`,
     state: sale.state,
     name: "Localized.life",
     url: process.env.NEXT_PUBLIC_GENERAL_LOCALIZED_FACEBOOK_URL || defaultGeneralFacebookUrl,

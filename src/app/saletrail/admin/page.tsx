@@ -436,7 +436,8 @@ export default async function AdminPage({ searchParams }: Props) {
               <h2>Photos to create</h2>
               <p className="muted">
                 Active listings without organizer-uploaded photos use branded fallback images. Will County is the open
-                region, so it gets town images. Other areas use county images until that region is opened.
+                region, so only listings detected inside Will County get town image requests. Other areas use county
+                images until that county is opened.
               </p>
             </div>
             {missingPhotos.length === 0 ? (
