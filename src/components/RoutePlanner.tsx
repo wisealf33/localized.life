@@ -29,6 +29,11 @@ function mapsUrl(sales: SavedSale[]) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
+function saveRoute(next: SavedSale[]) {
+  window.localStorage.setItem(key, JSON.stringify(next));
+  window.dispatchEvent(new Event("saletrail:saved"));
+}
+
 export function RoutePlanner() {
   const [sales, setSales] = useState<SavedSale[]>(() => {
     if (typeof window === "undefined") return [];
@@ -61,7 +66,16 @@ export function RoutePlanner() {
 
   function remove(slug: string) {
     const next = sales.filter((sale) => sale.slug !== slug);
-    window.localStorage.setItem(key, JSON.stringify(next));
+    saveRoute(next);
+    setSales(next);
+  }
+
+  function moveStop(index: number, direction: -1 | 1) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= sales.length) return;
+    const next = [...sales];
+    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+    saveRoute(next);
     setSales(next);
   }
 
@@ -93,15 +107,37 @@ export function RoutePlanner() {
           {hasMappedStops ? <SaleMap sales={mappedSales} /> : null}
           <div className="list">
             {sales.map((sale, index) => (
-              <article className="card compact" key={sale.slug}>
+              <article className="card route-stop" key={sale.slug}>
                 <div>
                   <p className="eyebrow">Stop {index + 1}</p>
                   <h2>{sale.title}</h2>
                   <p>{sale.address}</p>
                 </div>
-                <button className="button ghost" type="button" onClick={() => remove(sale.slug)}>
-                  Remove
-                </button>
+                <div className="route-stop-actions" aria-label={`Reorder ${sale.title}`}>
+                  <button
+                    className="icon-button"
+                    type="button"
+                    onClick={() => moveStop(index, -1)}
+                    disabled={index === 0}
+                    aria-label={`Move ${sale.title} up`}
+                    title="Move up"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    className="icon-button"
+                    type="button"
+                    onClick={() => moveStop(index, 1)}
+                    disabled={index === sales.length - 1}
+                    aria-label={`Move ${sale.title} down`}
+                    title="Move down"
+                  >
+                    ↓
+                  </button>
+                  <button className="button ghost compact-button" type="button" onClick={() => remove(sale.slug)}>
+                    Remove
+                  </button>
+                </div>
               </article>
             ))}
           </div>

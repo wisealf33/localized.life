@@ -638,6 +638,44 @@ h2 {
   align-items: start;
 }
 
+.route-stop {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.route-stop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.icon-button {
+  display: inline-grid;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--primary-dark);
+  font-size: 1.05rem;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.08);
+}
+
+.icon-button:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .card-top,
 .toolbar {
   display: flex;
