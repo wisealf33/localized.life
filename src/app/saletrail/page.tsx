@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConfigNotice } from "@/components/ConfigNotice";
+import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
@@ -7,7 +8,7 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const publicSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
 type Props = {
   searchParams: Promise<{ q?: string; date?: string; page?: string; perPage?: string }>;
@@ -180,6 +181,21 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 <Link className="button primary" href={salePath(sale)}>
                   View listing
                 </Link>
+                <SaveSaleButton
+                  sale={{
+                    slug: sale.slug,
+                    title: sale.title,
+                    address: fullAddress(sale),
+                    city: sale.city,
+                    state: sale.state,
+                    startsAt: sale.starts_at,
+                    href: salePath(sale),
+                    latitude: sale.latitude,
+                    longitude: sale.longitude,
+                    locationPrecision: sale.location_precision,
+                  }}
+                  variant="secondary"
+                />
                 {canClaim(sale) ? (
                   <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
                     Claim listing

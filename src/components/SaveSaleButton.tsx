@@ -25,7 +25,7 @@ function readSaved(): SavedSale[] {
   }
 }
 
-export function SaveSaleButton({ sale }: { sale: SavedSale }) {
+export function SaveSaleButton({ sale, variant = "primary" }: { sale: SavedSale; variant?: "primary" | "secondary" }) {
   const [saved, setSaved] = useState(() => {
     if (typeof window === "undefined") return false;
     return readSaved().some((item) => item.slug === sale.slug);
@@ -40,8 +40,8 @@ export function SaveSaleButton({ sale }: { sale: SavedSale }) {
   }
 
   return (
-    <button className="button primary" type="button" onClick={toggle}>
-      {saved ? "Saved to route" : "Save to route"}
+    <button className={variant === "primary" ? "button primary" : "button"} type="button" onClick={toggle}>
+      {saved ? "Saved to route" : "Add to route"}
     </button>
   );
 }
