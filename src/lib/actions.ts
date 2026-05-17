@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
 import { sendClaimApprovedEmail, sendClaimInstructionsEmail } from "./email";
 import { categoryOptions, salePath, saleSharePath } from "./format";
+import { geocodeAddress } from "./geocode";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
 import type { ListingRequestType, OutreachStatus, SaleStatus } from "./types";
@@ -42,14 +43,6 @@ function required(formData: FormData, key: string) {
   const next = value(formData, key);
   if (!next) throw new Error(`Missing ${key}`);
   return next;
-}
-
-function optionalNumber(formData: FormData, key: string) {
-  const next = value(formData, key);
-  if (!next) return null;
-  const parsed = Number(next);
-  if (!Number.isFinite(parsed)) throw new Error(`Invalid ${key}`);
-  return parsed;
 }
 
 function asIsoLocalDateTime(dateValue: string, timeValue: string) {
@@ -116,6 +109,15 @@ function normalizeCategories(formData: FormData) {
   return values(formData, "categories").filter((category) => categoryOptions.includes(category));
 }
 
+function addressFromForm(formData: FormData) {
+  return {
+    address_line: required(formData, "address_line"),
+    city: required(formData, "city"),
+    state: required(formData, "state").toUpperCase(),
+    zip: required(formData, "zip"),
+  };
+}
+
 function photoFiles(formData: FormData) {
   return formData
     .getAll("photos")
@@ -168,15 +170,16 @@ export async function createSellerSale(formData: FormData) {
   const manageToken = randomToken();
   const schedule = buildSchedule(formData);
   const photoUrls = await uploadPhotos(supabase, slug, formData);
+  const address = addressFromForm(formData);
+  const coordinates = await geocodeAddress(address);
 
   const insertPayload: Record<string, unknown> = {
     slug,
     title,
     description: value(formData, "description"),
-    address_line: required(formData, "address_line"),
-    city: required(formData, "city"),
-    state: required(formData, "state").toUpperCase(),
-    zip: required(formData, "zip"),
+    ...address,
+    latitude: coordinates?.latitude ?? null,
+    longitude: coordinates?.longitude ?? null,
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,
@@ -204,17 +207,16 @@ export async function createCommunitySale(formData: FormData) {
   const title = required(formData, "title");
   const slug = slugifyTitle(title);
   const schedule = buildSchedule(formData);
+  const address = addressFromForm(formData);
+  const coordinates = await geocodeAddress(address);
 
   const { error } = await supabase.from("sales").insert({
     slug,
     title,
     description: value(formData, "description"),
-    address_line: required(formData, "address_line"),
-    city: required(formData, "city"),
-    state: required(formData, "state").toUpperCase(),
-    zip: required(formData, "zip"),
-    latitude: optionalNumber(formData, "latitude"),
-    longitude: optionalNumber(formData, "longitude"),
+    ...address,
+    latitude: coordinates?.latitude ?? null,
+    longitude: coordinates?.longitude ?? null,
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,
@@ -233,7 +235,7 @@ export async function createCommunitySale(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail");
-  redirect(salePath({ slug, city: required(formData, "city"), state: required(formData, "state").toUpperCase() }));
+  redirect(salePath({ slug, city: address.city, state: address.state }));
 }
 
 export async function updateManagedSale(formData: FormData) {
@@ -245,14 +247,14 @@ export async function updateManagedSale(formData: FormData) {
 
   let { data: sale, error: findError } = await supabase
     .from("sales")
-    .select("slug, city, state, photo_urls")
+    .select("slug, address_line, city, state, zip, latitude, longitude, photo_urls")
     .eq("manage_token_hash", tokenHash)
     .single();
 
   if (findError?.message.includes("photo_urls")) {
     const fallback = await supabase
       .from("sales")
-      .select("slug, city, state")
+      .select("slug, address_line, city, state, zip, latitude, longitude")
       .eq("manage_token_hash", tokenHash)
       .single();
     sale = fallback.data ? { ...fallback.data, photo_urls: [] } : null;
@@ -261,14 +263,20 @@ export async function updateManagedSale(formData: FormData) {
 
   if (findError || !sale) throw new Error("Manage link was not found.");
   const photoUrls = await uploadPhotos(supabase, sale.slug, formData, sale.photo_urls || []);
+  const address = addressFromForm(formData);
+  const addressChanged =
+    address.address_line !== sale.address_line ||
+    address.city !== sale.city ||
+    address.state !== sale.state ||
+    address.zip !== sale.zip;
+  const coordinates = addressChanged ? await geocodeAddress(address) : null;
 
   const updatePayload: Record<string, unknown> = {
     title: required(formData, "title"),
     description: value(formData, "description"),
-    address_line: required(formData, "address_line"),
-    city: required(formData, "city"),
-    state: required(formData, "state").toUpperCase(),
-    zip: required(formData, "zip"),
+    ...address,
+    latitude: addressChanged ? (coordinates?.latitude ?? null) : sale.latitude,
+    longitude: addressChanged ? (coordinates?.longitude ?? null) : sale.longitude,
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,
@@ -288,7 +296,7 @@ export async function updateManagedSale(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath(salePath(sale));
-  redirect(salePath({ slug: sale.slug, city: required(formData, "city"), state: required(formData, "state").toUpperCase() }));
+  redirect(salePath({ slug: sale.slug, city: address.city, state: address.state }));
 }
 
 export async function submitClaimRequest(formData: FormData) {

@@ -118,7 +118,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
     return (
       <div className="empty">
         <h2>No mapped sales yet</h2>
-        <p>Add latitude and longitude in admin quick add to make listings appear on the map.</p>
+        <p>Map pins are added automatically from listing addresses when SaleTrail can match them.</p>
       </div>
     );
   }
