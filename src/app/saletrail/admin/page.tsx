@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { adminLogin, adminLogout, isAdminAuthenticated } from "@/lib/admin";
 import {
   approveClaim,
+  createCommunitySalesBatch,
   createCommunitySale,
   rejectClaim,
   resolveListingRequest,
@@ -18,7 +19,7 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { ClaimRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
 
 type Props = {
-  searchParams: Promise<{ approved?: string; manage?: string; updated?: string }>;
+  searchParams: Promise<{ approved?: string; manage?: string; updated?: string; batch?: string; skipped?: string }>;
 };
 
 const outreachSaleColumns =
@@ -273,6 +274,12 @@ export default async function AdminPage({ searchParams }: Props) {
             approved organizer. It should not be posted publicly.
           </div>
         ) : null}
+        {params.batch ? (
+          <div className="notice good">
+            Batch import finished. Added {params.batch} listing{params.batch === "1" ? "" : "s"}
+            {params.skipped && params.skipped !== "0" ? ` and skipped ${params.skipped} duplicate source link${params.skipped === "1" ? "" : "s"}` : ""}.
+          </div>
+        ) : null}
         {enabled ? (
           <form action={adminLogout}>
             <button className="button ghost" type="submit">
@@ -300,6 +307,30 @@ export default async function AdminPage({ searchParams }: Props) {
           <section className="panel">
             <h2>Admin quick add</h2>
             <SaleForm action={createCommunitySale} admin />
+          </section>
+
+          <section className="panel stack">
+            <div>
+              <h2>Batch quick add</h2>
+              <p className="muted">
+                Paste a JSON batch from researched public sources or screenshots. This creates community-added,
+                unclaimed listings and skips duplicate source URLs.
+              </p>
+            </div>
+            <form action={createCommunitySalesBatch} className="form">
+              <label>
+                Listing batch JSON
+                <textarea
+                  name="batch_json"
+                  rows={12}
+                  placeholder='[{"title":"Example garage sale","address_line":"123 Main St","city":"Joliet","state":"IL","zip":"60435","days":[{"date":"2026-05-23","start":"09:00","end":"15:00"}],"categories":["Garage sale","Home goods"],"source_platform":"Public source","source_url":"https://example.com/listing"}]'
+                  required
+                />
+              </label>
+              <button className="button primary" type="submit">
+                Import batch
+              </button>
+            </form>
           </section>
 
           <section className="panel stack">

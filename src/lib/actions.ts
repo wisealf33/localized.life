@@ -31,6 +31,28 @@ const outreachStatuses = new Set<OutreachStatus>([
   "removed",
 ]);
 
+type BatchListingDay = {
+  date?: string;
+  start?: string;
+  end?: string;
+};
+
+type BatchListing = {
+  title?: string;
+  description?: string;
+  address_line?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  days?: BatchListingDay[];
+  categories?: string[];
+  source_platform?: string;
+  source_url?: string;
+  source_poster_name?: string;
+  source_notes?: string;
+  raw_source_text?: string;
+};
+
 function value(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
@@ -105,8 +127,44 @@ function buildSchedule(formData: FormData) {
   };
 }
 
+function buildScheduleFromDays(days: BatchListingDay[] | undefined) {
+  const rows = (days || [])
+    .map((day) => {
+      const date = String(day.date || "").trim();
+      if (!date) return null;
+      const start = String(day.start || "08:00").trim();
+      const end = String(day.end || "14:00").trim();
+      return {
+        date,
+        start,
+        end,
+        startsAt: asIsoLocalDateTime(date, start),
+        endsAt: asIsoLocalDateTime(date, end),
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
+  if (rows.length === 0) throw new Error("Each batch listing needs at least one day.");
+  if (rows.some((row) => row.endsAt <= row.startsAt)) {
+    throw new Error("Each batch listing day needs an end time after its start time.");
+  }
+
+  return {
+    starts_at: rows[0].startsAt,
+    ends_at: rows[rows.length - 1].endsAt,
+    sale_schedule: rows
+      .map((row) => `${formatScheduleDate(row.date)} ${formatScheduleTime(row.start)}-${formatScheduleTime(row.end)}`)
+      .join("\n"),
+  };
+}
+
 function normalizeCategories(formData: FormData) {
   return values(formData, "categories").filter((category) => categoryOptions.includes(category));
+}
+
+function normalizeBatchCategories(categories: string[] | undefined) {
+  return (categories || []).filter((category) => categoryOptions.includes(category));
 }
 
 function addressFromForm(formData: FormData) {
@@ -256,6 +314,87 @@ export async function createCommunitySale(formData: FormData) {
 
   revalidatePath("/saletrail");
   redirect(salePath({ slug, city: address.city, state: address.state }));
+}
+
+export async function createCommunitySalesBatch(formData: FormData) {
+  await requireAdmin();
+
+  const raw = required(formData, "batch_json");
+  let listings: BatchListing[];
+  try {
+    const parsed = JSON.parse(raw);
+    listings = Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    throw new Error("Batch import needs valid JSON.");
+  }
+
+  if (listings.length === 0) throw new Error("Batch import is empty.");
+  if (listings.length > 25) throw new Error("Import 25 listings or fewer at a time.");
+
+  const supabase = getSupabaseAdmin();
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const listing of listings) {
+    const title = String(listing.title || "").trim();
+    const address = {
+      address_line: String(listing.address_line || "").trim(),
+      city: String(listing.city || "").trim(),
+      state: String(listing.state || "").trim().toUpperCase(),
+      zip: String(listing.zip || "").trim(),
+    };
+    if (!title || !address.address_line || !address.city || !address.state || !address.zip) {
+      throw new Error("Each batch listing needs title, address_line, city, state, and zip.");
+    }
+
+    if (listing.source_url) {
+      const existing = await supabase.from("sales").select("id").eq("source_url", listing.source_url).limit(1);
+      if (existing.data?.length) {
+        skipped += 1;
+        continue;
+      }
+    }
+
+    const slug = slugifyTitle(title);
+    const schedule = buildScheduleFromDays(listing.days);
+    const coordinates = await geocodeAddress(address);
+    const insertPayload: Record<string, unknown> = {
+      slug,
+      title,
+      description: String(listing.description || "").trim(),
+      ...address,
+      latitude: coordinates?.latitude ?? null,
+      longitude: coordinates?.longitude ?? null,
+      location_precision: coordinates?.precision ?? null,
+      starts_at: schedule.starts_at,
+      ends_at: schedule.ends_at,
+      sale_schedule: schedule.sale_schedule,
+      categories: normalizeBatchCategories(listing.categories),
+      status: "active",
+      source_type: "community_added",
+      claim_status: "unclaimed",
+      visibility_status: "public",
+      source_notes: String(listing.source_notes || "Community-added from public source. Do not use source photos without permission.").trim(),
+      source_platform: String(listing.source_platform || "").trim(),
+      source_url: String(listing.source_url || "").trim(),
+      source_poster_name: String(listing.source_poster_name || "").trim(),
+      raw_source_text: String(listing.raw_source_text || "").trim(),
+      outreach_status: "not_contacted",
+    };
+
+    const { error } = await supabase.from("sales").insert(insertPayload);
+    if (error?.message.includes("location_precision")) {
+      const retry = await supabase.from("sales").insert(withoutLocationPrecision(insertPayload));
+      if (retry.error) throw new Error(retry.error.message);
+    } else if (error) {
+      throw new Error(error.message);
+    }
+    inserted += 1;
+  }
+
+  revalidatePath("/saletrail");
+  revalidatePath("/saletrail/map");
+  redirect(`/saletrail/admin?batch=${inserted}&skipped=${skipped}`);
 }
 
 export async function updateManagedSale(formData: FormData) {
