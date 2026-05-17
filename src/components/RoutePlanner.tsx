@@ -105,7 +105,7 @@ export function RoutePlanner() {
             </button>
           </div>
           {hasMappedStops ? <SaleMap sales={mappedSales} /> : null}
-          <div className="list">
+          <div className="route-list">
             {sales.map((sale, index) => (
               <article className="card route-stop" key={sale.slug}>
                 <div>

@@ -706,6 +706,11 @@ h2 {
   align-items: center;
 }
 
+.route-list {
+  display: grid;
+  gap: 14px;
+}
+
 .route-stop-actions {
   display: flex;
   flex-wrap: wrap;
