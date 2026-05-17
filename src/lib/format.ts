@@ -2,6 +2,11 @@ import type { ClaimStatus, Sale, SaleSourceType } from "./types";
 import { dedicatedAreaShareNote } from "./regions";
 
 export const categoryOptions = [
+  "Garage sale",
+  "Estate sale",
+  "Rummage sale",
+  "Community sale",
+  "Vintage market",
   "Furniture",
   "Tools",
   "Kids",
