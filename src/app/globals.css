@@ -101,6 +101,7 @@ h2 {
   justify-content: space-between;
   gap: 18px;
   border-bottom: 1px solid var(--line);
+  margin-bottom: clamp(24px, 3vw, 34px);
   padding: 0 0 18px;
 }
 
