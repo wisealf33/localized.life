@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { SaleMap } from "./SaleMap";
 import type { SavedSale } from "./SaveSaleButton";
 
 const key = "saletrail.savedSales";
@@ -34,6 +35,20 @@ export function RoutePlanner() {
     return readSaved();
   });
   const url = useMemo(() => mapsUrl(sales), [sales]);
+  const mappedSales = useMemo(
+    () =>
+      sales.map((sale) => ({
+        slug: sale.slug,
+        title: sale.title,
+        address: sale.address,
+        startsAt: sale.startsAt,
+        href: sale.href || `/saletrail/sale/${sale.slug}`,
+        latitude: sale.latitude ?? null,
+        longitude: sale.longitude ?? null,
+      })),
+    [sales],
+  );
+  const hasMappedStops = mappedSales.some((sale) => sale.latitude !== null && sale.longitude !== null);
 
   useEffect(() => {
     const update = () => setSales(readSaved());
@@ -72,6 +87,7 @@ export function RoutePlanner() {
               Clear route
             </button>
           </div>
+          {hasMappedStops ? <SaleMap sales={mappedSales} /> : null}
           <div className="list">
             {sales.map((sale, index) => (
               <article className="card compact" key={sale.slug}>

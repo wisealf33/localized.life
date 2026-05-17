@@ -24,6 +24,8 @@ export type Sale = {
   city: string;
   state: string;
   zip: string;
+  latitude: number | null;
+  longitude: number | null;
   starts_at: string;
   ends_at: string;
   sale_schedule: string | null;

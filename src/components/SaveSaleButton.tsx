@@ -7,6 +7,9 @@ export type SavedSale = {
   title: string;
   address: string;
   startsAt: string;
+  href?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 const key = "saletrail.savedSales";

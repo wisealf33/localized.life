@@ -102,6 +102,14 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           A clean directory for local garage sales, including seller-created listings and clearly labeled
           community-added listings.
         </p>
+        <div className="toolbar">
+          <Link className="button primary" href="/saletrail/map">
+            View map
+          </Link>
+          <Link className="button" href="/saletrail/route">
+            My route
+          </Link>
+        </div>
       </section>
 
       <section className="panel">

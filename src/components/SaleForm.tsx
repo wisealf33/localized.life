@@ -42,6 +42,19 @@ export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) 
         <input name="zip" required defaultValue={sale?.zip} inputMode="numeric" />
       </label>
 
+      {admin ? (
+        <div className="grid two">
+          <label>
+            Latitude
+            <input name="latitude" defaultValue={sale?.latitude ?? ""} inputMode="decimal" placeholder="41.5250" />
+          </label>
+          <label>
+            Longitude
+            <input name="longitude" defaultValue={sale?.longitude ?? ""} inputMode="decimal" placeholder="-87.6850" />
+          </label>
+        </div>
+      ) : null}
+
       <ScheduleFields sale={sale} />
 
       <fieldset>

@@ -4,15 +4,17 @@ import { notFound } from "next/navigation";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatSaleHours, fullAddress, mapSearchUrl, saleSharePath } from "@/lib/format";
+import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath } from "@/lib/format";
 import { saleCanonicalUrl, saleOgImageUrl } from "@/lib/og";
 import { submitListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const publicSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
 const publicSaleColumnsWithoutPhotos =
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+const publicSaleColumnsWithoutCoordinates =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
 
 type Props = {
@@ -39,6 +41,17 @@ async function getSale(slug: string) {
       .single();
     if (fallbackError || !fallbackData) return null;
     return { ...fallbackData, photo_urls: [] } as unknown as Sale;
+  }
+
+  if (error?.message.includes("latitude") || error?.message.includes("longitude")) {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("sales")
+      .select(publicSaleColumnsWithoutCoordinates)
+      .eq("slug", slug)
+      .eq("visibility_status", "public")
+      .single();
+    if (fallbackError || !fallbackData) return null;
+    return { ...fallbackData, photo_urls: [], latitude: null, longitude: null } as unknown as Sale;
   }
 
   if (error || !data) return null;
@@ -156,6 +169,9 @@ export default async function SalePage({ params, searchParams }: Props) {
               title: sale.title,
               address: fullAddress(sale),
               startsAt: sale.starts_at,
+              href: salePath(sale),
+              latitude: sale.latitude,
+              longitude: sale.longitude,
             }}
           />
           <Link className="button" href={saleSharePath(sale)}>

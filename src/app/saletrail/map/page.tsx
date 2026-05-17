@@ -1,0 +1,108 @@
+import Link from "next/link";
+import { SaleMap, type MappedSale } from "@/components/SaleMap";
+import { SiteHeader } from "@/components/SiteHeader";
+import { formatSaleHours, fullAddress, salePath } from "@/lib/format";
+import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import type { Sale } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+const mapSaleColumns =
+  "id, slug, title, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, created_at, updated_at";
+const mapSaleColumnsWithoutCoordinates =
+  "id, slug, title, address_line, city, state, zip, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, created_at, updated_at";
+
+async function getMapSales() {
+  if (!isSupabaseConfigured) return [];
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("sales")
+    .select(mapSaleColumns)
+    .eq("visibility_status", "public")
+    .eq("status", "active")
+    .order("starts_at", { ascending: true })
+    .limit(200);
+
+  if (error?.message.includes("latitude") || error?.message.includes("longitude")) {
+    const fallback = await supabase
+      .from("sales")
+      .select(mapSaleColumnsWithoutCoordinates)
+      .eq("visibility_status", "public")
+      .eq("status", "active")
+      .order("starts_at", { ascending: true })
+      .limit(200);
+    if (fallback.error) throw new Error(fallback.error.message);
+    return ((fallback.data || []) as Sale[]).map((sale) => ({ ...sale, latitude: null, longitude: null }));
+  }
+
+  if (error) throw new Error(error.message);
+  return (data || []) as Sale[];
+}
+
+function toMappedSale(sale: Sale): MappedSale {
+  return {
+    slug: sale.slug,
+    title: sale.title,
+    address: fullAddress(sale),
+    startsAt: sale.starts_at,
+    href: salePath(sale),
+    latitude: sale.latitude,
+    longitude: sale.longitude,
+  };
+}
+
+export default async function SaleTrailMapPage() {
+  const sales = await getMapSales();
+  const mappedSales = sales.map(toMappedSale);
+  const mappedCount = mappedSales.filter((sale) => sale.latitude !== null && sale.longitude !== null).length;
+
+  return (
+    <main className="page">
+      <SiteHeader active="map" />
+      <section className="hero compact-hero">
+        <p className="eyebrow">SaleTrail map</p>
+        <h1>Find garage sales on a map.</h1>
+        <p>
+          Browse mapped SaleTrail listings, then open a listing to save it to your route. This uses OpenStreetMap tiles,
+          not a paid Google Maps embed.
+        </p>
+        <div className="toolbar">
+          <Link className="button" href="/saletrail">
+            View list
+          </Link>
+          <Link className="button primary" href="/saletrail/route">
+            My route
+          </Link>
+        </div>
+      </section>
+
+      <section className="panel stack">
+        <div className="card-top">
+          <h2>{mappedCount} mapped sales</h2>
+          <p className="muted">{sales.length - mappedCount} listings still need coordinates.</p>
+        </div>
+        <SaleMap sales={mappedSales} />
+      </section>
+
+      {sales.length ? (
+        <section className="list">
+          {sales.slice(0, 20).map((sale) => (
+            <article className="card compact" key={sale.id}>
+              <div>
+                <h2>
+                  <Link href={salePath(sale)}>{sale.title}</Link>
+                </h2>
+                <p className="muted">
+                  {sale.city}, {sale.state} · <span className="whitespace">{formatSaleHours(sale)}</span>
+                </p>
+              </div>
+              <span className={sale.latitude !== null && sale.longitude !== null ? "badge good" : "badge plain"}>
+                {sale.latitude !== null && sale.longitude !== null ? "Mapped" : "Needs coordinates"}
+              </span>
+            </article>
+          ))}
+        </section>
+      ) : null}
+    </main>
+  );
+}

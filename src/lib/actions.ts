@@ -44,6 +44,14 @@ function required(formData: FormData, key: string) {
   return next;
 }
 
+function optionalNumber(formData: FormData, key: string) {
+  const next = value(formData, key);
+  if (!next) return null;
+  const parsed = Number(next);
+  if (!Number.isFinite(parsed)) throw new Error(`Invalid ${key}`);
+  return parsed;
+}
+
 function asIsoLocalDateTime(dateValue: string, timeValue: string) {
   const date = new Date(`${dateValue}T${timeValue}`);
   if (Number.isNaN(date.getTime())) throw new Error("Invalid sale day or time.");
@@ -205,6 +213,8 @@ export async function createCommunitySale(formData: FormData) {
     city: required(formData, "city"),
     state: required(formData, "state").toUpperCase(),
     zip: required(formData, "zip"),
+    latitude: optionalNumber(formData, "latitude"),
+    longitude: optionalNumber(formData, "longitude"),
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,

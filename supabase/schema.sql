@@ -9,6 +9,8 @@ create table if not exists public.sales (
   city text not null,
   state text not null,
   zip text not null,
+  latitude double precision,
+  longitude double precision,
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   sale_schedule text,
@@ -49,6 +51,10 @@ create table if not exists public.sales (
 
 alter table public.sales
   add column if not exists photo_urls text[] not null default '{}';
+
+alter table public.sales
+  add column if not exists latitude double precision,
+  add column if not exists longitude double precision;
 
 alter table public.sales
   add column if not exists source_platform text,
@@ -123,6 +129,9 @@ create table if not exists public.listing_requests (
 
 create index if not exists sales_public_search_idx
   on public.sales (visibility_status, status, city, state, zip, starts_at);
+
+create index if not exists sales_public_map_idx
+  on public.sales (visibility_status, status, latitude, longitude);
 
 create index if not exists sales_claim_visibility_idx
   on public.sales (claim_status, source_type);
