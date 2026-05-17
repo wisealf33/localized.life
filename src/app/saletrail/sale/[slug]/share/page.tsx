@@ -1,9 +1,10 @@
 import QRCode from "qrcode";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FlyerPreview } from "@/components/FlyerPreview";
 import { ShareActions } from "@/components/ShareActions";
 import { SiteHeader } from "@/components/SiteHeader";
-import { formatSaleHours, fullAddress, salePath, saleUrl, socialCopy } from "@/lib/format";
+import { salePath, saleUrl, socialCopy } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
@@ -85,22 +86,15 @@ export default async function SharePage({ params, searchParams }: Props) {
               <p className="eyebrow">Flyer preview</p>
               <h2>QR flyer</h2>
             </div>
-            <p className="muted">Print it or screenshot it.</p>
+            <Link className="button compact-button" href={`${salePath(sale)}/share/flyer`}>
+              Flyer-only view
+            </Link>
           </div>
-          <div className="flyer">
-            <p className="eyebrow">SaleTrail by Localized.life</p>
-            <h2>{sale.title}</h2>
-            <p className="whitespace">{formatSaleHours(sale)}</p>
-            <p>{fullAddress(sale)}</p>
-            {sale.photo_urls?.[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="flyer-photo" src={sale.photo_urls[0]} alt={`${sale.title} photo`} />
-            ) : null}
-            {sale.description ? <p>{sale.description}</p> : null}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qr} alt="QR code for SaleTrail listing" />
-            <p className="short-url">{url}</p>
-          </div>
+          <p className="muted">
+            This auto-generated flyer is made for screenshots, printing, and sharing offline. The QR code and short URL
+            send shoppers back to the live listing.
+          </p>
+          <FlyerPreview qr={qr} sale={sale} url={url} />
         </aside>
         <ShareActions
           listingUrl={url}
