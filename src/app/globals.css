@@ -1067,43 +1067,69 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .share-tools {
-  min-height: 100%;
+  gap: 12px;
+  align-content: start;
+}
+
+.share-tools.panel {
+  padding: 20px;
+}
+
+.share-tools h2 {
+  margin-bottom: 6px;
+  font-size: 1.25rem;
+}
+
+.share-tools .muted {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .share-link-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 12px;
   background: #fbfdff;
 }
 
 .share-link-card strong {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  font-size: 0.88rem;
 }
 
 .share-link-card p {
   margin: 0;
   color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
 
 .share-action-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
+}
+
+.share-compact-button {
+  min-height: 40px;
+  padding: 9px 13px;
+  border-radius: 11px;
+  font-size: 0.9rem;
 }
 
 .share-post-field textarea {
-  min-height: 320px;
+  min-height: 235px;
   white-space: pre-wrap;
 }
 

@@ -29,10 +29,7 @@ export function ShareActions({ listingUrl, postText, title }: ShareActionsProps)
       <div>
         <p className="eyebrow">Share tools</p>
         <h2>Send people to this listing</h2>
-        <p className="muted">
-          Use the public listing link anywhere. The post text is written for Facebook, Nextdoor, Craigslist, groups, or
-          a text message.
-        </p>
+        <p className="muted">Copy the link or ready-to-post text, then share it anywhere.</p>
       </div>
 
       <div className="share-link-card">
@@ -40,23 +37,23 @@ export function ShareActions({ listingUrl, postText, title }: ShareActionsProps)
           <strong>Public listing link</strong>
           <p>{listingUrl}</p>
         </div>
-        <button className="button" type="button" onClick={() => copyText(listingUrl)}>
+        <button className="button share-compact-button" type="button" onClick={() => copyText(listingUrl)}>
           Copy link
         </button>
       </div>
 
       <div className="share-action-grid">
-        <button className="button primary" type="button" onClick={nativeShare}>
-          Share from device
+        <button className="button primary share-compact-button" type="button" onClick={nativeShare}>
+          Share
         </button>
-        <button className="button" type="button" onClick={() => copyText(postText)}>
-          Copy post text
+        <button className="button share-compact-button" type="button" onClick={() => copyText(postText)}>
+          Copy post
         </button>
       </div>
 
       <label className="share-post-field">
         Post text
-        <textarea readOnly rows={13} value={postText} />
+        <textarea readOnly rows={9} value={postText} />
       </label>
     </section>
   );
