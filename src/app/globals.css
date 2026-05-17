@@ -482,6 +482,7 @@ h2 {
 
 .list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 20px;
 }
@@ -583,6 +584,41 @@ h2 {
   display: grid;
   gap: 12px;
   padding: 22px;
+  box-shadow: var(--shadow-soft);
+}
+
+.sale-card {
+  align-content: start;
+  overflow: hidden;
+  padding: 0;
+}
+
+.sale-card > :not(.sale-card-image) {
+  margin-right: 20px;
+  margin-left: 20px;
+}
+
+.sale-card > :last-child {
+  margin-bottom: 20px;
+}
+
+.sale-card-image,
+.listing-preview-image {
+  width: 100%;
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+.sale-card-image {
+  aspect-ratio: 16 / 9;
+  border-width: 0 0 1px;
+  border-radius: 20px 20px 0 0;
+}
+
+.listing-preview-image {
+  max-height: 360px;
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
   box-shadow: var(--shadow-soft);
 }
 
@@ -869,6 +905,10 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.compact-photo-grid {
+  grid-template-columns: 1fr;
 }
 
 .photo-grid img {
@@ -1249,6 +1289,7 @@ code {
 @media (max-width: 760px) {
   .two,
   .three,
+  .list,
   .search,
   .front-hero,
   .tool-card-grid,

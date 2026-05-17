@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath } from "@/lib/format";
 import { saleCanonicalUrl, saleOgImageUrl } from "@/lib/og";
+import { salePreviewImage } from "@/lib/share";
 import { submitListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -126,6 +127,7 @@ export default async function SalePage({ params, searchParams }: Props) {
   const query = await searchParams;
   const sale = await getSale(slug);
   if (!sale) notFound();
+  const previewImage = salePreviewImage(sale);
 
   return (
     <main className="page narrow">
@@ -144,9 +146,13 @@ export default async function SalePage({ params, searchParams }: Props) {
         </p>
         {sale.status !== "active" ? <div className="notice">This sale is marked {sale.status}.</div> : null}
         {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
-        {sale.photo_urls?.length ? (
-          <div className="photo-grid">
-            {sale.photo_urls.slice(0, 2).map((url) => (
+        {previewImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="listing-preview-image" src={previewImage.src} alt={`${sale.title} preview`} />
+        ) : null}
+        {sale.photo_urls && sale.photo_urls.length > 1 ? (
+          <div className="photo-grid compact-photo-grid">
+            {sale.photo_urls.slice(1, 2).map((url) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={url} alt={`${sale.title} photo`} key={url} />
             ))}

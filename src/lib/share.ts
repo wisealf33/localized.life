@@ -34,3 +34,4 @@ export function saleFlyerImage(sale: ShareImageSale) {
   return null;
 }
 
+export const salePreviewImage = saleFlyerImage;

@@ -4,11 +4,12 @@ import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
+import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const publicSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
 type Props = {
   searchParams: Promise<{ q?: string; date?: string; page?: string; perPage?: string }>;
@@ -161,49 +162,59 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             <p>Try another city or add the first sale for your area.</p>
           </div>
         ) : (
-          sales.map((sale) => (
-            <article className="card" key={sale.id}>
-              <div className="card-top">
-                <StatusBadge sale={sale} />
-                <span className="muted">{sale.city}, {sale.state}</span>
-              </div>
-              <h2>
-                <Link href={salePath(sale)}>{sale.title}</Link>
-              </h2>
-              <p>{formatSaleHours(sale)}</p>
-              <p className="muted">
-                <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
-                  {fullAddress(sale)}
-                </a>
-              </p>
-              {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
-              <div className="card-actions">
-                <Link className="button primary" href={salePath(sale)}>
-                  View listing
-                </Link>
-                <SaveSaleButton
-                  sale={{
-                    slug: sale.slug,
-                    title: sale.title,
-                    address: fullAddress(sale),
-                    city: sale.city,
-                    state: sale.state,
-                    startsAt: sale.starts_at,
-                    href: salePath(sale),
-                    latitude: sale.latitude,
-                    longitude: sale.longitude,
-                    locationPrecision: sale.location_precision,
-                  }}
-                  variant="secondary"
-                />
-                {canClaim(sale) ? (
-                  <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
-                    Claim listing
-                  </Link>
+          sales.map((sale) => {
+            const image = salePreviewImage(sale);
+
+            return (
+              <article className="card sale-card" key={sale.id}>
+                {image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="sale-card-image" src={image.src} alt={`${sale.title} preview`} />
                 ) : null}
-              </div>
-            </article>
-          ))
+                <div className="card-top">
+                  <StatusBadge sale={sale} />
+                  <span className="muted">
+                    {sale.city}, {sale.state}
+                  </span>
+                </div>
+                <h2>
+                  <Link href={salePath(sale)}>{sale.title}</Link>
+                </h2>
+                <p>{formatSaleHours(sale)}</p>
+                <p className="muted">
+                  <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+                    {fullAddress(sale)}
+                  </a>
+                </p>
+                {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+                <div className="card-actions">
+                  <Link className="button primary" href={salePath(sale)}>
+                    View listing
+                  </Link>
+                  <SaveSaleButton
+                    sale={{
+                      slug: sale.slug,
+                      title: sale.title,
+                      address: fullAddress(sale),
+                      city: sale.city,
+                      state: sale.state,
+                      startsAt: sale.starts_at,
+                      href: salePath(sale),
+                      latitude: sale.latitude,
+                      longitude: sale.longitude,
+                      locationPrecision: sale.location_precision,
+                    }}
+                    variant="secondary"
+                  />
+                  {canClaim(sale) ? (
+                    <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
+                      Claim listing
+                    </Link>
+                  ) : null}
+                </div>
+              </article>
+            );
+          })
         )}
       </section>
 
