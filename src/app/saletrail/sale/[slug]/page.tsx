@@ -135,7 +135,7 @@ export default async function SalePage({ params, searchParams }: Props) {
 
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}
 
-      <section className="stack">
+      <section className="stack listing-detail">
         <StatusBadge sale={sale} />
         <div className="listing-title-row">
           <h1>{sale.title}</h1>

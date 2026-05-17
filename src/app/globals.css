@@ -687,6 +687,10 @@ h2 {
   gap: 14px;
 }
 
+.listing-detail {
+  margin-top: 16px;
+}
+
 .listing-title-row h1 {
   flex: 1 1 360px;
   margin-bottom: 0;
