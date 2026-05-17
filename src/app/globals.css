@@ -679,9 +679,17 @@ h2 {
   margin-bottom: 0;
 }
 
-.listing-page-nav {
+.listing-title-row {
   display: flex;
-  margin-top: 18px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.listing-title-row h1 {
+  flex: 1 1 360px;
+  margin-bottom: 0;
 }
 
 .compact {

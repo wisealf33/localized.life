@@ -135,13 +135,12 @@ export default async function SalePage({ params, searchParams }: Props) {
 
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}
 
-      <div className="listing-page-nav">
-        <BackToListingsButton />
-      </div>
-
       <section className="stack">
         <StatusBadge sale={sale} />
-        <h1>{sale.title}</h1>
+        <div className="listing-title-row">
+          <h1>{sale.title}</h1>
+          <BackToListingsButton />
+        </div>
         <p className="lede whitespace">{formatSaleHours(sale)}</p>
         <p>
           <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
