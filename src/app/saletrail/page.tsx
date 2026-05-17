@@ -57,7 +57,7 @@ async function getSales(q?: string, date?: string, page = 1, perPage = 10) {
   }
 
   if (date) {
-    query = query.gte("starts_at", `${date}T00:00:00`).lte("starts_at", `${date}T23:59:59`);
+    query = query.lte("starts_at", `${date}T23:59:59`).gte("ends_at", `${date}T00:00:00`);
   }
 
   const { data, error, count } = await query;
