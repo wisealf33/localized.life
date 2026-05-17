@@ -87,7 +87,7 @@ export default async function SharePage({ params, searchParams }: Props) {
               <h2>QR flyer</h2>
             </div>
             <Link className="button compact-button" href={`${salePath(sale)}/share/flyer`}>
-              Flyer-only view
+              Printer-friendly view
             </Link>
           </div>
           <p className="muted">
