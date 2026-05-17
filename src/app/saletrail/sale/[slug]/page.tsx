@@ -11,8 +11,10 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const publicSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
 const publicSaleColumnsWithoutPhotos =
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+const publicSaleColumnsWithoutPrecision =
   "id, slug, title, description, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
 const publicSaleColumnsWithoutCoordinates =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
@@ -43,6 +45,17 @@ async function getSale(slug: string) {
     return { ...fallbackData, photo_urls: [] } as unknown as Sale;
   }
 
+  if (error?.message.includes("location_precision")) {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("sales")
+      .select(publicSaleColumnsWithoutPrecision)
+      .eq("slug", slug)
+      .eq("visibility_status", "public")
+      .single();
+    if (fallbackError || !fallbackData) return null;
+    return { ...fallbackData, photo_urls: [], location_precision: null } as unknown as Sale;
+  }
+
   if (error?.message.includes("latitude") || error?.message.includes("longitude")) {
     const { data: fallbackData, error: fallbackError } = await supabase
       .from("sales")
@@ -51,7 +64,7 @@ async function getSale(slug: string) {
       .eq("visibility_status", "public")
       .single();
     if (fallbackError || !fallbackData) return null;
-    return { ...fallbackData, photo_urls: [], latitude: null, longitude: null } as unknown as Sale;
+    return { ...fallbackData, photo_urls: [], latitude: null, longitude: null, location_precision: null } as unknown as Sale;
   }
 
   if (error || !data) return null;
@@ -168,10 +181,13 @@ export default async function SalePage({ params, searchParams }: Props) {
               slug: sale.slug,
               title: sale.title,
               address: fullAddress(sale),
+              city: sale.city,
+              state: sale.state,
               startsAt: sale.starts_at,
               href: salePath(sale),
               latitude: sale.latitude,
               longitude: sale.longitude,
+              locationPrecision: sale.location_precision,
             }}
           />
           <Link className="button" href={saleSharePath(sale)}>

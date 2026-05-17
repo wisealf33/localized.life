@@ -118,6 +118,12 @@ function addressFromForm(formData: FormData) {
   };
 }
 
+function withoutLocationPrecision(payload: Record<string, unknown>) {
+  const next = { ...payload };
+  delete next.location_precision;
+  return next;
+}
+
 function photoFiles(formData: FormData) {
   return formData
     .getAll("photos")
@@ -180,6 +186,7 @@ export async function createSellerSale(formData: FormData) {
     ...address,
     latitude: coordinates?.latitude ?? null,
     longitude: coordinates?.longitude ?? null,
+    location_precision: coordinates?.precision ?? null,
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,
@@ -194,8 +201,13 @@ export async function createSellerSale(formData: FormData) {
   if (photoUrls.length > 0) insertPayload.photo_urls = photoUrls;
 
   const { error } = await supabase.from("sales").insert(insertPayload);
+  if (error?.message.includes("location_precision")) {
+    const retry = await supabase.from("sales").insert(withoutLocationPrecision(insertPayload));
+    if (retry.error) throw new Error(retry.error.message);
+  } else if (error) {
+    throw new Error(error.message);
+  }
 
-  if (error) throw new Error(error.message);
   revalidatePath("/saletrail");
   redirect(`${saleSharePath({ slug, city: String(insertPayload.city), state: String(insertPayload.state) })}?manage=${manageToken}`);
 }
@@ -210,13 +222,14 @@ export async function createCommunitySale(formData: FormData) {
   const address = addressFromForm(formData);
   const coordinates = await geocodeAddress(address);
 
-  const { error } = await supabase.from("sales").insert({
+  const insertPayload: Record<string, unknown> = {
     slug,
     title,
     description: value(formData, "description"),
     ...address,
     latitude: coordinates?.latitude ?? null,
     longitude: coordinates?.longitude ?? null,
+    location_precision: coordinates?.precision ?? null,
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,
@@ -231,9 +244,16 @@ export async function createCommunitySale(formData: FormData) {
     source_poster_name: value(formData, "source_poster_name"),
     raw_source_text: value(formData, "raw_source_text"),
     outreach_status: "not_contacted",
-  });
+  };
 
-  if (error) throw new Error(error.message);
+  const { error } = await supabase.from("sales").insert(insertPayload);
+  if (error?.message.includes("location_precision")) {
+    const retry = await supabase.from("sales").insert(withoutLocationPrecision(insertPayload));
+    if (retry.error) throw new Error(retry.error.message);
+  } else if (error) {
+    throw new Error(error.message);
+  }
+
   revalidatePath("/saletrail");
   redirect(salePath({ slug, city: address.city, state: address.state }));
 }
@@ -247,14 +267,22 @@ export async function updateManagedSale(formData: FormData) {
 
   let { data: sale, error: findError } = await supabase
     .from("sales")
-    .select("slug, address_line, city, state, zip, latitude, longitude, photo_urls")
+    .select("slug, address_line, city, state, zip, latitude, longitude, location_precision, photo_urls")
     .eq("manage_token_hash", tokenHash)
     .single();
 
-  if (findError?.message.includes("photo_urls")) {
+  if (findError?.message.includes("location_precision")) {
     const fallback = await supabase
       .from("sales")
-      .select("slug, address_line, city, state, zip, latitude, longitude")
+      .select("slug, address_line, city, state, zip, latitude, longitude, photo_urls")
+      .eq("manage_token_hash", tokenHash)
+      .single();
+    sale = fallback.data ? { ...fallback.data, location_precision: null } : null;
+    findError = fallback.error;
+  } else if (findError?.message.includes("photo_urls")) {
+    const fallback = await supabase
+      .from("sales")
+      .select("slug, address_line, city, state, zip, latitude, longitude, location_precision")
       .eq("manage_token_hash", tokenHash)
       .single();
     sale = fallback.data ? { ...fallback.data, photo_urls: [] } : null;
@@ -277,6 +305,7 @@ export async function updateManagedSale(formData: FormData) {
     ...address,
     latitude: addressChanged ? (coordinates?.latitude ?? null) : sale.latitude,
     longitude: addressChanged ? (coordinates?.longitude ?? null) : sale.longitude,
+    location_precision: addressChanged ? (coordinates?.precision ?? null) : sale.location_precision,
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,
@@ -294,7 +323,15 @@ export async function updateManagedSale(formData: FormData) {
     .update(updatePayload)
     .eq("manage_token_hash", tokenHash);
 
-  if (error) throw new Error(error.message);
+  if (error?.message.includes("location_precision")) {
+    const retry = await supabase
+      .from("sales")
+      .update(withoutLocationPrecision(updatePayload))
+      .eq("manage_token_hash", tokenHash);
+    if (retry.error) throw new Error(retry.error.message);
+  } else if (error) {
+    throw new Error(error.message);
+  }
   revalidatePath(salePath(sale));
   redirect(salePath({ slug: sale.slug, city: address.city, state: address.state }));
 }

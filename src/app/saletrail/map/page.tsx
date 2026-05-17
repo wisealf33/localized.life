@@ -8,6 +8,8 @@ import type { Sale } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 const mapSaleColumns =
+  "id, slug, title, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, created_at, updated_at";
+const mapSaleColumnsWithoutPrecision =
   "id, slug, title, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, created_at, updated_at";
 const mapSaleColumnsWithoutCoordinates =
   "id, slug, title, address_line, city, state, zip, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, created_at, updated_at";
@@ -20,8 +22,22 @@ async function getMapSales() {
     .select(mapSaleColumns)
     .eq("visibility_status", "public")
     .eq("status", "active")
+    .gte("ends_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
     .limit(200);
+
+  if (error?.message.includes("location_precision")) {
+    const fallback = await supabase
+      .from("sales")
+      .select(mapSaleColumnsWithoutPrecision)
+      .eq("visibility_status", "public")
+      .eq("status", "active")
+      .gte("ends_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(200);
+    if (fallback.error) throw new Error(fallback.error.message);
+    return ((fallback.data || []) as Sale[]).map((sale) => ({ ...sale, location_precision: null }));
+  }
 
   if (error?.message.includes("latitude") || error?.message.includes("longitude")) {
     const fallback = await supabase
@@ -29,10 +45,16 @@ async function getMapSales() {
       .select(mapSaleColumnsWithoutCoordinates)
       .eq("visibility_status", "public")
       .eq("status", "active")
+      .gte("ends_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
       .limit(200);
     if (fallback.error) throw new Error(fallback.error.message);
-    return ((fallback.data || []) as Sale[]).map((sale) => ({ ...sale, latitude: null, longitude: null }));
+    return ((fallback.data || []) as Sale[]).map((sale) => ({
+      ...sale,
+      latitude: null,
+      longitude: null,
+      location_precision: null,
+    }));
   }
 
   if (error) throw new Error(error.message);
@@ -44,10 +66,13 @@ function toMappedSale(sale: Sale): MappedSale {
     slug: sale.slug,
     title: sale.title,
     address: fullAddress(sale),
+    city: sale.city,
+    state: sale.state,
     startsAt: sale.starts_at,
     href: salePath(sale),
     latitude: sale.latitude,
     longitude: sale.longitude,
+    locationPrecision: sale.location_precision,
   };
 }
 
@@ -55,6 +80,7 @@ export default async function SaleTrailMapPage() {
   const sales = await getMapSales();
   const mappedSales = sales.map(toMappedSale);
   const mappedCount = mappedSales.filter((sale) => sale.latitude !== null && sale.longitude !== null).length;
+  const approximateCount = mappedSales.filter((sale) => sale.locationPrecision === "area").length;
 
   return (
     <main className="page">
@@ -79,7 +105,10 @@ export default async function SaleTrailMapPage() {
       <section className="panel stack">
         <div className="card-top">
           <h2>{mappedCount} mapped sales</h2>
-          <p className="muted">{sales.length - mappedCount} listings still need coordinates.</p>
+          <p className="muted">
+            {sales.length - mappedCount} listings still need coordinates. {approximateCount} pins are approximate area
+            pins.
+          </p>
         </div>
         <SaleMap sales={mappedSales} />
       </section>
@@ -97,7 +126,11 @@ export default async function SaleTrailMapPage() {
                 </p>
               </div>
               <span className={sale.latitude !== null && sale.longitude !== null ? "badge good" : "badge plain"}>
-                {sale.latitude !== null && sale.longitude !== null ? "Mapped" : "Needs coordinates"}
+                {sale.latitude !== null && sale.longitude !== null
+                  ? sale.location_precision === "area"
+                    ? "Approximate area"
+                    : "Mapped"
+                  : "Needs coordinates"}
               </span>
             </article>
           ))}

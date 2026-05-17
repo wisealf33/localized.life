@@ -7,10 +7,13 @@ export type MappedSale = {
   slug: string;
   title: string;
   address: string;
+  city?: string;
+  state?: string;
   startsAt: string;
   href: string;
   latitude: number | null;
   longitude: number | null;
+  locationPrecision?: "address" | "area" | null;
 };
 
 function formatDate(value: string) {
@@ -36,9 +39,17 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
       ),
     [sales],
   );
+  const mapGroups = useMemo(() => {
+    const groups = new Map<string, MappedSale[]>();
+    for (const sale of mappedSales) {
+      const key = `${sale.latitude?.toFixed(5)},${sale.longitude?.toFixed(5)}`;
+      groups.set(key, [...(groups.get(key) || []), sale]);
+    }
+    return Array.from(groups.values());
+  }, [mappedSales]);
 
   useEffect(() => {
-    if (!containerRef.current || mappedSales.length === 0) return;
+    if (!containerRef.current || mapGroups.length === 0) return;
     let cancelled = false;
 
     async function renderMap() {
@@ -50,7 +61,8 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         mapRef.current = null;
       }
 
-      const center = [mappedSales[0].latitude || 41.5, mappedSales[0].longitude || -87.7] as [number, number];
+      const firstSale = mapGroups[0][0];
+      const center = [firstSale.latitude || 41.5, firstSale.longitude || -87.7] as [number, number];
       const map = L.map(containerRef.current, {
         scrollWheelZoom: false,
       }).setView(center, 10);
@@ -63,7 +75,8 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
 
       const bounds = L.latLngBounds([]);
 
-      for (const sale of mappedSales) {
+      for (const group of mapGroups) {
+        const sale = group[0];
         const latLng = L.latLng(sale.latitude || 0, sale.longitude || 0);
         bounds.extend(latLng);
 
@@ -71,25 +84,43 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         popup.className = "map-popup";
 
         const title = document.createElement("strong");
-        title.textContent = sale.title;
+        title.textContent =
+          group.length > 1
+            ? `${sale.city || "Area"}${sale.state ? `, ${sale.state}` : ""}: ${group.length} sales`
+            : sale.title;
         popup.append(title);
 
-        const when = document.createElement("p");
-        when.textContent = formatDate(sale.startsAt);
-        popup.append(when);
+        if (group.some((item) => item.locationPrecision === "area")) {
+          const note = document.createElement("p");
+          note.textContent = "Approximate area pin";
+          popup.append(note);
+        }
 
-        const address = document.createElement("p");
-        address.textContent = sale.address;
-        popup.append(address);
+        for (const item of group.slice(0, 6)) {
+          const listing = document.createElement("div");
+          listing.className = "map-popup-listing";
 
-        const link = document.createElement("a");
-        link.href = sale.href;
-        link.textContent = "View listing";
-        popup.append(link);
+          const listingLink = document.createElement("a");
+          listingLink.href = item.href;
+          listingLink.textContent = item.title;
+          listing.append(listingLink);
+
+          const listingMeta = document.createElement("p");
+          listingMeta.textContent = `${formatDate(item.startsAt)} · ${item.address}`;
+          listing.append(listingMeta);
+          popup.append(listing);
+        }
+
+        if (group.length > 6 && sale.city) {
+          const more = document.createElement("a");
+          more.href = `/saletrail?q=${encodeURIComponent(sale.city)}`;
+          more.textContent = `View more ${sale.city} listings`;
+          popup.append(more);
+        }
 
         L.circleMarker(latLng, {
-          radius: 9,
-          color: "#1d4ed8",
+          radius: group.length > 1 ? 14 : 9,
+          color: group.some((item) => item.locationPrecision === "area") ? "#f97373" : "#1d4ed8",
           weight: 3,
           fillColor: "#3b82f6",
           fillOpacity: 0.85,
@@ -98,7 +129,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
           .bindPopup(popup);
       }
 
-      if (mappedSales.length > 1) {
+      if (mapGroups.length > 1) {
         map.fitBounds(bounds, { padding: [32, 32], maxZoom: 13 });
       }
     }
@@ -112,7 +143,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         mapRef.current = null;
       }
     };
-  }, [mappedSales]);
+  }, [mapGroups]);
 
   if (mappedSales.length === 0) {
     return (

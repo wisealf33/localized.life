@@ -41,10 +41,13 @@ export function RoutePlanner() {
         slug: sale.slug,
         title: sale.title,
         address: sale.address,
+        city: sale.city,
+        state: sale.state,
         startsAt: sale.startsAt,
         href: sale.href || `/saletrail/sale/${sale.slug}`,
         latitude: sale.latitude ?? null,
         longitude: sale.longitude ?? null,
+        locationPrecision: sale.locationPrecision ?? null,
       })),
     [sales],
   );

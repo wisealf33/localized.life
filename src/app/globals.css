@@ -634,8 +634,9 @@ h2 {
 
 .map-popup {
   display: grid;
-  gap: 6px;
-  min-width: 180px;
+  gap: 8px;
+  min-width: 210px;
+  max-width: 280px;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Inter, system-ui, sans-serif;
 }
@@ -655,6 +656,13 @@ h2 {
 .map-popup a {
   color: var(--primary);
   font-weight: 800;
+}
+
+.map-popup-listing {
+  display: grid;
+  gap: 3px;
+  border-top: 1px solid var(--line);
+  padding-top: 7px;
 }
 
 .notice {

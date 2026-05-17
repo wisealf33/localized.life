@@ -46,6 +46,7 @@ async function getSales(q?: string, date?: string, page = 1, perPage = 10) {
     .select(publicSaleColumns, { count: "exact" })
     .eq("visibility_status", "public")
     .eq("status", "active")
+    .gte("ends_at", new Date().toISOString())
     .order("source_type", { ascending: false })
     .order("claim_status", { ascending: true })
     .order("starts_at", { ascending: true })

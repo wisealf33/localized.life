@@ -11,6 +11,7 @@ create table if not exists public.sales (
   zip text not null,
   latitude double precision,
   longitude double precision,
+  location_precision text,
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   sale_schedule text,
@@ -54,7 +55,8 @@ alter table public.sales
 
 alter table public.sales
   add column if not exists latitude double precision,
-  add column if not exists longitude double precision;
+  add column if not exists longitude double precision,
+  add column if not exists location_precision text;
 
 alter table public.sales
   add column if not exists source_platform text,

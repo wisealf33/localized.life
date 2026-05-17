@@ -6,6 +6,7 @@ type AddressInput = Pick<Sale, "address_line" | "city" | "state" | "zip">;
 type GeocodeResult = {
   latitude: number;
   longitude: number;
+  precision: "address" | "area";
 };
 
 type NominatimResult = {
@@ -15,8 +16,7 @@ type NominatimResult = {
 
 const nominatimUrl = "https://nominatim.openstreetmap.org/search";
 
-export async function geocodeAddress(address: AddressInput): Promise<GeocodeResult | null> {
-  const query = fullAddress(address);
+async function lookup(query: string): Promise<Omit<GeocodeResult, "precision"> | null> {
   const params = new URLSearchParams({
     q: query,
     format: "jsonv2",
@@ -48,3 +48,15 @@ export async function geocodeAddress(address: AddressInput): Promise<GeocodeResu
   }
 }
 
+export async function geocodeAddress(address: AddressInput): Promise<GeocodeResult | null> {
+  const exact = await lookup(fullAddress(address));
+  if (exact) return { ...exact, precision: "address" };
+
+  const area = await lookup(`${address.city}, ${address.state} ${address.zip}`);
+  if (area) return { ...area, precision: "area" };
+
+  const city = await lookup(`${address.city}, ${address.state}`);
+  if (city) return { ...city, precision: "area" };
+
+  return null;
+}

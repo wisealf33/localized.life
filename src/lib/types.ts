@@ -26,6 +26,7 @@ export type Sale = {
   zip: string;
   latitude: number | null;
   longitude: number | null;
+  location_precision: "address" | "area" | null;
   starts_at: string;
   ends_at: string;
   sale_schedule: string | null;

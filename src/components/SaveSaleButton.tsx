@@ -6,10 +6,13 @@ export type SavedSale = {
   slug: string;
   title: string;
   address: string;
+  city?: string;
+  state?: string;
   startsAt: string;
   href?: string;
   latitude?: number | null;
   longitude?: number | null;
+  locationPrecision?: "address" | "area" | null;
 };
 
 const key = "saletrail.savedSales";
