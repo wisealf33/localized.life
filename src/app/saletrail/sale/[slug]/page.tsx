@@ -7,7 +7,6 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath } from "@/lib/format";
 import { saleCanonicalUrl, saleOgImageUrl } from "@/lib/og";
 import { salePreviewImage } from "@/lib/share";
-import { submitListingRequest } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
@@ -168,8 +167,8 @@ export default async function SalePage({ params, searchParams }: Props) {
               removal of this listing.
             </p>
             <p>
-              Claiming asks for a public Facebook post/comment so admin can confirm the organizer. Correction and
-              removal requests are reviewed privately through the form below.
+              Claiming asks for a public Facebook post/comment so admin can confirm the organizer. Once approved, the
+              organizer gets a private manage link to update details.
             </p>
             {sale.source_url ? (
               <p>
@@ -207,38 +206,21 @@ export default async function SalePage({ params, searchParams }: Props) {
         </div>
       </section>
 
-      <section className="panel">
-        <h2>Suggest a correction or request removal</h2>
-        <p className="muted">
-          Use this private request if details are wrong or if you want the listing removed. Admin may contact you through
-          the contact info you provide to confirm before making changes.
-        </p>
-        <form action={submitListingRequest} className="form">
-          <input type="hidden" name="slug" value={sale.slug} />
-          <label>
-            Request type
-            <select name="request_type" required>
-              <option value="correction">Correction</option>
-              <option value="removal">Removal</option>
-            </select>
-          </label>
-          <label>
-            Name
-            <input name="name" />
-          </label>
-          <label>
-            Contact
-            <input name="contact" placeholder="Email or phone" />
-          </label>
-          <label>
-            Message
-            <textarea name="message" rows={4} required />
-          </label>
-          <button className="button primary" type="submit">
-            Send for manual review
-          </button>
-        </form>
-      </section>
+      {sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
+        <section className="panel claim-listing-panel">
+          <div>
+            <p className="eyebrow">Organizer access</p>
+            <h2>Need to update this listing?</h2>
+          </div>
+          <p className="muted">
+            Claim the listing first. After admin approval, you will receive a private manage link to update details,
+            improve the listing, or request removal.
+          </p>
+          <Link className="button primary compact-button" href={`/saletrail/claim/${sale.slug}`}>
+            Claim this listing
+          </Link>
+        </section>
+      ) : null}
     </main>
   );
 }
