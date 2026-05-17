@@ -16,11 +16,15 @@ type OpenRegion = FacebookDestination & {
 
 const cityCounty: Record<string, string> = {
   aurora: "Kane County",
+  batavia: "Kane County",
   beecher: "Will County",
   bolingbrook: "Will County",
   bradley: "Kankakee County",
+  "buffalo grove": "Lake County",
+  chicago: "Cook County",
   "chicago heights": "Cook County",
   channahon: "Will County",
+  crete: "Will County",
   "crest hill": "Will County",
   elwood: "Will County",
   frankfort: "Will County",
@@ -58,6 +62,7 @@ const openRegions: OpenRegion[] = [
       "beecher",
       "bolingbrook",
       "channahon",
+      "crete",
       "crest hill",
       "elwood",
       "frankfort",
