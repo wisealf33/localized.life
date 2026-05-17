@@ -79,11 +79,6 @@ export default async function SharePage({ params, searchParams }: Props) {
       </section>
 
       <section className="share-layout">
-        <ShareActions
-          listingUrl={url}
-          title={sale.title}
-          postText={copy.publicPost}
-        />
         <aside className="flyer-panel">
           <div className="flyer-panel-header">
             <div>
@@ -107,6 +102,11 @@ export default async function SharePage({ params, searchParams }: Props) {
             <p className="short-url">{url}</p>
           </div>
         </aside>
+        <ShareActions
+          listingUrl={url}
+          title={sale.title}
+          postText={copy.publicPost}
+        />
       </section>
     </main>
   );
