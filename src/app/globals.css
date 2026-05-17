@@ -330,6 +330,67 @@ h2 {
   gap: 24px;
 }
 
+.admin-jump-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-jump-nav a {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 12px;
+  background: #ffffff;
+  color: var(--primary-dark);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.admin-jump-nav a:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.admin-priority-grid {
+  align-items: start;
+}
+
+.admin-priority-panel {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-tool-details {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-tool-details > summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.admin-tool-details > summary span {
+  display: inline-grid;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.admin-tool-details > summary strong {
+  color: var(--foreground);
+  font-size: 1.25rem;
+}
+
+.admin-tool-details > summary small {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.admin-tool-details[open] > summary {
+  margin-bottom: 18px;
+}
+
 .outreach-card {
   display: grid;
   gap: 18px;

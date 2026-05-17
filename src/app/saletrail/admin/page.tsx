@@ -287,6 +287,15 @@ export default async function AdminPage({ searchParams }: Props) {
             </button>
           </form>
         ) : null}
+        {enabled ? (
+          <nav className="admin-jump-nav" aria-label="Admin sections">
+            <a href="#admin-claims">Claims ({claims.length})</a>
+            <a href="#admin-requests">Corrections/removals ({requests.length})</a>
+            <a href="#admin-outreach">Outreach ({activeOutreach.length})</a>
+            <a href="#admin-batch">Batch add</a>
+            <a href="#admin-quick-add">Quick add</a>
+          </nav>
+        ) : null}
       </section>
 
       {!enabled ? (
@@ -304,65 +313,13 @@ export default async function AdminPage({ searchParams }: Props) {
         </section>
       ) : (
         <div className="admin-sections">
-          <section className="panel">
-            <h2>Admin quick add</h2>
-            <SaleForm action={createCommunitySale} admin />
-          </section>
-
-          <section className="panel stack">
-            <div>
-              <h2>Batch quick add</h2>
-              <p className="muted">
-                Paste a JSON batch from researched public sources or screenshots. This creates community-added,
-                unclaimed listings and skips duplicate source URLs.
-              </p>
-            </div>
-            <form action={createCommunitySalesBatch} className="form">
-              <label>
-                Listing batch JSON
-                <textarea
-                  name="batch_json"
-                  rows={12}
-                  placeholder='[{"title":"Example garage sale","address_line":"123 Main St","city":"Joliet","state":"IL","zip":"60435","days":[{"date":"2026-05-23","start":"09:00","end":"15:00"}],"categories":["Garage sale","Home goods"],"source_platform":"Public source","source_url":"https://example.com/listing"}]'
-                  required
-                />
-              </label>
-              <button className="button primary" type="submit">
-                Import batch
-              </button>
-            </form>
-          </section>
-
-          <section className="panel stack">
-            <div>
-              <p className="eyebrow">Manual tracking</p>
-              <h2>Outreach queue</h2>
-              <p className="muted">
-                Community-added, unclaimed listings that may need manual outreach. This queue only helps you copy text
-                and track what you did outside the app.
-              </p>
-            </div>
-            <h3>Outreach needed</h3>
-            {activeOutreach.length === 0 ? <p className="muted">No active outreach items.</p> : null}
-            {activeOutreach.map((sale) => (
-              <OutreachCard key={sale.id} sale={sale} />
-            ))}
-
-            {completedOutreach.length ? (
-              <details className="admin-details completed-outreach">
-                <summary>Completed outreach ({completedOutreach.length})</summary>
-                <div className="stack">
-                  {completedOutreach.map((sale) => (
-                    <OutreachCard completed key={sale.id} sale={sale} />
-                  ))}
-                </div>
-              </details>
-            ) : null}
-          </section>
-
-          <section className="grid two">
-            <div className="panel stack">
-              <h3>Claims</h3>
+          <section className="grid two admin-priority-grid">
+            <div className="panel stack admin-priority-panel" id="admin-claims">
+              <div>
+                <p className="eyebrow">Needs review</p>
+                <h2>Claims</h2>
+                <p className="muted">Review organizer claim requests first. Approving sends or shows the private manage link.</p>
+              </div>
               {claims.length === 0 ? <p className="muted">No pending claims.</p> : null}
               {claims.map((claim) => (
                 <article className="card compact" key={claim.id}>
@@ -394,8 +351,12 @@ export default async function AdminPage({ searchParams }: Props) {
               ))}
             </div>
 
-            <div className="panel stack">
-              <h3>Corrections and removals</h3>
+            <div className="panel stack" id="admin-requests">
+              <div>
+                <p className="eyebrow">Needs review</p>
+                <h2>Corrections and removals</h2>
+                <p className="muted">Handle organizer or community requests to correct or remove listings.</p>
+              </div>
               {requests.length === 0 ? <p className="muted">No pending listing requests.</p> : null}
               {requests.map((request) => (
                 <article className="card compact" key={request.id}>
@@ -419,6 +380,66 @@ export default async function AdminPage({ searchParams }: Props) {
               ))}
             </div>
           </section>
+
+          <section className="panel stack" id="admin-outreach">
+            <div>
+              <p className="eyebrow">Manual tracking</p>
+              <h2>Outreach queue</h2>
+              <p className="muted">
+                Community-added, unclaimed listings that may need manual outreach. This queue only helps you copy text
+                and track what you did outside the app.
+              </p>
+            </div>
+            <h3>Outreach needed</h3>
+            {activeOutreach.length === 0 ? <p className="muted">No active outreach items.</p> : null}
+            {activeOutreach.map((sale) => (
+              <OutreachCard key={sale.id} sale={sale} />
+            ))}
+
+            {completedOutreach.length ? (
+              <details className="admin-details completed-outreach">
+                <summary>Completed outreach ({completedOutreach.length})</summary>
+                <div className="stack">
+                  {completedOutreach.map((sale) => (
+                    <OutreachCard completed key={sale.id} sale={sale} />
+                  ))}
+                </div>
+              </details>
+            ) : null}
+          </section>
+
+          <details className="panel admin-tool-details" id="admin-batch" open>
+            <summary>
+              <span>
+                <strong>Batch quick add</strong>
+                <small>Import researched public-source listings in one paste.</small>
+              </span>
+            </summary>
+            <form action={createCommunitySalesBatch} className="form">
+              <label>
+                Listing batch JSON
+                <textarea
+                  name="batch_json"
+                  rows={12}
+                  placeholder='[{"title":"Example garage sale","address_line":"123 Main St","city":"Joliet","state":"IL","zip":"60435","days":[{"date":"2026-05-23","start":"09:00","end":"15:00"}],"categories":["Garage sale","Home goods"],"source_platform":"Public source","source_url":"https://example.com/listing"}]'
+                  required
+                />
+              </label>
+              <button className="button primary" type="submit">
+                Import batch
+              </button>
+            </form>
+          </details>
+
+          <details className="panel admin-tool-details" id="admin-quick-add">
+            <summary>
+              <span>
+                <strong>Single quick add</strong>
+                <small>Add one manually reviewed community listing.</small>
+              </span>
+            </summary>
+            <SaleForm action={createCommunitySale} admin />
+          </details>
         </div>
       )}
     </main>
