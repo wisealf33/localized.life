@@ -438,6 +438,15 @@ h2 {
   align-content: start;
 }
 
+.events-hero h1 {
+  max-width: 640px;
+}
+
+.events-hero .lede {
+  max-width: 860px;
+  font-size: clamp(1.08rem, 1.8vw, 1.28rem);
+}
+
 .event-card .button {
   width: fit-content;
 }

@@ -10,8 +10,8 @@ const eventColumns =
   "id, slug, title, event_type, description, address_line, city, state, zip, county, latitude, longitude, starts_at, ends_at, event_schedule, source_url, source_platform, source_notes, status, visibility_status, created_at, updated_at";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Local garage sale events | SaleTrail",
-  description: "Find city-wide garage sales, community sales, flea markets, swap meets, farmers markets, and local markets on SaleTrail.",
+  title: "Local events | SaleTrail",
+  description: "Find local community events, city-wide sales, flea markets, swap meets, farmers markets, and local markets on SaleTrail.",
   path: "/saletrail/events",
   image: "/og/city-wide-sale.jpg",
 });
@@ -36,12 +36,12 @@ export default async function EventsPage() {
   return (
     <main className="page">
       <SiteHeader active="events" />
-      <section className="hero">
-        <p className="eyebrow">SaleTrail events</p>
-        <h1>City-wide sales and local market events.</h1>
-        <p>
-          A simple calendar for city-wide garage sales, community sales, flea markets, swap meets, farmers markets, and
-          local markets.
+      <section className="hero events-hero">
+        <p className="eyebrow">Events</p>
+        <h1>Local events.</h1>
+        <p className="lede">
+          A simple calendar for useful community events, starting with city-wide garage sales and expanding into flea
+          markets, swap meets, farmers markets, local markets, and other nearby events worth finding.
         </p>
       </section>
 
@@ -49,7 +49,7 @@ export default async function EventsPage() {
         {events.length === 0 ? (
           <div className="empty">
             <h2>No upcoming events yet</h2>
-            <p>Events will appear here as they are added by SaleTrail admin.</p>
+            <p>City-wide sales, markets, and other local events will appear here as they are added.</p>
           </div>
         ) : (
           events.map((event) => (
