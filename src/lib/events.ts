@@ -1,3 +1,5 @@
+import { existsSync } from "fs";
+import path from "path";
 import type { LocalEvent, LocalEventType } from "./types";
 import { urlSegment } from "./format";
 
@@ -28,4 +30,21 @@ export function formatEventHours(event: Pick<LocalEvent, "starts_at" | "ends_at"
     minute: "2-digit",
   });
   return `${formatter.format(new Date(event.starts_at))} to ${formatter.format(new Date(event.ends_at))}`;
+}
+
+function publicFileExists(publicPath: string) {
+  return existsSync(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")));
+}
+
+export function eventPreviewImagePath(event: Pick<LocalEvent, "city">) {
+  const cityPath = `/og/${urlSegment(event.city)}.jpg`;
+  if (publicFileExists(cityPath)) return cityPath;
+
+  const cityWidePath = "/og/city-wide-sale.jpg";
+  if (publicFileExists(cityWidePath)) return cityWidePath;
+
+  const defaultPath = "/og/default-saletrail.jpg";
+  if (publicFileExists(defaultPath)) return defaultPath;
+
+  return null;
 }

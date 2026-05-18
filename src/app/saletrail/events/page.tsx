@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
-import { eventPath, eventTypeLabel, formatEventHours } from "@/lib/events";
+import { eventPath, eventPreviewImagePath, eventTypeLabel, formatEventHours } from "@/lib/events";
 import { formatSaleHours, salePath } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -98,43 +98,57 @@ export default async function EventsPage() {
           </div>
         ) : (
           <>
-            {events.map((event) => (
-              <article className="card event-card" key={event.id}>
-                <div>
-                  <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
-                  <h2>
-                    <Link href={eventPath(event)}>{event.title}</Link>
-                  </h2>
-                  <p className="muted">
-                    {event.city}, {event.state}
-                    {event.county ? ` · ${event.county}` : ""}
-                  </p>
-                </div>
-                <p className="whitespace">{formatEventHours(event)}</p>
-                {event.description ? <p>{event.description}</p> : null}
-                <Link className="button primary" href={eventPath(event)}>
-                  View event
-                </Link>
-              </article>
-            ))}
-            {eventSales.map((sale) => (
-              <article className="card event-card" key={sale.id}>
-                <div>
-                  <p className="eyebrow">{saleEventLabel(sale)}</p>
-                  <h2>
-                    <Link href={salePath(sale)}>{sale.title}</Link>
-                  </h2>
-                  <p className="muted">
-                    {sale.city}, {sale.state}
-                  </p>
-                </div>
-                <p className="whitespace">{formatSaleHours(sale)}</p>
-                {sale.description ? <p>{sale.description}</p> : null}
-                <Link className="button primary" href={salePath(sale)}>
-                  View event
-                </Link>
-              </article>
-            ))}
+            {events.map((event) => {
+              const image = eventPreviewImagePath(event);
+              return (
+                <article className="card event-card" key={event.id}>
+                  {image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="sale-card-image" src={image} alt={`${event.title} preview`} />
+                  ) : null}
+                  <div>
+                    <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
+                    <h2>
+                      <Link href={eventPath(event)}>{event.title}</Link>
+                    </h2>
+                    <p className="muted">
+                      {event.city}, {event.state}
+                      {event.county ? ` · ${event.county}` : ""}
+                    </p>
+                  </div>
+                  <p className="whitespace">{formatEventHours(event)}</p>
+                  {event.description ? <p>{event.description}</p> : null}
+                  <Link className="button primary" href={eventPath(event)}>
+                    View event
+                  </Link>
+                </article>
+              );
+            })}
+            {eventSales.map((sale) => {
+              const image = eventPreviewImagePath(sale);
+              return (
+                <article className="card event-card" key={sale.id}>
+                  {image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="sale-card-image" src={image} alt={`${sale.title} preview`} />
+                  ) : null}
+                  <div>
+                    <p className="eyebrow">{saleEventLabel(sale)}</p>
+                    <h2>
+                      <Link href={salePath(sale)}>{sale.title}</Link>
+                    </h2>
+                    <p className="muted">
+                      {sale.city}, {sale.state}
+                    </p>
+                  </div>
+                  <p className="whitespace">{formatSaleHours(sale)}</p>
+                  {sale.description ? <p>{sale.description}</p> : null}
+                  <Link className="button primary" href={salePath(sale)}>
+                    View event
+                  </Link>
+                </article>
+              );
+            })}
           </>
         )}
       </section>
