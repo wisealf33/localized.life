@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { CopyIconButton } from "@/components/CopyIconButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { submitClaimRequest } from "@/lib/actions";
@@ -7,6 +8,11 @@ import { listingId, publicClaimMessageForSale, salePath } from "@/lib/format";
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "Claim a SaleTrail listing",
+  robots: { index: false, follow: false },
+};
 
 const claimSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, source_url, claim_status, visibility_status, claimed_at, created_at, updated_at";

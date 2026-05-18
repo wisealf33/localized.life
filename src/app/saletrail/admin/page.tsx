@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { CopyIconButton } from "@/components/CopyIconButton";
 import { SaleForm } from "@/components/SaleForm";
@@ -18,6 +19,11 @@ import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/
 import { salePreviewImageNeed } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { ClaimRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "SaleTrail admin",
+  robots: { index: false, follow: false },
+};
 
 type Props = {
   searchParams: Promise<{ approved?: string; manage?: string; updated?: string; batch?: string; skipped?: string }>;

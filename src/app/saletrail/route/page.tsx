@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import { RoutePlanner } from "@/components/RoutePlanner";
 import { SiteHeader } from "@/components/SiteHeader";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Plan a garage sale route | SaleTrail",
+  description:
+    "Save garage sale listings in your browser, reorder your stops, and open your selected route in Google Maps.",
+  path: "/saletrail/route",
+  image: "/og/default-saletrail.jpg",
+});
 
 export default function RoutePage() {
   return (

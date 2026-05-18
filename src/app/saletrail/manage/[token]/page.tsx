@@ -1,10 +1,16 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { hashSecret } from "@/lib/tokens";
 import { SaleForm } from "@/components/SaleForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { updateManagedSale } from "@/lib/actions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "Manage SaleTrail listing",
+  robots: { index: false, follow: false },
+};
 
 type Props = {
   params: Promise<{ token: string }>;

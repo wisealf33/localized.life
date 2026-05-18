@@ -1,9 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
+import { pageMetadata } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -14,6 +16,14 @@ const publicSaleColumns =
 type Props = {
   searchParams: Promise<{ q?: string; date?: string; page?: string; perPage?: string }>;
 };
+
+export const metadata: Metadata = pageMetadata({
+  title: "Find garage sales near you | SaleTrail",
+  description:
+    "Search upcoming garage sales, yard sales, estate sales, and community-added listings. Save sales to a route and open the route in Google Maps.",
+  path: "/saletrail",
+  image: "/og/default-saletrail.jpg",
+});
 
 const pageSizes = [10, 20, 50];
 

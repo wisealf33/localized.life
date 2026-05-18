@@ -1,11 +1,21 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SaleMap, type MappedSale } from "@/components/SaleMap";
 import { SiteHeader } from "@/components/SiteHeader";
 import { formatSaleHours, fullAddress, salePath } from "@/lib/format";
+import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Garage sale map | SaleTrail",
+  description:
+    "View upcoming garage sales and estate sales on a simple map, then open listings to save stops to your SaleTrail route.",
+  path: "/saletrail/map",
+  image: "/og/default-saletrail.jpg",
+});
 
 const mapSaleColumns =
   "id, slug, title, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, created_at, updated_at";

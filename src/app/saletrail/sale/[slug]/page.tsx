@@ -6,7 +6,7 @@ import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath } from "@/lib/format";
-import { saleCanonicalUrl, saleOgImageUrl } from "@/lib/og";
+import { saleMetadata, saleStructuredData } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -81,45 +81,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const titleLocation = sale.title.toLowerCase().includes(sale.city.toLowerCase())
-    ? `${sale.title}, ${sale.state}`
-    : `${sale.title} in ${sale.city}, ${sale.state}`;
-  const title = `${titleLocation} | SaleTrail`;
-  const description = `${titleLocation}. ${formatSaleHours(sale).replace(/\n/g, " ")} Address: ${fullAddress(sale)}.`;
-  const url = saleCanonicalUrl(sale);
-  const image = saleOgImageUrl(sale);
-  const imageMetadata = image
-    ? [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: `${sale.title} in ${sale.city}, ${sale.state}`,
-        },
-      ]
-    : undefined;
-
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: url,
-    },
-    openGraph: {
-      title,
-      description,
-      url,
-      siteName: "SaleTrail by Localized.life",
-      images: imageMetadata,
-      type: "article",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: image ? [image] : undefined,
-    },
-  };
+  return saleMetadata(sale);
 }
 
 export default async function SalePage({ params, searchParams }: Props) {
@@ -128,9 +90,14 @@ export default async function SalePage({ params, searchParams }: Props) {
   const sale = await getSale(slug);
   if (!sale) notFound();
   const previewImage = salePreviewImage(sale);
+  const structuredData = saleStructuredData(sale);
 
   return (
     <main className="page narrow">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+      />
       <SiteHeader />
 
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}

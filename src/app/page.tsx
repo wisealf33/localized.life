@@ -1,5 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Localized.life | Local tools for real-world community",
+  description:
+    "Localized.life is building practical local tools, starting with SaleTrail: a garage sale directory, flyer generator, and simple route planner.",
+  path: "/",
+  image: "/og/default-saletrail.jpg",
+});
 
 export default function Home() {
   return (
