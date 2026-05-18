@@ -41,11 +41,46 @@ create table if not exists public.sales (
   ),
   outreach_last_at timestamptz,
   outreach_notes text,
+  event_id uuid,
   manage_token_hash text unique,
   claimed_at timestamptz,
   claimed_by_name text,
   claimed_by_contact text,
   admin_notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.local_events (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  title text not null,
+  event_type text not null check (
+    event_type in (
+      'city_wide_garage_sale',
+      'community_sale',
+      'flea_market',
+      'swap_meet',
+      'farmers_market',
+      'local_market'
+    )
+  ),
+  description text,
+  address_line text,
+  city text not null,
+  state text not null,
+  zip text,
+  county text,
+  latitude double precision,
+  longitude double precision,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  event_schedule text,
+  source_url text,
+  source_platform text,
+  source_notes text,
+  status text not null default 'active' check (status in ('active', 'cancelled', 'ended')),
+  visibility_status text not null default 'public' check (visibility_status in ('public', 'hidden', 'removed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -64,6 +99,24 @@ alter table public.sales
   add column if not exists outreach_status text not null default 'not_contacted',
   add column if not exists outreach_last_at timestamptz,
   add column if not exists outreach_notes text;
+
+alter table public.sales
+  add column if not exists event_id uuid;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'sales_event_id_fkey'
+  ) then
+    alter table public.sales
+      add constraint sales_event_id_fkey
+      foreign key (event_id)
+      references public.local_events(id)
+      on delete set null;
+  end if;
+end $$;
 
 alter table public.sales
   drop constraint if exists sales_outreach_status_check;
@@ -152,6 +205,12 @@ create index if not exists sales_claim_visibility_idx
 create index if not exists sales_outreach_queue_idx
   on public.sales (source_type, claim_status, outreach_status, starts_at);
 
+create index if not exists sales_event_id_idx
+  on public.sales (event_id, starts_at);
+
+create index if not exists local_events_public_idx
+  on public.local_events (visibility_status, status, state, city, starts_at);
+
 create index if not exists claim_requests_status_idx
   on public.claim_requests (status, created_at desc);
 
@@ -162,6 +221,7 @@ create index if not exists feedback_requests_status_idx
   on public.feedback_requests (status, created_at desc);
 
 alter table public.sales enable row level security;
+alter table public.local_events enable row level security;
 alter table public.claim_requests enable row level security;
 alter table public.listing_requests enable row level security;
 alter table public.feedback_requests enable row level security;

@@ -433,6 +433,67 @@ h2 {
   align-content: start;
 }
 
+.event-admin-card,
+.event-card {
+  align-content: start;
+}
+
+.event-card .button {
+  width: fit-content;
+}
+
+.event-attach-card {
+  align-items: center;
+}
+
+.event-route-selector {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  background: #fbfdff;
+}
+
+.event-stop-list {
+  display: grid;
+  gap: 10px;
+}
+
+.event-stop-check {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.event-stop-check input {
+  width: auto;
+}
+
+.event-stop-check span {
+  display: grid;
+  gap: 3px;
+}
+
+.event-stop-check small {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.compact-list {
+  grid-template-columns: 1fr;
+  margin-top: 0;
+}
+
+.mini-sale-card {
+  padding: 18px;
+}
+
 .plain-list {
   margin: 12px 0 0;
   padding-left: 20px;

@@ -4,6 +4,13 @@ export type SaleStatus = "active" | "cancelled" | "ended";
 export type VisibilityStatus = "public" | "hidden" | "removed";
 export type ListingRequestType = "correction" | "removal";
 export type FeedbackRequestType = "feature" | "bug" | "general";
+export type LocalEventType =
+  | "city_wide_garage_sale"
+  | "community_sale"
+  | "flea_market"
+  | "swap_meet"
+  | "farmers_market"
+  | "local_market";
 export type ClaimVerificationMethod = "original_post_comment" | "localized_group_post";
 export type OutreachStatus =
   | "not_contacted"
@@ -45,11 +52,37 @@ export type Sale = {
   outreach_status: OutreachStatus | null;
   outreach_last_at: string | null;
   outreach_notes: string | null;
+  event_id: string | null;
   manage_token_hash: string | null;
   claimed_at: string | null;
   claimed_by_name: string | null;
   claimed_by_contact: string | null;
   admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LocalEvent = {
+  id: string;
+  slug: string;
+  title: string;
+  event_type: LocalEventType;
+  description: string | null;
+  address_line: string | null;
+  city: string;
+  state: string;
+  zip: string | null;
+  county: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  starts_at: string;
+  ends_at: string;
+  event_schedule: string | null;
+  source_url: string | null;
+  source_platform: string | null;
+  source_notes: string | null;
+  status: SaleStatus;
+  visibility_status: VisibilityStatus;
   created_at: string;
   updated_at: string;
 };

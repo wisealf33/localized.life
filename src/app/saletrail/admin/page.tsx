@@ -8,18 +8,21 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { adminLogin, adminLogout, isAdminAuthenticated } from "@/lib/admin";
 import {
   approveClaim,
+  createLocalEvent,
   createCommunitySalesBatch,
   createCommunitySale,
   rejectClaim,
   resolveFeedbackRequest,
   resolveListingRequest,
+  updateSaleEvent,
   updateOutreachStatus,
 } from "@/lib/actions";
+import { eventPath, eventTypeLabel, eventTypeOptions, formatEventHours } from "@/lib/events";
 import { claimUrl, formatSaleHours, fullAddress, salePath, saleUrl } from "@/lib/format";
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { missingGeneralFallbackImageNeeds, salePreviewImageNeed } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
-import type { ClaimRequest, FeedbackRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
+import type { ClaimRequest, FeedbackRequest, ListingRequest, LocalEvent, OutreachStatus, Sale } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "SaleTrail admin",
@@ -35,6 +38,10 @@ const outreachSaleColumns =
 
 const photoNeedSaleColumns =
   "id, slug, title, city, state, starts_at, ends_at, sale_schedule, photo_urls, status, source_type, claim_status, visibility_status";
+const eventColumns =
+  "id, slug, title, event_type, description, address_line, city, state, zip, county, latitude, longitude, starts_at, ends_at, event_schedule, source_url, source_platform, source_notes, status, visibility_status, created_at, updated_at";
+const eventAttachSaleColumns =
+  "id, slug, title, address_line, city, state, zip, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, event_id";
 
 const outreachStatusLabels: Record<OutreachStatus, string> = {
   not_contacted: "Not contacted",
@@ -59,9 +66,17 @@ const completedOutreachStatuses = new Set<OutreachStatus>([
 ]);
 
 async function getQueues(enabled: boolean) {
-  if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [] };
+  if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [] };
   const supabase = getSupabaseAdmin();
-  const [{ data: outreach }, { data: claims }, { data: requests }, { data: feedback }, { data: photoSales }] = await Promise.all([
+  const [
+    { data: outreach },
+    { data: claims },
+    { data: requests },
+    { data: feedback },
+    { data: photoSales },
+    eventsResult,
+    attachSalesResult,
+  ] = await Promise.all([
     supabase
       .from("sales")
       .select(outreachSaleColumns)
@@ -88,6 +103,18 @@ async function getQueues(enabled: boolean) {
       .eq("status", "active")
       .gte("ends_at", new Date().toISOString())
       .order("starts_at", { ascending: true }),
+    supabase
+      .from("local_events")
+      .select(eventColumns)
+      .eq("visibility_status", "public")
+      .order("starts_at", { ascending: true }),
+    supabase
+      .from("sales")
+      .select(eventAttachSaleColumns)
+      .eq("visibility_status", "public")
+      .eq("status", "active")
+      .gte("ends_at", new Date().toISOString())
+      .order("starts_at", { ascending: true }),
   ]);
 
   return {
@@ -96,6 +123,8 @@ async function getQueues(enabled: boolean) {
     requests: (requests || []) as ListingRequest[],
     feedback: (feedback || []) as FeedbackRequest[],
     photoSales: (photoSales || []) as Sale[],
+    events: eventsResult.error ? [] : ((eventsResult.data || []) as LocalEvent[]),
+    attachSales: attachSalesResult.error ? [] : ((attachSalesResult.data || []) as Sale[]),
   };
 }
 
@@ -307,7 +336,7 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
 export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
   const enabled = await isAdminAuthenticated();
-  const { outreach, claims, requests, feedback, photoSales } = await getQueues(enabled);
+  const { outreach, claims, requests, feedback, photoSales, events, attachSales } = await getQueues(enabled);
   const activeOutreach = outreach.filter(
     (sale) => !isExpired(sale) && !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
@@ -354,6 +383,7 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-claims">Claims ({claims.length})</a>
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
             <a href="#admin-feedback">Feedback ({feedback.length})</a>
+            <a href="#admin-events">Events ({events.length})</a>
             <a href="#admin-photo-needs">Photo needs ({missingPhotos.length + missingGeneralPhotos.length})</a>
             <a href="#admin-outreach">Outreach ({activeOutreach.length})</a>
             <a href="#admin-expired">Expired ({expiredOutreach.length})</a>
@@ -481,6 +511,157 @@ export default async function AdminPage({ searchParams }: Props) {
                 </form>
               </article>
             ))}
+          </section>
+
+          <section className="panel stack" id="admin-events">
+            <div>
+              <p className="eyebrow">Launch 1.3</p>
+              <h2>Events</h2>
+              <p className="muted">
+                Create simple local event pages. City-wide garage sales can have sale stops attached for shoppers to add
+                to their route.
+              </p>
+            </div>
+
+            <details className="admin-details" open>
+              <summary>Create event</summary>
+              <form action={createLocalEvent} className="form">
+                <div className="grid two">
+                  <label>
+                    Event title
+                    <input name="title" placeholder="Monee City-Wide Garage Sale" required />
+                  </label>
+                  <label>
+                    Event type
+                    <select name="event_type" defaultValue="city_wide_garage_sale">
+                      {eventTypeOptions.map((option) => (
+                        <option value={option.value} key={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    City
+                    <input name="city" required />
+                  </label>
+                  <label>
+                    State
+                    <input name="state" defaultValue="IL" required maxLength={2} />
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    County
+                    <input name="county" placeholder="Will County" />
+                  </label>
+                  <label>
+                    ZIP
+                    <input name="zip" inputMode="numeric" />
+                  </label>
+                </div>
+                <label>
+                  Main address or starting point
+                  <input name="address_line" placeholder="Optional" />
+                </label>
+                <div className="grid two">
+                  <label>
+                    Start date
+                    <input name="start_date" type="date" required />
+                  </label>
+                  <label>
+                    Start time
+                    <input name="start_time" type="time" defaultValue="08:00" />
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    End date
+                    <input name="end_date" type="date" required />
+                  </label>
+                  <label>
+                    End time
+                    <input name="end_time" type="time" defaultValue="17:00" />
+                  </label>
+                </div>
+                <label>
+                  Public schedule text
+                  <textarea name="event_schedule" rows={3} placeholder="Friday, June 5 8 AM-5 PM&#10;Saturday, June 6 8 AM-5 PM" />
+                </label>
+                <label>
+                  Description
+                  <textarea name="description" rows={4} />
+                </label>
+                <div className="grid two">
+                  <label>
+                    Source platform
+                    <input name="source_platform" placeholder="Village website, Facebook, flyer" />
+                  </label>
+                  <label>
+                    Source URL
+                    <input name="source_url" placeholder="Official/source link" />
+                  </label>
+                </div>
+                <label>
+                  Source notes
+                  <textarea name="source_notes" rows={3} />
+                </label>
+                <button className="button primary" type="submit">
+                  Create event
+                </button>
+              </form>
+            </details>
+
+            <div className="grid two">
+              {events.length === 0 ? <p className="muted">No events created yet.</p> : null}
+              {events.map((event) => (
+                <article className="card event-admin-card" key={event.id}>
+                  <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
+                  <h3>{event.title}</h3>
+                  <p className="muted">
+                    {event.city}, {event.state} · <span className="whitespace">{formatEventHours(event)}</span>
+                  </p>
+                  <Link className="text-link" href={eventPath(event)} target="_blank" rel="noopener noreferrer">
+                    Open public event
+                  </Link>
+                </article>
+              ))}
+            </div>
+
+            {events.length ? (
+              <details className="admin-details">
+                <summary>Attach sale listings to events</summary>
+                <div className="stack">
+                  {attachSales.length === 0 ? <p className="muted">No active listings available to attach.</p> : null}
+                  {attachSales.map((sale) => (
+                    <article className="card compact event-attach-card" key={sale.id}>
+                      <div>
+                        <h3>{sale.title}</h3>
+                        <p className="muted">
+                          {sale.city}, {sale.state} · {formatSaleHours(sale).replace(/\n/g, " ")}
+                        </p>
+                      </div>
+                      <form action={updateSaleEvent} className="inline-form">
+                        <input type="hidden" name="sale_id" value={sale.id} />
+                        <select name="event_id" defaultValue={sale.event_id || ""}>
+                          <option value="">No event</option>
+                          {events.map((event) => (
+                            <option value={event.id} key={event.id}>
+                              {event.title}
+                            </option>
+                          ))}
+                        </select>
+                        <button className="button" type="submit">
+                          Save
+                        </button>
+                      </form>
+                    </article>
+                  ))}
+                </div>
+              </details>
+            ) : null}
           </section>
 
           <section className="panel stack" id="admin-photo-needs">

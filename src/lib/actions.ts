@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
 import { sendClaimApprovedEmail, sendClaimInstructionsEmail } from "./email";
+import { eventPath, eventTypeOptions } from "./events";
 import { categoryOptions, salePath, saleSharePath } from "./format";
 import { geocodeAddress } from "./geocode";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
-import type { FeedbackRequestType, ListingRequestType, OutreachStatus, SaleStatus } from "./types";
+import type { FeedbackRequestType, ListingRequestType, LocalEventType, OutreachStatus, SaleStatus } from "./types";
 
 const photoBucket = "saletrail-photos";
 const maxPhotos = 2;
@@ -33,6 +34,7 @@ const outreachStatuses = new Set<OutreachStatus>([
 
 const feedbackRequestTypes = new Set<FeedbackRequestType>(["feature", "bug", "general"]);
 const feedbackStatuses = new Set(["pending", "reviewed", "resolved", "rejected"]);
+const localEventTypes = new Set<LocalEventType>(eventTypeOptions.map((option) => option.value));
 
 type BatchListingDay = {
   date?: string;
@@ -882,6 +884,71 @@ export async function updateOutreachStatus(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail/admin");
+  revalidatePath("/saletrail");
+  redirect("/saletrail/admin?updated=1");
+}
+
+export async function createLocalEvent(formData: FormData) {
+  await requireAdmin();
+
+  const supabase = getSupabaseAdmin();
+  const title = required(formData, "title");
+  const eventType = required(formData, "event_type") as LocalEventType;
+  if (!localEventTypes.has(eventType)) throw new Error("Invalid event type.");
+
+  const slug = slugifyTitle(title);
+  const address = {
+    address_line: value(formData, "address_line"),
+    city: required(formData, "city"),
+    state: required(formData, "state").toUpperCase(),
+    zip: value(formData, "zip"),
+  };
+  const startsAt = asIsoLocalDateTime(required(formData, "start_date"), value(formData, "start_time") || "08:00");
+  const endsAt = asIsoLocalDateTime(required(formData, "end_date"), value(formData, "end_time") || "17:00");
+  if (endsAt <= startsAt) throw new Error("Event end needs to be after the event start.");
+  const coordinates = address.address_line && address.zip ? await geocodeAddress(address) : null;
+
+  const insertPayload = {
+    slug,
+    title,
+    event_type: eventType,
+    description: value(formData, "description"),
+    address_line: address.address_line,
+    city: address.city,
+    state: address.state,
+    zip: address.zip,
+    county: value(formData, "county"),
+    latitude: coordinates?.latitude ?? null,
+    longitude: coordinates?.longitude ?? null,
+    starts_at: startsAt,
+    ends_at: endsAt,
+    event_schedule: value(formData, "event_schedule"),
+    source_url: value(formData, "source_url"),
+    source_platform: value(formData, "source_platform"),
+    source_notes: value(formData, "source_notes"),
+    status: "active",
+    visibility_status: "public",
+  };
+
+  const { error } = await supabase.from("local_events").insert(insertPayload);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/saletrail/admin");
+  revalidatePath("/saletrail/events");
+  redirect(eventPath({ slug, city: address.city, state: address.state }));
+}
+
+export async function updateSaleEvent(formData: FormData) {
+  await requireAdmin();
+
+  const supabase = getSupabaseAdmin();
+  const saleId = required(formData, "sale_id");
+  const eventId = value(formData, "event_id") || null;
+  const { error } = await supabase.from("sales").update({ event_id: eventId, updated_at: new Date().toISOString() }).eq("id", saleId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/saletrail/admin");
+  revalidatePath("/saletrail/events");
   revalidatePath("/saletrail");
   redirect("/saletrail/admin?updated=1");
 }

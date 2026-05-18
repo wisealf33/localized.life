@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type ActiveNav = "home" | "find" | "map" | "list" | "route";
+type ActiveNav = "home" | "find" | "events" | "map" | "list" | "route";
 
 type SiteHeaderProps = {
   active?: ActiveNav;
@@ -20,6 +20,9 @@ export function SiteHeader({ active }: SiteHeaderProps) {
       <nav className="site-nav" aria-label="SaleTrail navigation">
         <Link className={navClass(active, "find")} href="/saletrail">
           Find sales
+        </Link>
+        <Link className={navClass(active, "events")} href="/saletrail/events">
+          Events
         </Link>
         <Link className={navClass(active, "map")} href="/saletrail/map">
           Map
