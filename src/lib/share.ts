@@ -14,10 +14,10 @@ const generalFallbackImages = [
     description: "Used when an estate sale does not have a seller photo, town image, or county image.",
   },
   {
-    label: "General city-wide / town-wide sale image",
-    filename: "city-wide-town-wide-sale.jpg",
-    publicPath: "/og/city-wide-town-wide-sale.jpg",
-    description: "Used for city-wide, town-wide, and village-wide sale events when no more specific image exists.",
+    label: "General city-wide sale image",
+    filename: "city-wide-sale.jpg",
+    publicPath: "/og/city-wide-sale.jpg",
+    description: "Used for city-wide and village-wide sale events when no more specific image exists.",
   },
   {
     label: "General Illinois image",
@@ -59,7 +59,7 @@ function stateImagePath(state: string) {
 
 function saleTypeFallbackPath(sale: ShareImageSale) {
   const categories = sale.categories || [];
-  if (categories.includes("Town-wide sale")) return "/og/city-wide-town-wide-sale.jpg";
+  if (categories.includes("City-wide sale")) return "/og/city-wide-sale.jpg";
   if (categories.includes("Estate sale")) return "/og/estate-sale.jpg";
   return null;
 }

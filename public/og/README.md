@@ -8,7 +8,7 @@ Current lookup order for listing pages:
 1. First uploaded listing photo.
 2. City image, such as `peotone.jpg`.
 3. County image, such as `will-county.jpg`.
-4. Sale type fallback, such as `estate-sale.jpg` or `city-wide-town-wide-sale.jpg`.
+4. Sale type fallback, such as `estate-sale.jpg` or `city-wide-sale.jpg`.
 5. State fallback, such as `illinois.jpg`, `indiana.jpg`, or `wisconsin.jpg`.
 6. Global fallback, `default-saletrail.jpg`, only if that file exists.
 
@@ -26,7 +26,7 @@ File names should be lowercase URL segments, matching the app helper:
 General fallback image to-do list:
 
 - Estate sales -> `estate-sale.jpg`
-- City-wide / town-wide sales -> `city-wide-town-wide-sale.jpg`
+- City-wide sales -> `city-wide-sale.jpg`
 - Illinois fallback -> `illinois.jpg`
 - Indiana fallback -> `indiana.jpg`
 - Wisconsin fallback -> `wisconsin.jpg`
