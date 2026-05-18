@@ -181,36 +181,38 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                   <Link href={salePath(sale)}>{sale.title}</Link>
                 </h2>
                 <p>{formatSaleHours(sale)}</p>
-                <p className="muted">
-                  <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+                <p>
+                  <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
                     {fullAddress(sale)}
                   </a>
                 </p>
-                {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
-                <div className="card-actions">
-                  <Link className="button primary" href={salePath(sale)}>
-                    View listing
-                  </Link>
-                  <SaveSaleButton
-                    sale={{
-                      slug: sale.slug,
-                      title: sale.title,
-                      address: fullAddress(sale),
-                      city: sale.city,
-                      state: sale.state,
-                      startsAt: sale.starts_at,
-                      href: salePath(sale),
-                      latitude: sale.latitude,
-                      longitude: sale.longitude,
-                      locationPrecision: sale.location_precision,
-                    }}
-                    variant="secondary"
-                  />
-                  {canClaim(sale) ? (
-                    <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
-                      Claim listing
+                <div className="sale-card-footer">
+                  {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+                  <div className="card-actions">
+                    <Link className="button primary" href={salePath(sale)}>
+                      View listing
                     </Link>
-                  ) : null}
+                    <SaveSaleButton
+                      sale={{
+                        slug: sale.slug,
+                        title: sale.title,
+                        address: fullAddress(sale),
+                        city: sale.city,
+                        state: sale.state,
+                        startsAt: sale.starts_at,
+                        href: salePath(sale),
+                        latitude: sale.latitude,
+                        longitude: sale.longitude,
+                        locationPrecision: sale.location_precision,
+                      }}
+                      variant="secondary"
+                    />
+                    {canClaim(sale) ? (
+                      <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
+                        Claim listing
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               </article>
             );

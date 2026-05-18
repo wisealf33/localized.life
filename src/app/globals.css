@@ -619,6 +619,20 @@ h2 {
   margin-bottom: 20px;
 }
 
+.sale-card-address {
+  display: inline-block;
+  font-size: 1.03rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.sale-card-footer {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
 .sale-card-image,
 .listing-preview-image {
   width: 100%;
@@ -779,8 +793,6 @@ h2 {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-top: auto;
-  padding-top: 12px;
 }
 
 .card-actions .button {
