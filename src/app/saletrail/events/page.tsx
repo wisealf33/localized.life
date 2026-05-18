@@ -2,12 +2,24 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { eventPath, eventTypeLabel, formatEventHours } from "@/lib/events";
+import { formatSaleHours, salePath } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
-import type { LocalEvent } from "@/lib/types";
+import type { LocalEvent, Sale } from "@/lib/types";
 
 const eventColumns =
   "id, slug, title, event_type, description, address_line, city, state, zip, county, latitude, longitude, starts_at, ends_at, event_schedule, source_url, source_platform, source_notes, status, visibility_status, created_at, updated_at";
+const eventSaleColumns =
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+const eventLikeCategories = [
+  "City-wide sale",
+  "Community sale",
+  "Flea market",
+  "Swap meet",
+  "Farmers market",
+  "Local market",
+  "Vintage market",
+];
 
 export const metadata: Metadata = pageMetadata({
   title: "Local events | SaleTrail",
@@ -30,8 +42,39 @@ async function getEvents() {
   return (data || []) as LocalEvent[];
 }
 
+async function getEventLikeSales() {
+  if (!isSupabaseConfigured) return [];
+  const supabase = getSupabaseAdmin();
+  const matches = await Promise.all(
+    eventLikeCategories.map((category) =>
+      supabase
+        .from("sales")
+        .select(eventSaleColumns)
+        .eq("visibility_status", "public")
+        .eq("status", "active")
+        .gte("ends_at", new Date().toISOString())
+        .contains("categories", [category])
+        .order("starts_at", { ascending: true })
+        .limit(50),
+    ),
+  );
+
+  const byId = new Map<string, Sale>();
+  for (const result of matches) {
+    if (result.error) continue;
+    for (const sale of (result.data || []) as Sale[]) byId.set(sale.id, sale);
+  }
+
+  return Array.from(byId.values()).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+}
+
+function saleEventLabel(sale: Pick<Sale, "categories">) {
+  return eventLikeCategories.find((category) => sale.categories?.includes(category)) || "Local event";
+}
+
 export default async function EventsPage() {
   const events = await getEvents();
+  const eventSales = events.length === 0 ? await getEventLikeSales() : [];
 
   return (
     <main className="page">
@@ -46,31 +89,51 @@ export default async function EventsPage() {
       </section>
 
       <section className="list">
-        {events.length === 0 ? (
+        {events.length === 0 && eventSales.length === 0 ? (
           <div className="empty">
             <h2>No Upcoming Events Yet</h2>
             <p>City-wide sales, markets, and other local events will appear here as they are added.</p>
           </div>
         ) : (
-          events.map((event) => (
-            <article className="card event-card" key={event.id}>
-              <div>
-                <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
-                <h2>
-                  <Link href={eventPath(event)}>{event.title}</Link>
-                </h2>
-                <p className="muted">
-                  {event.city}, {event.state}
-                  {event.county ? ` · ${event.county}` : ""}
-                </p>
-              </div>
-              <p className="whitespace">{formatEventHours(event)}</p>
-              {event.description ? <p>{event.description}</p> : null}
-              <Link className="button primary" href={eventPath(event)}>
-                View event
-              </Link>
-            </article>
-          ))
+          <>
+            {events.map((event) => (
+              <article className="card event-card" key={event.id}>
+                <div>
+                  <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
+                  <h2>
+                    <Link href={eventPath(event)}>{event.title}</Link>
+                  </h2>
+                  <p className="muted">
+                    {event.city}, {event.state}
+                    {event.county ? ` · ${event.county}` : ""}
+                  </p>
+                </div>
+                <p className="whitespace">{formatEventHours(event)}</p>
+                {event.description ? <p>{event.description}</p> : null}
+                <Link className="button primary" href={eventPath(event)}>
+                  View event
+                </Link>
+              </article>
+            ))}
+            {eventSales.map((sale) => (
+              <article className="card event-card" key={sale.id}>
+                <div>
+                  <p className="eyebrow">{saleEventLabel(sale)}</p>
+                  <h2>
+                    <Link href={salePath(sale)}>{sale.title}</Link>
+                  </h2>
+                  <p className="muted">
+                    {sale.city}, {sale.state}
+                  </p>
+                </div>
+                <p className="whitespace">{formatSaleHours(sale)}</p>
+                {sale.description ? <p>{sale.description}</p> : null}
+                <Link className="button primary" href={salePath(sale)}>
+                  View event
+                </Link>
+              </article>
+            ))}
+          </>
         )}
       </section>
     </main>
