@@ -4,7 +4,7 @@ import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
+import { categoryOptions, formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -14,7 +14,7 @@ const publicSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
 type Props = {
-  searchParams: Promise<{ q?: string; date?: string; page?: string; perPage?: string }>;
+  searchParams: Promise<{ q?: string; date?: string; category?: string; page?: string; perPage?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -37,17 +37,22 @@ function pageSizeParam(value: string | undefined) {
   return pageSizes.includes(parsed) ? parsed : 10;
 }
 
-function directoryUrl(params: { q?: string; date?: string; page?: number; perPage?: number }) {
+function directoryUrl(params: { q?: string; date?: string; category?: string; page?: number; perPage?: number }) {
   const next = new URLSearchParams();
   if (params.q) next.set("q", params.q);
   if (params.date) next.set("date", params.date);
+  if (params.category) next.set("category", params.category);
   if (params.perPage && params.perPage !== 10) next.set("perPage", String(params.perPage));
   if (params.page && params.page > 1) next.set("page", String(params.page));
   const query = next.toString();
   return query ? `/saletrail?${query}` : "/saletrail";
 }
 
-async function getSales(q?: string, date?: string, page = 1, perPage = 10) {
+function categoryParam(value: string | undefined) {
+  return value && categoryOptions.includes(value) ? value : "";
+}
+
+async function getSales(q?: string, date?: string, category?: string, page = 1, perPage = 10) {
   if (!isSupabaseConfigured) return { sales: [], total: 0 };
 
   const supabase = getSupabaseAdmin();
@@ -70,6 +75,10 @@ async function getSales(q?: string, date?: string, page = 1, perPage = 10) {
 
   if (date) {
     query = query.lte("starts_at", `${date}T23:59:59`).gte("ends_at", `${date}T00:00:00`);
+  }
+
+  if (category) {
+    query = query.contains("categories", [category]);
   }
 
   const { data, error, count } = await query;
@@ -95,7 +104,8 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const params = await searchParams;
   const perPage = pageSizeParam(params.perPage);
   const currentPage = numberParam(params.page, 1);
-  const { sales, total } = await getSales(params.q, params.date, currentPage, perPage);
+  const category = categoryParam(params.category);
+  const { sales, total } = await getSales(params.q, params.date, category, currentPage, perPage);
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const safePage = Math.min(currentPage, totalPages);
   const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
@@ -135,6 +145,17 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             Date
             <input name="date" type="date" defaultValue={params.date || ""} />
           </label>
+          <label>
+            Sale type
+            <select name="category" defaultValue={category}>
+              <option value="">Any type</option>
+              {categoryOptions.map((option) => (
+                <option value={option} key={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
           <input name="perPage" type="hidden" value={perPage} />
           <button className="button primary" type="submit">
             Search
@@ -149,6 +170,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
         <form className="per-page-form">
           {params.q ? <input name="q" type="hidden" value={params.q} /> : null}
           {params.date ? <input name="date" type="hidden" value={params.date} /> : null}
+          {category ? <input name="category" type="hidden" value={category} /> : null}
           <label>
             Listings per page
             <select name="perPage" defaultValue={perPage}>
@@ -233,7 +255,10 @@ export default async function SaleTrailHome({ searchParams }: Props) {
       {totalPages > 1 ? (
         <nav className="pagination" aria-label="Listings pages">
           {safePage > 1 ? (
-            <Link className="button" href={directoryUrl({ q: params.q, date: params.date, perPage, page: safePage - 1 })}>
+            <Link
+              className="button"
+              href={directoryUrl({ q: params.q, date: params.date, category, perPage, page: safePage - 1 })}
+            >
               Previous
             </Link>
           ) : (
@@ -248,7 +273,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
               ) : (
                 <Link
                   className="page-link"
-                  href={directoryUrl({ q: params.q, date: params.date, perPage, page: pageNumber })}
+                  href={directoryUrl({ q: params.q, date: params.date, category, perPage, page: pageNumber })}
                   key={pageNumber}
                 >
                   {pageNumber}
@@ -257,7 +282,10 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             )}
           </div>
           {safePage < totalPages ? (
-            <Link className="button" href={directoryUrl({ q: params.q, date: params.date, perPage, page: safePage + 1 })}>
+            <Link
+              className="button"
+              href={directoryUrl({ q: params.q, date: params.date, category, perPage, page: safePage + 1 })}
+            >
               Next
             </Link>
           ) : (
