@@ -29,6 +29,8 @@ const cityCounty: Record<string, string> = {
   elwood: "Will County",
   "elk grove village": "Cook County",
   frankfort: "Will County",
+  glenwood: "Cook County",
+  hinsdale: "DuPage County",
   "homer glen": "Will County",
   joliet: "Will County",
   kankakee: "Kankakee County",
@@ -50,6 +52,7 @@ const cityCounty: Record<string, string> = {
   shorewood: "Will County",
   "sugar grove": "Kane County",
   waukegan: "Lake County",
+  "western springs": "Cook County",
   wilmington: "Will County",
   zion: "Lake County",
 };
