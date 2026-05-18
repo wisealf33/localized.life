@@ -4,7 +4,7 @@ import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
-import { categoryOptions, formatSaleHours, fullAddress, mapSearchUrl, salePath } from "@/lib/format";
+import { categoryOptions, fullAddress, mapSearchUrl, salePath, splitSaleSchedule } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -262,6 +262,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
         ) : (
           sales.map((sale) => {
             const image = salePreviewImage(sale);
+            const schedule = splitSaleSchedule(sale);
 
             return (
               <article className="card sale-card" key={sale.id}>
@@ -278,7 +279,12 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 <h2>
                   <Link href={salePath(sale)}>{sale.title}</Link>
                 </h2>
-                <p>{formatSaleHours(sale)}</p>
+                <div className="sale-card-schedule">
+                  {schedule.dates.map((line) => (
+                    <span key={line}>{line}</span>
+                  ))}
+                  {schedule.note ? <small>{schedule.note}</small> : null}
+                </div>
                 <p>
                   <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
                     {fullAddress(sale)}

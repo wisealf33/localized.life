@@ -655,6 +655,25 @@ h2 {
   line-height: 1.35;
 }
 
+.sale-card-schedule {
+  display: grid;
+  gap: 3px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.sale-card-schedule span {
+  display: block;
+}
+
+.sale-card-schedule small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 .sale-card-footer {
   display: grid;
   gap: 8px;

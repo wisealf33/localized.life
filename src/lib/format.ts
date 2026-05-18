@@ -38,6 +38,39 @@ export function formatSaleHours(sale: Pick<Sale, "starts_at" | "ends_at" | "sale
   return sale.sale_schedule?.trim() || formatDateRange(sale);
 }
 
+export function splitSaleSchedule(sale: Pick<Sale, "starts_at" | "ends_at" | "sale_schedule">) {
+  const schedule = formatSaleHours(sale);
+  const lines = schedule
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length > 1) return { dates: lines, note: "" };
+
+  const compact = lines[0] || "";
+  const weekdayPattern =
+    /(?=(?:Possible:\s*)?(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s)/gi;
+  const pieces = compact
+    .split(weekdayPattern)
+    .map((piece) => piece.trim())
+    .filter(Boolean);
+  const dates: string[] = [];
+  const notes: string[] = [];
+
+  for (const piece of pieces.length > 1 ? pieces : [compact]) {
+    const noteMatch = piece.match(
+      /\s((?:Rain or shine|No early birds|Individual sale times|Exact day|Exact days|Message the poster|Confirm details).*)$/i,
+    );
+    if (noteMatch?.index && noteMatch.index > 0) {
+      dates.push(piece.slice(0, noteMatch.index).trim());
+      notes.push(noteMatch[1].trim());
+    } else if (piece) {
+      dates.push(piece);
+    }
+  }
+
+  return { dates: dates.filter(Boolean), note: notes.join(" ") };
+}
+
 export function fullAddress(sale: Pick<Sale, "address_line" | "city" | "state" | "zip">) {
   return `${sale.address_line}, ${sale.city}, ${sale.state} ${sale.zip}`;
 }
