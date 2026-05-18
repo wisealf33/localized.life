@@ -210,7 +210,7 @@ function titleLooksSimilar(a: string, b: string) {
   const right = new Set(meaningfulTokens(b));
   if (left.length === 0 || right.size === 0) return false;
   const overlap = left.filter((token) => right.has(token)).length;
-  return overlap / Math.min(left.length, right.size) >= 0.45;
+  return overlap / Math.min(left.length, right.size) >= 0.7;
 }
 
 function isHiddenAddress(address: string) {
