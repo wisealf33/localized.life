@@ -38,7 +38,7 @@ export default async function EventsPage() {
       <SiteHeader active="events" />
       <section className="hero events-hero">
         <p className="eyebrow">Events</p>
-        <h1>Local events.</h1>
+        <h1>Local Events.</h1>
         <p className="lede">
           A simple calendar for useful community events, starting with city-wide garage sales and expanding into flea
           markets, swap meets, farmers markets, local markets, and other nearby events worth finding.
@@ -48,7 +48,7 @@ export default async function EventsPage() {
       <section className="list">
         {events.length === 0 ? (
           <div className="empty">
-            <h2>No upcoming events yet</h2>
+            <h2>No Upcoming Events Yet</h2>
             <p>City-wide sales, markets, and other local events will appear here as they are added.</p>
           </div>
         ) : (
