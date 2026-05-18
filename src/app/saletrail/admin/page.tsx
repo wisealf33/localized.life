@@ -17,7 +17,7 @@ import {
 } from "@/lib/actions";
 import { claimUrl, formatSaleHours, fullAddress, salePath, saleUrl } from "@/lib/format";
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
-import { salePreviewImageNeed } from "@/lib/share";
+import { missingGeneralFallbackImageNeeds, salePreviewImageNeed } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { ClaimRequest, FeedbackRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
 
@@ -184,6 +184,10 @@ function photoNeeds(sales: Sale[]) {
   });
 }
 
+function generalPhotoNeeds() {
+  return missingGeneralFallbackImageNeeds();
+}
+
 function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boolean }) {
   const messages = outreachMessages(sale);
   const outreachStatus: OutreachStatus = sale.outreach_status || "not_contacted";
@@ -312,6 +316,7 @@ export default async function AdminPage({ searchParams }: Props) {
   );
   const expiredOutreach = outreach.filter((sale) => isExpired(sale));
   const missingPhotos = photoNeeds(photoSales);
+  const missingGeneralPhotos = generalPhotoNeeds();
 
   return (
     <main className="page">
@@ -349,7 +354,7 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-claims">Claims ({claims.length})</a>
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
             <a href="#admin-feedback">Feedback ({feedback.length})</a>
-            <a href="#admin-photo-needs">Photo needs ({missingPhotos.length})</a>
+            <a href="#admin-photo-needs">Photo needs ({missingPhotos.length + missingGeneralPhotos.length})</a>
             <a href="#admin-outreach">Outreach ({activeOutreach.length})</a>
             <a href="#admin-expired">Expired ({expiredOutreach.length})</a>
             <a href="#admin-batch">Batch add</a>
@@ -490,7 +495,7 @@ export default async function AdminPage({ searchParams }: Props) {
               </p>
             </div>
             {missingPhotos.length === 0 ? (
-              <p className="muted">No missing fallback images for active listings.</p>
+              <p className="muted">No missing listing-specific fallback images for active listings.</p>
             ) : (
               <div className="grid two">
                 {missingPhotos.map((need) => (
@@ -535,6 +540,34 @@ export default async function AdminPage({ searchParams }: Props) {
                         ))}
                       </ul>
                     </details>
+                  </article>
+                ))}
+              </div>
+            )}
+            <div>
+              <h3>General fallback images to create</h3>
+              <p className="muted">
+                These are broad reusable images for sale types and nearby states. Once you add the files, the app can
+                use them automatically when no seller, town, or county image exists.
+              </p>
+            </div>
+            {missingGeneralPhotos.length === 0 ? (
+              <p className="muted">All general fallback images exist.</p>
+            ) : (
+              <div className="grid two">
+                {missingGeneralPhotos.map((need) => (
+                  <article className="card photo-need-card" key={need.publicPath}>
+                    <div>
+                      <p className="eyebrow">General fallback</p>
+                      <h3>{need.label}</h3>
+                    </div>
+                    <p className="muted">{need.description}</p>
+                    <p>
+                      <strong>Create file:</strong> <code>{need.filename}</code>
+                    </p>
+                    <p>
+                      <strong>Add to:</strong> <code>public/og/{need.filename}</code>
+                    </p>
                   </article>
                 ))}
               </div>

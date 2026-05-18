@@ -4,10 +4,64 @@ import { countyForSale, regionDestinationForSale } from "./regions";
 import { urlSegment } from "./format";
 import type { Sale } from "./types";
 
-type ShareImageSale = Pick<Sale, "city" | "state" | "photo_urls">;
+type ShareImageSale = Pick<Sale, "city" | "state" | "photo_urls" | "categories">;
+
+const generalFallbackImages = [
+  {
+    label: "General estate sale image",
+    filename: "estate-sale.jpg",
+    publicPath: "/og/estate-sale.jpg",
+    description: "Used when an estate sale does not have a seller photo, town image, or county image.",
+  },
+  {
+    label: "General city-wide / town-wide sale image",
+    filename: "city-wide-town-wide-sale.jpg",
+    publicPath: "/og/city-wide-town-wide-sale.jpg",
+    description: "Used for city-wide, town-wide, and village-wide sale events when no more specific image exists.",
+  },
+  {
+    label: "General Illinois image",
+    filename: "illinois.jpg",
+    publicPath: "/og/illinois.jpg",
+    description: "Statewide fallback as SaleTrail spreads beyond the first open counties.",
+  },
+  {
+    label: "General Indiana image",
+    filename: "indiana.jpg",
+    publicPath: "/og/indiana.jpg",
+    description: "Statewide fallback for Indiana listings.",
+  },
+  {
+    label: "General Wisconsin image",
+    filename: "wisconsin.jpg",
+    publicPath: "/og/wisconsin.jpg",
+    description: "Statewide fallback for Wisconsin listings.",
+  },
+];
 
 function publicFileExists(publicPath: string) {
   return existsSync(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")));
+}
+
+function stateImagePath(state: string) {
+  const normalized = state.trim().toLowerCase();
+  const stateNames: Record<string, string> = {
+    il: "illinois",
+    illinois: "illinois",
+    in: "indiana",
+    indiana: "indiana",
+    wi: "wisconsin",
+    wisconsin: "wisconsin",
+  };
+  const stateName = stateNames[normalized];
+  return stateName ? `/og/${stateName}.jpg` : null;
+}
+
+function saleTypeFallbackPath(sale: ShareImageSale) {
+  const categories = sale.categories || [];
+  if (categories.includes("Town-wide sale")) return "/og/city-wide-town-wide-sale.jpg";
+  if (categories.includes("Estate sale")) return "/og/estate-sale.jpg";
+  return null;
 }
 
 export function saleFallbackImagePath(sale: ShareImageSale) {
@@ -17,6 +71,12 @@ export function saleFallbackImagePath(sale: ShareImageSale) {
 
   const countyPath = `/og/${urlSegment(destination.county)}.jpg`;
   if (publicFileExists(countyPath)) return countyPath;
+
+  const typePath = saleTypeFallbackPath(sale);
+  if (typePath && publicFileExists(typePath)) return typePath;
+
+  const statePath = stateImagePath(sale.state);
+  if (statePath && publicFileExists(statePath)) return statePath;
 
   const defaultPath = "/og/default-saletrail.jpg";
   if (publicFileExists(defaultPath)) return defaultPath;
@@ -35,6 +95,10 @@ export function saleFlyerImage(sale: ShareImageSale) {
 }
 
 export const salePreviewImage = saleFlyerImage;
+
+export function missingGeneralFallbackImageNeeds() {
+  return generalFallbackImages.filter((image) => !publicFileExists(image.publicPath));
+}
 
 export function salePreviewImageNeed(sale: ShareImageSale) {
   if (sale.photo_urls?.find(Boolean)) return null;

@@ -1,12 +1,10 @@
 import { existsSync } from "fs";
 import path from "path";
 import type { Sale } from "./types";
-import { regionDestinationForSale } from "./regions";
-import { saleUrl, urlSegment } from "./format";
+import { saleUrl } from "./format";
+import { saleFallbackImagePath } from "./share";
 
-type OgSale = Pick<Sale, "slug" | "title" | "city" | "state" | "photo_urls">;
-
-const defaultOgPath = "/og/default-saletrail.jpg";
+type OgSale = Pick<Sale, "slug" | "title" | "city" | "state" | "photo_urls" | "categories">;
 
 function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life").replace(/\/$/, "");
@@ -29,14 +27,8 @@ export function saleOgImageUrl(sale: OgSale) {
   const uploadedPhoto = firstUploadedPhoto(sale);
   if (uploadedPhoto) return uploadedPhoto;
 
-  const cityPath = `/og/${urlSegment(sale.city)}.jpg`;
-  if (publicFileExists(cityPath)) return absolutePublicUrl(cityPath);
-
-  const destination = regionDestinationForSale(sale);
-  const countyPath = `/og/${urlSegment(destination.county)}.jpg`;
-  if (publicFileExists(countyPath)) return absolutePublicUrl(countyPath);
-
-  if (publicFileExists(defaultOgPath)) return absolutePublicUrl(defaultOgPath);
+  const fallback = saleFallbackImagePath(sale);
+  if (fallback && publicFileExists(fallback)) return absolutePublicUrl(fallback);
 
   return null;
 }
