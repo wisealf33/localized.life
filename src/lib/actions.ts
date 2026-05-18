@@ -213,6 +213,16 @@ function titleLooksSimilar(a: string, b: string) {
   return overlap / Math.min(left.length, right.size) >= 0.7;
 }
 
+function normalizedMatch(a: string | null | undefined, b: string | null | undefined) {
+  const left = normalizeText(a);
+  const right = normalizeText(b);
+  return Boolean(left && right && left === right);
+}
+
+function hasSameSourcePoster(sale: ExistingBatchSale, listing: BatchListing) {
+  return normalizedMatch(sale.source_poster_name, listing.source_poster_name);
+}
+
 function isHiddenAddress(address: string) {
   const normalized = normalizeText(address);
   return normalized.includes("hidden") || normalized.includes("available") || normalized.includes("unknown");
@@ -340,7 +350,12 @@ async function findExistingBatchSale(
     .limit(12);
   if (error) throw new Error(error.message);
 
-  return ((data || []) as ExistingBatchSale[]).find((sale) => titleLooksSimilar(sale.title, title)) || null;
+  return (
+    ((data || []) as ExistingBatchSale[]).find((sale) => {
+      if (hasSameSourcePoster(sale, listing) && titleLooksSimilar(sale.title, title)) return true;
+      return titleLooksSimilar(sale.title, title) && normalizedMatch(sale.source_platform, listing.source_platform);
+    }) || null
+  );
 }
 
 function mergedBatchUpdate(
