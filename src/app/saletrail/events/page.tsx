@@ -65,7 +65,9 @@ async function getEventLikeSales() {
     for (const sale of (result.data || []) as Sale[]) byId.set(sale.id, sale);
   }
 
-  return Array.from(byId.values()).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  return Array.from(byId.values())
+    .filter((sale) => !sale.categories?.includes("Estate sale"))
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 }
 
 function saleEventLabel(sale: Pick<Sale, "categories">) {
