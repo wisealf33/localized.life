@@ -8,7 +8,7 @@ import { categoryOptions, salePath, saleSharePath } from "./format";
 import { geocodeAddress } from "./geocode";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
-import type { ListingRequestType, OutreachStatus, SaleStatus } from "./types";
+import type { FeedbackRequestType, ListingRequestType, OutreachStatus, SaleStatus } from "./types";
 
 const photoBucket = "saletrail-photos";
 const maxPhotos = 2;
@@ -30,6 +30,9 @@ const outreachStatuses = new Set<OutreachStatus>([
   "do_not_contact",
   "removed",
 ]);
+
+const feedbackRequestTypes = new Set<FeedbackRequestType>(["feature", "bug", "general"]);
+const feedbackStatuses = new Set(["pending", "reviewed", "resolved", "rejected"]);
 
 type BatchListingDay = {
   date?: string;
@@ -819,6 +822,37 @@ export async function resolveListingRequest(formData: FormData) {
   const requestId = required(formData, "request_id");
   const status = required(formData, "status");
   const { error } = await supabase.from("listing_requests").update({ status }).eq("id", requestId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  redirect("/saletrail/admin?updated=1");
+}
+
+export async function submitFeedbackRequest(formData: FormData) {
+  const supabase = getSupabaseAdmin();
+  const requestType = required(formData, "request_type") as FeedbackRequestType;
+  if (!feedbackRequestTypes.has(requestType)) throw new Error("Invalid feedback type.");
+
+  const { error } = await supabase.from("feedback_requests").insert({
+    request_type: requestType,
+    name: value(formData, "name"),
+    contact: value(formData, "contact"),
+    page_url: value(formData, "page_url"),
+    message: required(formData, "message"),
+    status: "pending",
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  redirect("/saletrail/feedback?submitted=1");
+}
+
+export async function resolveFeedbackRequest(formData: FormData) {
+  await requireAdmin();
+  const supabase = getSupabaseAdmin();
+  const requestId = required(formData, "request_id");
+  const status = required(formData, "status");
+  if (!feedbackStatuses.has(status)) throw new Error("Invalid feedback status.");
+  const { error } = await supabase.from("feedback_requests").update({ status }).eq("id", requestId);
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail/admin");
   redirect("/saletrail/admin?updated=1");

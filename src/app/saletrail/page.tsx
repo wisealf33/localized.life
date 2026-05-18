@@ -165,9 +165,6 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
   const resultEnd = Math.min(safePage * perPage, total);
   const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
-  const feedbackEmail = process.env.NEXT_PUBLIC_FEEDBACK_EMAIL || "claims@localized.life";
-  const feedbackHref = `mailto:${feedbackEmail}?subject=${encodeURIComponent("SaleTrail feedback")}`;
-
   return (
     <main className="page">
       <SiteHeader active="find" />
@@ -375,9 +372,9 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             we know what to improve next.
           </p>
         </div>
-        <a className="button primary" href={feedbackHref}>
+        <Link className="button primary" href="/saletrail/feedback">
           Request a feature or report a bug
-        </a>
+        </Link>
       </section>
     </main>
   );

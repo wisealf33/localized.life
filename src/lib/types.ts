@@ -3,6 +3,7 @@ export type ClaimStatus = "unclaimed" | "claim_pending" | "claimed";
 export type SaleStatus = "active" | "cancelled" | "ended";
 export type VisibilityStatus = "public" | "hidden" | "removed";
 export type ListingRequestType = "correction" | "removal";
+export type FeedbackRequestType = "feature" | "bug" | "general";
 export type ClaimVerificationMethod = "original_post_comment" | "localized_group_post";
 export type OutreachStatus =
   | "not_contacted"
@@ -80,4 +81,15 @@ export type ListingRequest = {
   status: "pending" | "resolved" | "rejected";
   created_at: string;
   sales?: Pick<Sale, "title" | "slug" | "city" | "state"> | null;
+};
+
+export type FeedbackRequest = {
+  id: string;
+  request_type: FeedbackRequestType;
+  name: string | null;
+  contact: string | null;
+  page_url: string | null;
+  message: string;
+  status: "pending" | "reviewed" | "resolved" | "rejected";
+  created_at: string;
 };

@@ -11,6 +11,7 @@ import {
   createCommunitySalesBatch,
   createCommunitySale,
   rejectClaim,
+  resolveFeedbackRequest,
   resolveListingRequest,
   updateOutreachStatus,
 } from "@/lib/actions";
@@ -18,7 +19,7 @@ import { claimUrl, formatSaleHours, fullAddress, salePath, saleUrl } from "@/lib
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { salePreviewImageNeed } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
-import type { ClaimRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
+import type { ClaimRequest, FeedbackRequest, ListingRequest, OutreachStatus, Sale } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "SaleTrail admin",
@@ -58,9 +59,9 @@ const completedOutreachStatuses = new Set<OutreachStatus>([
 ]);
 
 async function getQueues(enabled: boolean) {
-  if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [], photoSales: [] };
+  if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [] };
   const supabase = getSupabaseAdmin();
-  const [{ data: outreach }, { data: claims }, { data: requests }, { data: photoSales }] = await Promise.all([
+  const [{ data: outreach }, { data: claims }, { data: requests }, { data: feedback }, { data: photoSales }] = await Promise.all([
     supabase
       .from("sales")
       .select(outreachSaleColumns)
@@ -79,6 +80,7 @@ async function getQueues(enabled: boolean) {
       .select("*, sales(title, slug, city, state)")
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
+    supabase.from("feedback_requests").select("*").eq("status", "pending").order("created_at", { ascending: false }),
     supabase
       .from("sales")
       .select(photoNeedSaleColumns)
@@ -92,6 +94,7 @@ async function getQueues(enabled: boolean) {
     outreach: (outreach || []) as Sale[],
     claims: (claims || []) as ClaimRequest[],
     requests: (requests || []) as ListingRequest[],
+    feedback: (feedback || []) as FeedbackRequest[],
     photoSales: (photoSales || []) as Sale[],
   };
 }
@@ -300,7 +303,7 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
 export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
   const enabled = await isAdminAuthenticated();
-  const { outreach, claims, requests, photoSales } = await getQueues(enabled);
+  const { outreach, claims, requests, feedback, photoSales } = await getQueues(enabled);
   const activeOutreach = outreach.filter(
     (sale) => !isExpired(sale) && !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
@@ -345,6 +348,7 @@ export default async function AdminPage({ searchParams }: Props) {
           <nav className="admin-jump-nav" aria-label="Admin sections">
             <a href="#admin-claims">Claims ({claims.length})</a>
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
+            <a href="#admin-feedback">Feedback ({feedback.length})</a>
             <a href="#admin-photo-needs">Photo needs ({missingPhotos.length})</a>
             <a href="#admin-outreach">Outreach ({activeOutreach.length})</a>
             <a href="#admin-expired">Expired ({expiredOutreach.length})</a>
@@ -435,6 +439,43 @@ export default async function AdminPage({ searchParams }: Props) {
                 </article>
               ))}
             </div>
+          </section>
+
+          <section className="panel stack" id="admin-feedback">
+            <div>
+              <p className="eyebrow">Needs review</p>
+              <h2>Feature requests and bug reports</h2>
+              <p className="muted">Feedback submitted through the public SaleTrail form.</p>
+            </div>
+            {feedback.length === 0 ? <p className="muted">No pending feedback.</p> : null}
+            {feedback.map((item) => (
+              <article className="card compact" key={item.id}>
+                <div>
+                  <p className="eyebrow">{item.request_type}</p>
+                  <h3>{item.message.slice(0, 80)}{item.message.length > 80 ? "..." : ""}</h3>
+                  <p>{item.name || "No name"} · {item.contact || "No contact"}</p>
+                  {item.page_url ? (
+                    <p>
+                      <a className="text-link" href={item.page_url} target="_blank" rel="noopener noreferrer">
+                        Open referenced page
+                      </a>
+                    </p>
+                  ) : null}
+                  <p>{item.message}</p>
+                </div>
+                <form action={resolveFeedbackRequest} className="inline-form">
+                  <input type="hidden" name="request_id" value={item.id} />
+                  <select name="status" defaultValue="reviewed">
+                    <option value="reviewed">Reviewed</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <button className="button primary" type="submit">
+                    Update
+                  </button>
+                </form>
+              </article>
+            ))}
           </section>
 
           <section className="panel stack" id="admin-photo-needs">

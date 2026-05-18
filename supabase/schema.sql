@@ -129,6 +129,17 @@ create table if not exists public.listing_requests (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.feedback_requests (
+  id uuid primary key default gen_random_uuid(),
+  request_type text not null check (request_type in ('feature', 'bug', 'general')),
+  name text,
+  contact text,
+  page_url text,
+  message text not null,
+  status text not null default 'pending' check (status in ('pending', 'reviewed', 'resolved', 'rejected')),
+  created_at timestamptz not null default now()
+);
+
 create index if not exists sales_public_search_idx
   on public.sales (visibility_status, status, city, state, zip, starts_at);
 
@@ -147,9 +158,13 @@ create index if not exists claim_requests_status_idx
 create index if not exists listing_requests_status_idx
   on public.listing_requests (status, created_at desc);
 
+create index if not exists feedback_requests_status_idx
+  on public.feedback_requests (status, created_at desc);
+
 alter table public.sales enable row level security;
 alter table public.claim_requests enable row level security;
 alter table public.listing_requests enable row level security;
+alter table public.feedback_requests enable row level security;
 
 -- Launch 1 uses server-side access through SUPABASE_SERVICE_ROLE_KEY only.
 -- Add public read/write policies later only if the app moves forms to direct browser writes.
