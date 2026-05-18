@@ -1,6 +1,6 @@
 import { existsSync } from "fs";
 import path from "path";
-import { regionDestinationForSale } from "./regions";
+import { countyForSale, regionDestinationForSale } from "./regions";
 import { urlSegment } from "./format";
 import type { Sale } from "./types";
 
@@ -40,6 +40,7 @@ export function salePreviewImageNeed(sale: ShareImageSale) {
   if (sale.photo_urls?.find(Boolean)) return null;
 
   const destination = regionDestinationForSale(sale);
+  const county = countyForSale(sale);
   const cityPath = `/og/${urlSegment(sale.city)}.jpg`;
 
   if (destination.isDedicated && !publicFileExists(cityPath)) {
@@ -48,6 +49,15 @@ export function salePreviewImageNeed(sale: ShareImageSale) {
       label: `${sale.city}, ${sale.state}`,
       filename: `${urlSegment(sale.city)}.jpg`,
       publicPath: cityPath,
+    };
+  }
+
+  if (!county) {
+    return {
+      scope: "mapping" as const,
+      label: `${sale.city}, ${sale.state}`,
+      filename: "",
+      publicPath: `mapping:${urlSegment(sale.state)}:${urlSegment(sale.city)}`,
     };
   }
 

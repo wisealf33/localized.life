@@ -150,7 +150,7 @@ function photoNeeds(sales: Sale[]) {
   const needs = new Map<
     string,
     {
-      scope: "town" | "county";
+      scope: "town" | "county" | "mapping";
       label: string;
       filename: string;
       publicPath: string;
@@ -437,7 +437,8 @@ export default async function AdminPage({ searchParams }: Props) {
               <p className="muted">
                 Active listings without organizer-uploaded photos use branded fallback images. Will County is the open
                 region, so only listings detected inside Will County get town image requests. Other areas use county
-                images until that county is opened.
+                images until that county is opened. If a town cannot be matched to a real county, it appears as a county
+                mapping item instead of creating a fake county image request.
               </p>
             </div>
             {missingPhotos.length === 0 ? (
@@ -448,17 +449,31 @@ export default async function AdminPage({ searchParams }: Props) {
                   <article className="card photo-need-card" key={need.publicPath}>
                     <div className="card-top">
                       <div>
-                        <p className="eyebrow">{need.scope === "town" ? "Town image" : "County image"}</p>
+                        <p className="eyebrow">
+                          {need.scope === "town"
+                            ? "Town image"
+                            : need.scope === "county"
+                              ? "County image"
+                              : "County mapping needed"}
+                        </p>
                         <h3>{need.label}</h3>
                       </div>
                       <span className="badge plain">{need.sales.length} listing{need.sales.length === 1 ? "" : "s"}</span>
                     </div>
-                    <p>
-                      <strong>Create file:</strong> <code>{need.filename}</code>
-                    </p>
-                    <p>
-                      <strong>Add to:</strong> <code>public/og/{need.filename}</code>
-                    </p>
+                    {need.scope === "mapping" ? (
+                      <p className="muted">
+                        This town needs a real official county added before a branded county image should be created.
+                      </p>
+                    ) : (
+                      <>
+                        <p>
+                          <strong>Create file:</strong> <code>{need.filename}</code>
+                        </p>
+                        <p>
+                          <strong>Add to:</strong> <code>public/og/{need.filename}</code>
+                        </p>
+                      </>
+                    )}
                     <details className="admin-details">
                       <summary>Listings using this image</summary>
                       <ul className="plain-list">
