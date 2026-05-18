@@ -276,17 +276,17 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 <h2>
                   <Link href={salePath(sale)}>{sale.title}</Link>
                 </h2>
+                <p>
+                  <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+                    {fullAddress(sale)}
+                  </a>
+                </p>
                 <div className="sale-card-schedule">
                   {schedule.dates.map((line) => (
                     <span key={line}>{line}</span>
                   ))}
                   {schedule.note ? <small>{schedule.note}</small> : null}
                 </div>
-                <p>
-                  <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
-                    {fullAddress(sale)}
-                  </a>
-                </p>
                 <div className="sale-card-footer">
                   {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
                   <div className="card-actions">
