@@ -621,16 +621,16 @@ h2 {
 
 .sale-card-address {
   display: inline-block;
-  font-size: 1.03rem;
+  font-size: 1.1rem;
   font-weight: 850;
   line-height: 1.35;
 }
 
 .sale-card-footer {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 8px;
 }
 
 .sale-card-image,
