@@ -53,6 +53,29 @@ type BatchListing = {
   raw_source_text?: string;
 };
 
+type ExistingBatchSale = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  address_line: string;
+  city: string;
+  state: string;
+  zip: string;
+  latitude: number | null;
+  longitude: number | null;
+  location_precision: string | null;
+  starts_at: string;
+  ends_at: string;
+  sale_schedule: string | null;
+  categories: string[] | null;
+  source_notes: string | null;
+  source_platform: string | null;
+  source_url: string | null;
+  source_poster_name: string | null;
+  raw_source_text: string | null;
+};
+
 function value(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
@@ -167,6 +190,55 @@ function normalizeBatchCategories(categories: string[] | undefined) {
   return (categories || []).filter((category) => categoryOptions.includes(category));
 }
 
+function normalizeText(text: string | null | undefined) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function meaningfulTokens(text: string) {
+  const stop = new Set(["a", "an", "and", "at", "by", "for", "in", "of", "on", "sale", "the", "with"]);
+  return normalizeText(text)
+    .split(" ")
+    .filter((token) => token.length > 2 && !stop.has(token));
+}
+
+function titleLooksSimilar(a: string, b: string) {
+  const left = meaningfulTokens(a);
+  const right = new Set(meaningfulTokens(b));
+  if (left.length === 0 || right.size === 0) return false;
+  const overlap = left.filter((token) => right.has(token)).length;
+  return overlap / Math.min(left.length, right.size) >= 0.45;
+}
+
+function isHiddenAddress(address: string) {
+  const normalized = normalizeText(address);
+  return normalized.includes("hidden") || normalized.includes("available") || normalized.includes("unknown");
+}
+
+function mergeText(existing: string | null | undefined, next: string, label: string) {
+  const cleanNext = next.trim();
+  const cleanExisting = String(existing || "").trim();
+  if (!cleanNext) return cleanExisting;
+  if (!cleanExisting) return cleanNext;
+  if (normalizeText(cleanExisting).includes(normalizeText(cleanNext))) return cleanExisting;
+  return `${cleanExisting}\n\n${label}:\n${cleanNext}`;
+}
+
+function betterDescription(existing: string | null, next: string) {
+  const cleanExisting = String(existing || "").trim();
+  const cleanNext = next.trim();
+  if (!cleanNext) return cleanExisting;
+  if (!cleanExisting) return cleanNext;
+  return cleanNext.length > cleanExisting.length ? cleanNext : cleanExisting;
+}
+
+function mergeCategories(existing: string[] | null | undefined, next: string[]) {
+  return Array.from(new Set([...(existing || []), ...next].filter((category) => categoryOptions.includes(category))));
+}
+
 function addressFromForm(formData: FormData) {
   return {
     address_line: required(formData, "address_line"),
@@ -225,6 +297,103 @@ async function uploadPhotos(
   }
 
   return [...existingUrls, ...uploadedUrls].slice(0, maxPhotos);
+}
+
+async function findExistingBatchSale(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  listing: BatchListing,
+  title: string,
+  address: { address_line: string; city: string; state: string; zip: string },
+  schedule: ReturnType<typeof buildScheduleFromDays>,
+) {
+  const columns =
+    "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, categories, source_notes, source_platform, source_url, source_poster_name, raw_source_text";
+  const sourceUrl = String(listing.source_url || "").trim();
+
+  if (sourceUrl) {
+    const { data, error } = await supabase.from("sales").select(columns).eq("source_url", sourceUrl).limit(1);
+    if (error) throw new Error(error.message);
+    if (data?.[0]) return data[0] as ExistingBatchSale;
+  }
+
+  if (!isHiddenAddress(address.address_line)) {
+    const { data, error } = await supabase
+      .from("sales")
+      .select(columns)
+      .eq("address_line", address.address_line)
+      .eq("city", address.city)
+      .eq("state", address.state)
+      .eq("zip", address.zip)
+      .limit(1);
+    if (error) throw new Error(error.message);
+    if (data?.[0]) return data[0] as ExistingBatchSale;
+  }
+
+  const { data, error } = await supabase
+    .from("sales")
+    .select(columns)
+    .eq("city", address.city)
+    .eq("state", address.state)
+    .eq("zip", address.zip)
+    .lte("starts_at", schedule.ends_at)
+    .gte("ends_at", schedule.starts_at)
+    .limit(12);
+  if (error) throw new Error(error.message);
+
+  return ((data || []) as ExistingBatchSale[]).find((sale) => titleLooksSimilar(sale.title, title)) || null;
+}
+
+function mergedBatchUpdate(
+  existing: ExistingBatchSale,
+  insertPayload: Record<string, unknown>,
+  listing: BatchListing,
+  coordinates: Awaited<ReturnType<typeof geocodeAddress>>,
+) {
+  const nextAddress = String(insertPayload.address_line || "");
+  const shouldReplaceAddress = isHiddenAddress(existing.address_line) && nextAddress && !isHiddenAddress(nextAddress);
+  const existingStart = String(existing.starts_at);
+  const existingEnd = String(existing.ends_at);
+  const nextStart = String(insertPayload.starts_at);
+  const nextEnd = String(insertPayload.ends_at);
+  const nextSourceUrl = String(insertPayload.source_url || "").trim();
+  const updatePayload: Record<string, unknown> = {
+    description: betterDescription(existing.description, String(insertPayload.description || "")),
+    starts_at: nextStart < existingStart ? nextStart : existingStart,
+    ends_at: nextEnd > existingEnd ? nextEnd : existingEnd,
+    sale_schedule: mergeText(existing.sale_schedule, String(insertPayload.sale_schedule || ""), "Additional schedule source"),
+    categories: mergeCategories(existing.categories, (insertPayload.categories as string[]) || []),
+    source_notes: mergeText(existing.source_notes, String(insertPayload.source_notes || ""), "Additional source note"),
+    raw_source_text: mergeText(existing.raw_source_text, String(insertPayload.raw_source_text || ""), "Additional raw source text"),
+    updated_at: new Date().toISOString(),
+  };
+
+  if (!existing.source_platform && insertPayload.source_platform) updatePayload.source_platform = insertPayload.source_platform;
+  if (!existing.source_poster_name && insertPayload.source_poster_name) updatePayload.source_poster_name = insertPayload.source_poster_name;
+  if (!existing.source_url && nextSourceUrl) {
+    updatePayload.source_url = nextSourceUrl;
+  } else if (existing.source_url && nextSourceUrl && existing.source_url !== nextSourceUrl) {
+    updatePayload.source_notes = mergeText(String(updatePayload.source_notes || existing.source_notes || ""), nextSourceUrl, "Additional source URL");
+  }
+
+  if (shouldReplaceAddress) {
+    updatePayload.address_line = nextAddress;
+    updatePayload.city = insertPayload.city;
+    updatePayload.state = insertPayload.state;
+    updatePayload.zip = insertPayload.zip;
+    updatePayload.latitude = coordinates?.latitude ?? null;
+    updatePayload.longitude = coordinates?.longitude ?? null;
+    updatePayload.location_precision = coordinates?.precision ?? null;
+  } else if ((existing.latitude === null || existing.longitude === null) && coordinates) {
+    updatePayload.latitude = coordinates.latitude;
+    updatePayload.longitude = coordinates.longitude;
+    updatePayload.location_precision = coordinates.precision;
+  }
+
+  if (listing.title && String(listing.title).length > existing.title.length + 12) {
+    updatePayload.title = String(listing.title).trim();
+  }
+
+  return updatePayload;
 }
 
 export async function createSellerSale(formData: FormData) {
@@ -333,7 +502,8 @@ export async function createCommunitySalesBatch(formData: FormData) {
 
   const supabase = getSupabaseAdmin();
   let inserted = 0;
-  let skipped = 0;
+  let updated = 0;
+  const skipped = 0;
 
   for (const listing of listings) {
     const title = String(listing.title || "").trim();
@@ -345,14 +515,6 @@ export async function createCommunitySalesBatch(formData: FormData) {
     };
     if (!title || !address.address_line || !address.city || !address.state || !address.zip) {
       throw new Error("Each batch listing needs title, address_line, city, state, and zip.");
-    }
-
-    if (listing.source_url) {
-      const existing = await supabase.from("sales").select("id").eq("source_url", listing.source_url).limit(1);
-      if (existing.data?.length) {
-        skipped += 1;
-        continue;
-      }
     }
 
     const slug = slugifyTitle(title);
@@ -382,6 +544,21 @@ export async function createCommunitySalesBatch(formData: FormData) {
       outreach_status: "not_contacted",
     };
 
+    const existing = await findExistingBatchSale(supabase, listing, title, address, schedule);
+    if (existing) {
+      const updatePayload = mergedBatchUpdate(existing, insertPayload, listing, coordinates);
+      const { error } = await supabase.from("sales").update(updatePayload).eq("id", existing.id);
+      if (error?.message.includes("location_precision")) {
+        const retry = await supabase.from("sales").update(withoutLocationPrecision(updatePayload)).eq("id", existing.id);
+        if (retry.error) throw new Error(retry.error.message);
+      } else if (error) {
+        throw new Error(error.message);
+      }
+      revalidatePath(salePath(existing));
+      updated += 1;
+      continue;
+    }
+
     const { error } = await supabase.from("sales").insert(insertPayload);
     if (error?.message.includes("location_precision")) {
       const retry = await supabase.from("sales").insert(withoutLocationPrecision(insertPayload));
@@ -394,7 +571,7 @@ export async function createCommunitySalesBatch(formData: FormData) {
 
   revalidatePath("/saletrail");
   revalidatePath("/saletrail/map");
-  redirect(`/saletrail/admin?batch=${inserted}&skipped=${skipped}`);
+  redirect(`/saletrail/admin?batch=${inserted}&updated=${updated}&skipped=${skipped}`);
 }
 
 export async function updateManagedSale(formData: FormData) {

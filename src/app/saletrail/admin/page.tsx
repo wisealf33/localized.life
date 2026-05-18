@@ -324,6 +324,7 @@ export default async function AdminPage({ searchParams }: Props) {
         {params.batch ? (
           <div className="notice good">
             Batch import finished. Added {params.batch} listing{params.batch === "1" ? "" : "s"}
+            {params.updated && params.updated !== "0" ? ` and updated ${params.updated} existing listing${params.updated === "1" ? "" : "s"}` : ""}
             {params.skipped && params.skipped !== "0" ? ` and skipped ${params.skipped} duplicate source link${params.skipped === "1" ? "" : "s"}` : ""}.
           </div>
         ) : null}
