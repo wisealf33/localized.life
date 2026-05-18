@@ -14,7 +14,7 @@ const publicSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
 
 type Props = {
-  searchParams: Promise<{ q?: string; date?: string; category?: string; page?: string; perPage?: string }>;
+  searchParams: Promise<{ q?: string; date?: string; range?: string; category?: string; page?: string; perPage?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -26,6 +26,12 @@ export const metadata: Metadata = pageMetadata({
 });
 
 const pageSizes = [10, 20, 50];
+const rangeOptions = [
+  { value: "today", label: "Today" },
+  { value: "next3", label: "Next 3 days" },
+  { value: "week", label: "Next week" },
+  { value: "weekend", label: "Weekend" },
+];
 
 function numberParam(value: string | undefined, fallback: number) {
   const parsed = Number(value);
@@ -37,10 +43,18 @@ function pageSizeParam(value: string | undefined) {
   return pageSizes.includes(parsed) ? parsed : 10;
 }
 
-function directoryUrl(params: { q?: string; date?: string; category?: string; page?: number; perPage?: number }) {
+function directoryUrl(params: {
+  q?: string;
+  date?: string;
+  range?: string;
+  category?: string;
+  page?: number;
+  perPage?: number;
+}) {
   const next = new URLSearchParams();
   if (params.q) next.set("q", params.q);
   if (params.date) next.set("date", params.date);
+  if (params.range) next.set("range", params.range);
   if (params.category) next.set("category", params.category);
   if (params.perPage && params.perPage !== 10) next.set("perPage", String(params.perPage));
   if (params.page && params.page > 1) next.set("page", String(params.page));
@@ -52,7 +66,43 @@ function categoryParam(value: string | undefined) {
   return value && categoryOptions.includes(value) ? value : "";
 }
 
-async function getSales(q?: string, date?: string, category?: string, page = 1, perPage = 10) {
+function rangeParam(value: string | undefined) {
+  return rangeOptions.some((option) => option.value === value) ? value : "";
+}
+
+function chicagoDate(offsetDays = 0) {
+  const date = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+function chicagoDayOfWeek() {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "short",
+  }).format(new Date());
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
+}
+
+function rangeDates(range: string) {
+  if (range === "today") return { from: chicagoDate(), to: chicagoDate() };
+  if (range === "next3") return { from: chicagoDate(), to: chicagoDate(3) };
+  if (range === "week") return { from: chicagoDate(), to: chicagoDate(7) };
+  if (range === "weekend") {
+    const day = chicagoDayOfWeek();
+    const daysToSaturday = day >= 0 ? (6 - day + 7) % 7 : 0;
+    return { from: chicagoDate(daysToSaturday), to: chicagoDate(daysToSaturday + 1) };
+  }
+  return null;
+}
+
+async function getSales(q?: string, date?: string, range?: string, category?: string, page = 1, perPage = 10) {
   if (!isSupabaseConfigured) return { sales: [], total: 0 };
 
   const supabase = getSupabaseAdmin();
@@ -73,8 +123,11 @@ async function getSales(q?: string, date?: string, category?: string, page = 1, 
     query = query.or(`city.ilike.%${q}%,state.ilike.%${q}%,zip.ilike.%${q}%,title.ilike.%${q}%`);
   }
 
+  const selectedRange = range ? rangeDates(range) : null;
   if (date) {
     query = query.lte("starts_at", `${date}T23:59:59`).gte("ends_at", `${date}T00:00:00`);
+  } else if (selectedRange) {
+    query = query.lte("starts_at", `${selectedRange.to}T23:59:59`).gte("ends_at", `${selectedRange.from}T00:00:00`);
   }
 
   if (category) {
@@ -105,7 +158,8 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const perPage = pageSizeParam(params.perPage);
   const currentPage = numberParam(params.page, 1);
   const category = categoryParam(params.category);
-  const { sales, total } = await getSales(params.q, params.date, category, currentPage, perPage);
+  const range = rangeParam(params.range);
+  const { sales, total } = await getSales(params.q, params.date, range, category, currentPage, perPage);
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const safePage = Math.min(currentPage, totalPages);
   const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
@@ -161,6 +215,17 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             Search
           </button>
         </form>
+        <div className="quick-filters" aria-label="Quick date filters">
+          {rangeOptions.map((option) => (
+            <Link
+              className={range === option.value ? "filter-chip active" : "filter-chip"}
+              href={directoryUrl({ q: params.q, range: option.value, category, perPage })}
+              key={option.value}
+            >
+              {option.label}
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="directory-controls">
@@ -170,6 +235,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
         <form className="per-page-form">
           {params.q ? <input name="q" type="hidden" value={params.q} /> : null}
           {params.date ? <input name="date" type="hidden" value={params.date} /> : null}
+          {range ? <input name="range" type="hidden" value={range} /> : null}
           {category ? <input name="category" type="hidden" value={category} /> : null}
           <label>
             Listings per page
@@ -257,7 +323,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {safePage > 1 ? (
             <Link
               className="button"
-              href={directoryUrl({ q: params.q, date: params.date, category, perPage, page: safePage - 1 })}
+              href={directoryUrl({ q: params.q, date: params.date, range, category, perPage, page: safePage - 1 })}
             >
               Previous
             </Link>
@@ -273,7 +339,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
               ) : (
                 <Link
                   className="page-link"
-                  href={directoryUrl({ q: params.q, date: params.date, category, perPage, page: pageNumber })}
+                  href={directoryUrl({ q: params.q, date: params.date, range, category, perPage, page: pageNumber })}
                   key={pageNumber}
                 >
                   {pageNumber}
@@ -284,7 +350,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {safePage < totalPages ? (
             <Link
               className="button"
-              href={directoryUrl({ q: params.q, date: params.date, category, perPage, page: safePage + 1 })}
+              href={directoryUrl({ q: params.q, date: params.date, range, category, perPage, page: safePage + 1 })}
             >
               Next
             </Link>

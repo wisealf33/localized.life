@@ -555,6 +555,35 @@ h2 {
   color: #ffffff;
 }
 
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 800;
+  padding: 7px 13px;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.06);
+}
+
+.filter-chip:hover,
+.filter-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
 .button.disabled {
   opacity: 0.45;
   pointer-events: none;

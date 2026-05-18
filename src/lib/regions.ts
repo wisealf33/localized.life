@@ -30,6 +30,7 @@ const cityCounty: Record<string, string> = {
   "elk grove village": "Cook County",
   frankfort: "Will County",
   glenwood: "Cook County",
+  henry: "Marshall County",
   hinsdale: "DuPage County",
   "homer glen": "Will County",
   joliet: "Will County",
