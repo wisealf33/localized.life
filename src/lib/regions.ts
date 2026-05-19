@@ -59,7 +59,7 @@ const cityCounty: Record<string, string> = {
 };
 
 const defaultWillCountyGroupUrl = "https://www.facebook.com/groups/955521984061525";
-const defaultGeneralFacebookUrl = "https://www.localized.life";
+const defaultGeneralFacebookUrl = "https://www.facebook.com/groups/1480489626874863";
 
 const openRegions: OpenRegion[] = [
   {
