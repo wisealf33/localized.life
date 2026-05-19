@@ -273,7 +273,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
         <form className="search">
           <label>
             City, state, ZIP, or keyword
-            <input name="q" defaultValue={params.q || ""} placeholder="Austin, TX or 78704" />
+            <input name="q" defaultValue={params.q || ""} placeholder="Your city, ZIP code, or location" />
           </label>
           <label>
             Distance from ZIP
