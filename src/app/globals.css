@@ -499,20 +499,20 @@ h2 {
   margin-top: 0;
 }
 
-.mini-sale-card {
+.sale-card.mini-sale-card {
   padding: 24px;
 }
 
-.mini-sale-card > :not(.sale-card-image) {
+.sale-card.mini-sale-card > :not(.sale-card-image) {
   margin-right: 0;
   margin-left: 0;
 }
 
-.mini-sale-card > :last-child {
+.sale-card.mini-sale-card > :last-child {
   margin-bottom: 0;
 }
 
-.mini-sale-card h3 {
+.sale-card.mini-sale-card h3 {
   margin-bottom: 6px;
   font-size: clamp(1.25rem, 1.5vw, 1.55rem);
   line-height: 1.12;
