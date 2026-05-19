@@ -5,7 +5,7 @@ import { BackToListingsButton } from "@/components/BackToListingsButton";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath } from "@/lib/format";
+import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath, splitSaleSchedule } from "@/lib/format";
 import { saleMetadata, saleStructuredData } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -72,6 +72,80 @@ async function getSale(slug: string) {
   return data as Sale;
 }
 
+function isCityWideSale(sale: Pick<Sale, "categories">) {
+  return sale.categories?.includes("City-wide sale") || false;
+}
+
+async function getCityWideParticipatingSales(sale: Sale) {
+  if (!isSupabaseConfigured || !isCityWideSale(sale)) return [];
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("sales")
+    .select(publicSaleColumns)
+    .eq("visibility_status", "public")
+    .eq("status", "active")
+    .eq("city", sale.city)
+    .eq("state", sale.state)
+    .neq("id", sale.id)
+    .lte("starts_at", sale.ends_at)
+    .gte("ends_at", sale.starts_at)
+    .order("starts_at", { ascending: true })
+    .order("address_line", { ascending: true });
+
+  if (error || !data) return [];
+
+  return (data as Sale[])
+    .filter((item) => !isCityWideSale(item))
+    .sort((a, b) => {
+      const dateCompare = new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+      if (dateCompare !== 0) return dateCompare;
+      return a.address_line.localeCompare(b.address_line);
+    });
+}
+
+function ParticipatingSaleCard({ sale }: { sale: Sale }) {
+  const schedule = splitSaleSchedule(sale);
+
+  return (
+    <article className="card sale-card mini-sale-card">
+      <div>
+        <h3>
+          <Link href={salePath(sale)}>{sale.title}</Link>
+        </h3>
+        <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+          {fullAddress(sale)}
+        </a>
+      </div>
+      <div className="sale-card-schedule">
+        {schedule.dates.map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+        {schedule.note ? <small>{schedule.note}</small> : null}
+      </div>
+      {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+      <div className="sale-card-footer">
+        <Link className="button primary" href={salePath(sale)}>
+          View listing
+        </Link>
+        <SaveSaleButton
+          sale={{
+            slug: sale.slug,
+            title: sale.title,
+            address: fullAddress(sale),
+            city: sale.city,
+            state: sale.state,
+            startsAt: sale.starts_at,
+            href: salePath(sale),
+            latitude: sale.latitude,
+            longitude: sale.longitude,
+            locationPrecision: sale.location_precision,
+          }}
+        />
+      </div>
+    </article>
+  );
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const sale = await getSale(slug);
@@ -89,6 +163,8 @@ export default async function SalePage({ params, searchParams }: Props) {
   const query = await searchParams;
   const sale = await getSale(slug);
   if (!sale) notFound();
+  const isCityWide = isCityWideSale(sale);
+  const participatingSales = await getCityWideParticipatingSales(sale);
   const previewImage = salePreviewImage(sale);
   const structuredData = saleStructuredData(sale);
 
@@ -130,7 +206,18 @@ export default async function SalePage({ params, searchParams }: Props) {
         ) : null}
         {sale.description ? <p>{sale.description}</p> : null}
 
-        {sale.source_type !== "seller_created" && sale.claim_status !== "claimed" ? (
+        {isCityWide ? (
+          <div className="notice stack small-gap">
+            <p>
+              This city-wide sale page is managed by SaleTrail as a community event hub. Individual participating sales
+              can be viewed, saved, and added to your route below.
+            </p>
+            <p>
+              If one of the individual sale listings belongs to you, claim that individual listing instead of this
+              city-wide hub page.
+            </p>
+          </div>
+        ) : sale.source_type !== "seller_created" && sale.claim_status !== "claimed" ? (
           <div className="notice stack small-gap">
             <p>
               This listing was added from publicly available or community-submitted information and has not yet been
@@ -169,7 +256,7 @@ export default async function SalePage({ params, searchParams }: Props) {
           <Link className="button" href={saleSharePath(sale)}>
             Share kit
           </Link>
-          {sale.claim_status !== "claimed" ? (
+          {!isCityWide && sale.claim_status !== "claimed" ? (
             <Link className="button" href={`/saletrail/claim/${sale.slug}`}>
               Claim this listing
             </Link>
@@ -177,7 +264,32 @@ export default async function SalePage({ params, searchParams }: Props) {
         </div>
       </section>
 
-      {sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
+      {isCityWide ? (
+        <section className="panel stack citywide-participants-panel">
+          <div>
+            <p className="eyebrow">Participating sales</p>
+            <h2>
+              {participatingSales.length
+                ? `${participatingSales.length} sale${participatingSales.length === 1 ? "" : "s"} in this city-wide event`
+                : "Participating sales will appear here"}
+            </h2>
+          </div>
+          <p className="muted">
+            Save the individual stops you want, then open My route to arrange your own SaleTrail.
+          </p>
+          {participatingSales.length ? (
+            <div className="grid two related-sales-grid">
+              {participatingSales.map((item) => (
+                <ParticipatingSaleCard sale={item} key={item.id} />
+              ))}
+            </div>
+          ) : (
+            <p className="muted">No individual participating listings have been added yet.</p>
+          )}
+        </section>
+      ) : null}
+
+      {!isCityWide && sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
         <section className="panel claim-listing-panel">
           <div>
             <p className="eyebrow">Organizer access</p>
