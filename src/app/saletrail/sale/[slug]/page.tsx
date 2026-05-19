@@ -208,18 +208,34 @@ export default async function SalePage({ params, searchParams }: Props) {
 
       <section className={isCityWide ? "stack listing-detail citywide-hero" : "stack listing-detail"}>
         {isCityWide ? <span className="badge plain">City-wide event</span> : <StatusBadge sale={sale} />}
-        <div className="listing-title-row">
+        <div className={isCityWide ? "listing-title-row citywide-title-row" : "listing-title-row"}>
           <h1>{sale.title}</h1>
           <BackToListingsButton />
         </div>
-        <p className="lede whitespace">{formatSaleHours(sale)}</p>
-        <p>
-          <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
-            {fullAddress(sale)}
-          </a>
-        </p>
-        {sale.status !== "active" ? <div className="notice">This sale is marked {sale.status}.</div> : null}
-        {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+        {isCityWide ? (
+          <div className="citywide-event-summary">
+            <p>
+              <strong>{participatingSales.length} participating sales</strong>
+            </p>
+            <p>{formatSaleHours(sale).replace(/\n/g, " · ")}</p>
+            <p>
+              <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+                {fullAddress(sale)}
+              </a>
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="lede whitespace">{formatSaleHours(sale)}</p>
+            <p>
+              <a className="text-link" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+                {fullAddress(sale)}
+              </a>
+            </p>
+            {sale.status !== "active" ? <div className="notice">This sale is marked {sale.status}.</div> : null}
+            {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+          </>
+        )}
         {previewImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="listing-preview-image" src={previewImage.src} alt={`${sale.title} preview`} />
@@ -232,7 +248,7 @@ export default async function SalePage({ params, searchParams }: Props) {
             ))}
           </div>
         ) : null}
-        {sale.description ? <p>{sale.description}</p> : null}
+        {sale.description ? <p className={isCityWide ? "citywide-description" : undefined}>{sale.description}</p> : null}
 
         {isCityWide ? (
           <div className="notice stack small-gap">
