@@ -169,7 +169,7 @@ export default async function SalePage({ params, searchParams }: Props) {
   const structuredData = saleStructuredData(sale);
 
   return (
-    <main className="page narrow">
+    <main className={isCityWide ? "page citywide-page" : "page narrow"}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
@@ -178,8 +178,8 @@ export default async function SalePage({ params, searchParams }: Props) {
 
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}
 
-      <section className="stack listing-detail">
-        <StatusBadge sale={sale} />
+      <section className={isCityWide ? "stack listing-detail citywide-hero" : "stack listing-detail"}>
+        {isCityWide ? <span className="badge plain">City-wide event</span> : <StatusBadge sale={sale} />}
         <div className="listing-title-row">
           <h1>{sale.title}</h1>
           <BackToListingsButton />
@@ -239,20 +239,26 @@ export default async function SalePage({ params, searchParams }: Props) {
         ) : null}
 
         <div className="toolbar">
-          <SaveSaleButton
-            sale={{
-              slug: sale.slug,
-              title: sale.title,
-              address: fullAddress(sale),
-              city: sale.city,
-              state: sale.state,
-              startsAt: sale.starts_at,
-              href: salePath(sale),
-              latitude: sale.latitude,
-              longitude: sale.longitude,
-              locationPrecision: sale.location_precision,
-            }}
-          />
+          {isCityWide ? (
+            <a className="button primary" href="#participating-sales">
+              View participating sales
+            </a>
+          ) : (
+            <SaveSaleButton
+              sale={{
+                slug: sale.slug,
+                title: sale.title,
+                address: fullAddress(sale),
+                city: sale.city,
+                state: sale.state,
+                startsAt: sale.starts_at,
+                href: salePath(sale),
+                latitude: sale.latitude,
+                longitude: sale.longitude,
+                locationPrecision: sale.location_precision,
+              }}
+            />
+          )}
           <Link className="button" href={saleSharePath(sale)}>
             Share kit
           </Link>
@@ -265,7 +271,7 @@ export default async function SalePage({ params, searchParams }: Props) {
       </section>
 
       {isCityWide ? (
-        <section className="panel stack citywide-participants-panel">
+        <section className="panel stack citywide-participants-panel" id="participating-sales">
           <div>
             <p className="eyebrow">Participating sales</p>
             <h2>
