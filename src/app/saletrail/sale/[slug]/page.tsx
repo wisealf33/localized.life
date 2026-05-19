@@ -76,6 +76,32 @@ function isCityWideSale(sale: Pick<Sale, "categories">) {
   return sale.categories?.includes("City-wide sale") || false;
 }
 
+function streetTitle(address: string) {
+  const cleaned = address
+    .replace(/^(?:\d+[A-Za-z]?|Mizera Building),?\s*/i, "")
+    .replace(/\s*,?\s*(?:Raymond|Bloomington),?\s*IL.*$/i, "")
+    .replace(/\bN\b/i, "North")
+    .replace(/\bS\b/i, "South")
+    .replace(/\bE\b/i, "East")
+    .replace(/\bW\b/i, "West")
+    .replace(/\bSt\b\.?/i, "Street")
+    .replace(/\bRd\b\.?/i, "Road")
+    .replace(/\bDr\b\.?/i, "Drive")
+    .replace(/\bLn\b\.?/i, "Lane")
+    .replace(/\bCt\b\.?/i, "Court")
+    .replace(/\bCir\b\.?/i, "Circle")
+    .trim();
+
+  if (!cleaned) return "This location";
+  if (/building/i.test(address)) return "Mizera Building";
+  return cleaned;
+}
+
+function participantTitle(sale: Pick<Sale, "title" | "address_line" | "categories">) {
+  const prefix = sale.categories?.includes("Estate sale") ? "Estate Sale" : "Garage Sale";
+  return `${prefix} on ${streetTitle(sale.address_line)}`;
+}
+
 async function getCityWideParticipatingSales(sale: Sale) {
   if (!isSupabaseConfigured || !isCityWideSale(sale)) return [];
 
@@ -108,9 +134,9 @@ function ParticipatingSaleCard({ sale }: { sale: Sale }) {
 
   return (
     <article className="card sale-card mini-sale-card">
-      <div>
+      <div className="participant-card-main">
         <h3>
-          <Link href={salePath(sale)}>{sale.title}</Link>
+          <Link href={salePath(sale)}>{participantTitle(sale)}</Link>
         </h3>
         <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
           {fullAddress(sale)}
@@ -122,25 +148,27 @@ function ParticipatingSaleCard({ sale }: { sale: Sale }) {
         ))}
         {schedule.note ? <small>{schedule.note}</small> : null}
       </div>
-      {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
-      <div className="sale-card-footer">
-        <Link className="button primary" href={salePath(sale)}>
-          View listing
-        </Link>
-        <SaveSaleButton
-          sale={{
-            slug: sale.slug,
-            title: sale.title,
-            address: fullAddress(sale),
-            city: sale.city,
-            state: sale.state,
-            startsAt: sale.starts_at,
-            href: salePath(sale),
-            latitude: sale.latitude,
-            longitude: sale.longitude,
-            locationPrecision: sale.location_precision,
-          }}
-        />
+      <div className="participant-card-bottom">
+        {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+        <div className="sale-card-footer">
+          <Link className="button primary" href={salePath(sale)}>
+            View listing
+          </Link>
+          <SaveSaleButton
+            sale={{
+              slug: sale.slug,
+              title: sale.title,
+              address: fullAddress(sale),
+              city: sale.city,
+              state: sale.state,
+              startsAt: sale.starts_at,
+              href: salePath(sale),
+              latitude: sale.latitude,
+              longitude: sale.longitude,
+              locationPrecision: sale.location_precision,
+            }}
+          />
+        </div>
       </div>
     </article>
   );
