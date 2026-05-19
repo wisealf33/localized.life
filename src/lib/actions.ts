@@ -885,7 +885,6 @@ export async function updateOutreachStatus(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail/admin");
   revalidatePath("/saletrail");
-  redirect("/saletrail/admin?updated=1");
 }
 
 export async function createLocalEvent(formData: FormData) {

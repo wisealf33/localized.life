@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { hashSecret } from "./tokens";
 
 const adminCookie = "saletrail_admin";
+const adminCookiePath = "/";
 
 function expectedAdminSession() {
   const password = process.env.SALETRAIL_ADMIN_PASSWORD;
@@ -37,7 +38,7 @@ export async function adminLogin(formData: FormData) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/saletrail/admin",
+    path: adminCookiePath,
   });
 
   redirect("/saletrail/admin");
@@ -45,6 +46,19 @@ export async function adminLogin(formData: FormData) {
 
 export async function adminLogout() {
   const cookieStore = await cookies();
-  cookieStore.delete(adminCookie);
+  cookieStore.set(adminCookie, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: adminCookiePath,
+    expires: new Date(0),
+  });
+  cookieStore.set(adminCookie, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/saletrail/admin",
+    expires: new Date(0),
+  });
   redirect("/saletrail/admin");
 }
