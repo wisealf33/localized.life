@@ -22,7 +22,7 @@ export async function isAdminAuthenticated() {
 
 export async function requireAdmin() {
   if (!(await isAdminAuthenticated())) {
-    throw new Error("Admin password is required.");
+    redirect("/saletrail/admin?auth=expired");
   }
 }
 

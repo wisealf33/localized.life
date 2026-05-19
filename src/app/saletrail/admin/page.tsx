@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ approved?: string; manage?: string; updated?: string; batch?: string; skipped?: string }>;
+  searchParams: Promise<{ approved?: string; manage?: string; updated?: string; batch?: string; skipped?: string; auth?: string }>;
 };
 
 const outreachSaleColumns =
@@ -375,6 +375,11 @@ export default async function AdminPage({ searchParams }: Props) {
             Batch import finished. Added {params.batch} listing{params.batch === "1" ? "" : "s"}
             {params.updated && params.updated !== "0" ? ` and updated ${params.updated} existing listing${params.updated === "1" ? "" : "s"}` : ""}
             {params.skipped && params.skipped !== "0" ? ` and skipped ${params.skipped} duplicate source link${params.skipped === "1" ? "" : "s"}` : ""}.
+          </div>
+        ) : null}
+        {params.auth === "expired" ? (
+          <div className="notice">
+            Admin session needs to be refreshed. Sign in once, then outreach buttons should work normally.
           </div>
         ) : null}
         {enabled ? (
