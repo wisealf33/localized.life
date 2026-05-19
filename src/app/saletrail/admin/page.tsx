@@ -328,7 +328,13 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
             </OutreachStatusButton>
           </div>
         </>
-      ) : null}
+      ) : (
+        <div className="outreach-actions simplified">
+          <OutreachStatusButton primary saleId={sale.id} status="not_contacted">
+            Restore to outreach queue
+          </OutreachStatusButton>
+        </div>
+      )}
     </article>
   );
 }
