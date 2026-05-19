@@ -48,6 +48,10 @@ async function lookup(query: string): Promise<Omit<GeocodeResult, "precision"> |
   }
 }
 
+export async function geocodeSearch(query: string): Promise<Omit<GeocodeResult, "precision"> | null> {
+  return lookup(query);
+}
+
 export async function geocodeAddress(address: AddressInput): Promise<GeocodeResult | null> {
   const exact = await lookup(fullAddress(address));
   if (exact) return { ...exact, precision: "address" };
