@@ -47,6 +47,7 @@ const cityCounty: Record<string, string> = {
   "orland park": "Cook County",
   peotone: "Will County",
   plainfield: "Will County",
+  raymond: "Montgomery County",
   riverside: "Cook County",
   romeoville: "Will County",
   sandwich: "DeKalb County",
