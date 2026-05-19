@@ -314,7 +314,7 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
           </form>
 
           <div className="outreach-actions simplified">
-            <OutreachStatusButton primary saleId={sale.id} status="outreach_complete">
+            <OutreachStatusButton primary saleId={sale.id} status="message_sent">
               Mark outreach complete
             </OutreachStatusButton>
             <OutreachStatusButton saleId={sale.id} status="follow_up_needed">
