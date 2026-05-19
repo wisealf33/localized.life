@@ -97,6 +97,16 @@ function milesBetween(a: { latitude: number; longitude: number }, b: { latitude:
   return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 }
 
+function compareSalesByDate(a: Sale, b: Sale) {
+  const startCompare = new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+  if (startCompare !== 0) return startCompare;
+
+  const endCompare = new Date(a.ends_at).getTime() - new Date(b.ends_at).getTime();
+  if (endCompare !== 0) return endCompare;
+
+  return visibilityRank(a) - visibilityRank(b);
+}
+
 function categoryParam(value: string | undefined) {
   return value && categoryOptions.includes(value) ? value : "";
 }
@@ -151,9 +161,10 @@ async function getSales(q?: string, date?: string, range?: string, category?: st
     .eq("visibility_status", "public")
     .eq("status", "active")
     .gte("ends_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .order("ends_at", { ascending: true })
     .order("source_type", { ascending: false })
     .order("claim_status", { ascending: true })
-    .order("starts_at", { ascending: true })
     .range(from, to);
 
   if (q && !isRadiusSearch) {
@@ -195,9 +206,9 @@ async function getSales(q?: string, date?: string, range?: string, category?: st
       })
       .filter(({ distance }) => distance !== null && (!center || distance <= radius))
       .sort((a, b) => {
-        const rank = visibilityRank(a.sale) - visibilityRank(b.sale);
-        if (rank !== 0) return rank;
-        return (a.distance || 0) - (b.distance || 0) || a.sale.starts_at.localeCompare(b.sale.starts_at);
+        const dateCompare = compareSalesByDate(a.sale, b.sale);
+        if (dateCompare !== 0) return dateCompare;
+        return (a.distance || 0) - (b.distance || 0);
       })
       .map(({ sale }) => sale);
     return {
@@ -207,7 +218,7 @@ async function getSales(q?: string, date?: string, range?: string, category?: st
   }
 
   return {
-    sales: ((data as Sale[]) || []).sort((a, b) => visibilityRank(a) - visibilityRank(b)),
+    sales: ((data as Sale[]) || []).sort(compareSalesByDate),
     total: count || 0,
   };
 }

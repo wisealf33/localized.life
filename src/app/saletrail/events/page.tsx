@@ -39,7 +39,7 @@ async function getEvents() {
     .order("starts_at", { ascending: true })
     .limit(100);
   if (error) return [];
-  return (data || []) as LocalEvent[];
+  return ((data || []) as LocalEvent[]).sort(compareByStartDate);
 }
 
 async function getEventLikeSales() {
@@ -67,11 +67,17 @@ async function getEventLikeSales() {
 
   return Array.from(byId.values())
     .filter((sale) => !sale.categories?.includes("Estate sale"))
-    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+    .sort(compareByStartDate);
 }
 
 function saleEventLabel(sale: Pick<Sale, "categories">) {
   return eventLikeCategories.find((category) => sale.categories?.includes(category)) || "Local event";
+}
+
+function compareByStartDate(a: Pick<Sale | LocalEvent, "starts_at" | "ends_at">, b: Pick<Sale | LocalEvent, "starts_at" | "ends_at">) {
+  const startCompare = new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+  if (startCompare !== 0) return startCompare;
+  return new Date(a.ends_at).getTime() - new Date(b.ends_at).getTime();
 }
 
 export default async function EventsPage() {
