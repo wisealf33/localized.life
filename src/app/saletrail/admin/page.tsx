@@ -65,6 +65,12 @@ const completedOutreachStatuses = new Set<OutreachStatus>([
   "claimed",
 ]);
 
+function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url">) {
+  if (sale.categories?.includes("City-wide sale")) return false;
+  const sourceUrl = (sale.source_url || "").toLowerCase();
+  return sourceUrl.includes("facebook.com");
+}
+
 async function getQueues(enabled: boolean) {
   if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [] };
   const supabase = getSupabaseAdmin();
@@ -118,7 +124,7 @@ async function getQueues(enabled: boolean) {
   ]);
 
   return {
-    outreach: (outreach || []) as Sale[],
+    outreach: ((outreach || []) as Sale[]).filter(isFacebookOutreachCandidate),
     claims: (claims || []) as ClaimRequest[],
     requests: (requests || []) as ListingRequest[],
     feedback: (feedback || []) as FeedbackRequest[],
