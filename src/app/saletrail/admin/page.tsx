@@ -184,6 +184,10 @@ function isExpired(sale: Pick<Sale, "ends_at">) {
   return new Date(sale.ends_at).getTime() < Date.now();
 }
 
+function isOpenedAreaSale(sale: Sale) {
+  return regionDestinationForSale(sale).isDedicated;
+}
+
 function photoNeeds(sales: Sale[]) {
   const needs = new Map<
     string,
@@ -346,6 +350,8 @@ export default async function AdminPage({ searchParams }: Props) {
   const activeOutreach = outreach.filter(
     (sale) => !isExpired(sale) && !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
+  const openedAreaOutreach = activeOutreach.filter(isOpenedAreaSale);
+  const otherAreaOutreach = activeOutreach.filter((sale) => !isOpenedAreaSale(sale));
   const completedOutreach = outreach.filter(
     (sale) => !isExpired(sale) && completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
@@ -771,15 +777,36 @@ export default async function AdminPage({ searchParams }: Props) {
               <p className="eyebrow">Manual tracking</p>
               <h2>Outreach queue</h2>
               <p className="muted">
-                Community-added, unclaimed listings that may need manual outreach. This queue only helps you copy text
-                and track what you did outside the app.
+                Community-added, unclaimed listings that may need manual outreach. Opened Localized areas show first so
+                you can focus on the regions you are actively growing.
               </p>
             </div>
-            <h3>Outreach needed</h3>
+            <h3>Opened areas first</h3>
+            <p className="muted">
+              These listings are inside a dedicated Localized Facebook group area, so they are the main outreach priority.
+            </p>
             {activeOutreach.length === 0 ? <p className="muted">No active outreach items.</p> : null}
-            {activeOutreach.map((sale) => (
+            {openedAreaOutreach.length === 0 && activeOutreach.length > 0 ? (
+              <p className="muted">No active outreach in opened areas.</p>
+            ) : null}
+            {openedAreaOutreach.map((sale) => (
               <OutreachCard key={sale.id} sale={sale} />
             ))}
+
+            {otherAreaOutreach.length ? (
+              <details className="admin-details completed-outreach">
+                <summary>Other areas not dedicated yet ({otherAreaOutreach.length})</summary>
+                <p className="muted">
+                  These can still be contacted through the general Localized.life group/page, but they stay behind the
+                  opened-area queue so they do not overwhelm the main workflow.
+                </p>
+                <div className="stack">
+                  {otherAreaOutreach.map((sale) => (
+                    <OutreachCard key={sale.id} sale={sale} />
+                  ))}
+                </div>
+              </details>
+            ) : null}
 
             {completedOutreach.length ? (
               <details className="admin-details completed-outreach">
