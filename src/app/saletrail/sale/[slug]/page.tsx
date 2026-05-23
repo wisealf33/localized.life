@@ -261,7 +261,7 @@ export default async function SalePage({ params, searchParams }: Props) {
               city-wide hub page.
             </p>
           </div>
-        ) : sale.source_type !== "seller_created" && sale.claim_status !== "claimed" ? (
+        ) : sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
           <div className="notice stack small-gap">
             <p>
               This listing was added from publicly available or community-submitted information and has not yet been
@@ -306,7 +306,7 @@ export default async function SalePage({ params, searchParams }: Props) {
           <Link className="button" href={saleSharePath(sale)}>
             Share kit
           </Link>
-          {!isCityWide && sale.claim_status !== "claimed" ? (
+          {!isCityWide && sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
             <Link className="button" href={`/saletrail/claim/${sale.slug}`}>
               Claim this listing
             </Link>

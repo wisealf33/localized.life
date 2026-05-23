@@ -4,6 +4,7 @@ import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
+import { UseLocationButton } from "@/components/UseLocationButton";
 import { categoryOptions, fullAddress, mapSearchUrl, salePath, splitSaleSchedule } from "@/lib/format";
 import { geocodeSearch } from "@/lib/geocode";
 import { pageMetadata } from "@/lib/seo";
@@ -23,6 +24,8 @@ type Props = {
     page?: string;
     perPage?: string;
     radius?: string;
+    lat?: string;
+    lng?: string;
   }>;
 };
 
@@ -63,12 +66,19 @@ function zipParam(value: string | undefined) {
   return /^\d{5}$/.test(trimmed) ? trimmed : "";
 }
 
+function coordinateParam(value: string | undefined, min: number, max: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : null;
+}
+
 function directoryUrl(params: {
   q?: string;
   date?: string;
   range?: string;
   category?: string;
   radius?: number;
+  lat?: string;
+  lng?: string;
   page?: number;
   perPage?: number;
 }) {
@@ -78,6 +88,10 @@ function directoryUrl(params: {
   if (params.range) next.set("range", params.range);
   if (params.category) next.set("category", params.category);
   if (params.radius && params.radius !== 10) next.set("radius", String(params.radius));
+  if (params.lat && params.lng) {
+    next.set("lat", params.lat);
+    next.set("lng", params.lng);
+  }
   if (params.perPage && params.perPage !== 10) next.set("perPage", String(params.perPage));
   if (params.page && params.page > 1) next.set("page", String(params.page));
   const query = next.toString();
@@ -147,12 +161,21 @@ function rangeDates(range: string) {
   return null;
 }
 
-async function getSales(q?: string, date?: string, range?: string, category?: string, page = 1, perPage = 10, radius = 10) {
+async function getSales(
+  q?: string,
+  date?: string,
+  range?: string,
+  category?: string,
+  page = 1,
+  perPage = 10,
+  radius = 10,
+  userLocation?: { latitude: number; longitude: number } | null,
+) {
   if (!isSupabaseConfigured) return { sales: [], total: 0 };
 
   const supabase = getSupabaseAdmin();
   const zip = zipParam(q);
-  const isRadiusSearch = Boolean(zip);
+  const isRadiusSearch = Boolean(zip || userLocation);
   const from = isRadiusSearch ? 0 : (page - 1) * perPage;
   const to = isRadiusSearch ? 999 : from + perPage - 1;
   let query = supabase
@@ -185,7 +208,7 @@ async function getSales(q?: string, date?: string, range?: string, category?: st
   const { data, error, count } = await query;
   if (error) throw new Error(error.message);
   if (isRadiusSearch) {
-    const center = await geocodeSearch(`${zip}, USA`);
+    const center = userLocation || (zip ? await geocodeSearch(`${zip}, USA`) : null);
     const allSales = ((data as Sale[]) || [])
       .map((sale) => {
         const hasCoordinates =
@@ -242,7 +265,21 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const category = categoryParam(params.category);
   const range = rangeParam(params.range);
   const zip = zipParam(params.q);
-  const { sales, total } = await getSales(params.q, params.date, range, category, currentPage, perPage, radius);
+  const latitude = coordinateParam(params.lat, -90, 90);
+  const longitude = coordinateParam(params.lng, -180, 180);
+  const hasManualQuery = Boolean(params.q?.trim());
+  const userLocation = !hasManualQuery && latitude !== null && longitude !== null ? { latitude, longitude } : null;
+  const hasUserLocation = Boolean(userLocation);
+  const { sales, total } = await getSales(
+    params.q,
+    params.date,
+    range,
+    category,
+    currentPage,
+    perPage,
+    radius,
+    userLocation,
+  );
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const safePage = Math.min(currentPage, totalPages);
   const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
@@ -271,12 +308,13 @@ export default async function SaleTrailHome({ searchParams }: Props) {
 
       <section className="panel">
         <form className="search">
+          <UseLocationButton initialLat={params.lat || ""} initialLng={params.lng || ""} />
           <label>
             City, state, ZIP, or keyword
             <input name="q" defaultValue={params.q || ""} placeholder="Your city, ZIP code, or location" />
           </label>
           <label>
-            Distance from ZIP
+            Distance
             <select name="radius" defaultValue={radius}>
               {radiusOptions.map((option) => (
                 <option value={option} key={option}>
@@ -309,7 +347,15 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {rangeOptions.map((option) => (
             <Link
               className={range === option.value ? "filter-chip active" : "filter-chip"}
-              href={directoryUrl({ q: params.q, range: option.value, category, radius, perPage })}
+              href={directoryUrl({
+                q: params.q,
+                range: option.value,
+                category,
+                radius,
+                lat: params.lat,
+                lng: params.lng,
+                perPage,
+              })}
               key={option.value}
             >
               {option.label}
@@ -323,7 +369,11 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {total === 0
             ? "No listings to show."
             : `Showing ${resultStart}-${resultEnd} of ${total} listing${total === 1 ? "" : "s"}${
-                zip ? ` within ${radius} miles of ${zip}` : ""
+                hasUserLocation
+                  ? ` within ${radius} miles of your location`
+                  : zip
+                    ? ` within ${radius} miles of ${zip}`
+                    : ""
               }.`}
         </p>
         <form className="per-page-form">
@@ -331,7 +381,13 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {params.date ? <input name="date" type="hidden" value={params.date} /> : null}
           {range ? <input name="range" type="hidden" value={range} /> : null}
           {category ? <input name="category" type="hidden" value={category} /> : null}
-          {zip ? <input name="radius" type="hidden" value={radius} /> : null}
+          {zip || hasUserLocation ? <input name="radius" type="hidden" value={radius} /> : null}
+          {params.lat && params.lng ? (
+            <>
+              <input name="lat" type="hidden" value={params.lat} />
+              <input name="lng" type="hidden" value={params.lng} />
+            </>
+          ) : null}
           <label>
             Listings per page
             <select name="perPage" defaultValue={perPage}>
@@ -424,7 +480,17 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {safePage > 1 ? (
             <Link
               className="button"
-              href={directoryUrl({ q: params.q, date: params.date, range, category, radius, perPage, page: safePage - 1 })}
+              href={directoryUrl({
+                q: params.q,
+                date: params.date,
+                range,
+                category,
+                radius,
+                lat: params.lat,
+                lng: params.lng,
+                perPage,
+                page: safePage - 1,
+              })}
             >
               Previous
             </Link>
@@ -440,7 +506,17 @@ export default async function SaleTrailHome({ searchParams }: Props) {
               ) : (
                 <Link
                   className="page-link"
-                  href={directoryUrl({ q: params.q, date: params.date, range, category, radius, perPage, page: pageNumber })}
+                  href={directoryUrl({
+                    q: params.q,
+                    date: params.date,
+                    range,
+                    category,
+                    radius,
+                    lat: params.lat,
+                    lng: params.lng,
+                    perPage,
+                    page: pageNumber,
+                  })}
                   key={pageNumber}
                 >
                   {pageNumber}
@@ -451,7 +527,17 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {safePage < totalPages ? (
             <Link
               className="button"
-              href={directoryUrl({ q: params.q, date: params.date, range, category, radius, perPage, page: safePage + 1 })}
+              href={directoryUrl({
+                q: params.q,
+                date: params.date,
+                range,
+                category,
+                radius,
+                lat: params.lat,
+                lng: params.lng,
+                perPage,
+                page: safePage + 1,
+              })}
             >
               Next
             </Link>

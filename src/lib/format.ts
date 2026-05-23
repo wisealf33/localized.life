@@ -128,12 +128,13 @@ export function claimUrl(slug: string) {
 export function sourceLabel(sourceType: SaleSourceType, claimStatus: ClaimStatus) {
   if (claimStatus === "claimed") return "Claimed by organizer";
   if (sourceType === "seller_created") return "Listed by organizer";
+  if (sourceType === "admin_added") return "SaleTrail-managed";
   if (claimStatus === "claim_pending") return "Community-added · claim pending";
   return "Community-added · unclaimed";
 }
 
 export function sourceTone(sourceType: SaleSourceType, claimStatus: ClaimStatus) {
-  if (claimStatus === "claimed" || sourceType === "seller_created") return "good";
+  if (claimStatus === "claimed" || sourceType === "seller_created" || sourceType === "admin_added") return "good";
   if (claimStatus === "claim_pending") return "watch";
   return "plain";
 }

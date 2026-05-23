@@ -4,6 +4,8 @@ export type SaleStatus = "active" | "cancelled" | "ended";
 export type VisibilityStatus = "public" | "hidden" | "removed";
 export type ListingRequestType = "correction" | "removal";
 export type FeedbackRequestType = "feature" | "bug" | "general";
+export type EventLeadStatus = "needs_source" | "verified" | "added" | "ignored";
+export type BacklogLeadType = "local_goods" | "services" | "tools" | "gardens" | "food" | "local_exchange" | "other";
 export type LocalEventType =
   | "city_wide_garage_sale"
   | "community_sale"
@@ -124,5 +126,34 @@ export type FeedbackRequest = {
   page_url: string | null;
   message: string;
   status: "pending" | "reviewed" | "resolved" | "rejected";
+  created_at: string;
+};
+
+export type EventLead = {
+  id: string;
+  slug: string;
+  title: string;
+  city: string;
+  state: string;
+  date_text: string;
+  event_type: LocalEventType;
+  source_label: string | null;
+  source_notes: string | null;
+  status: EventLeadStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BacklogLead = {
+  id: string;
+  title: string;
+  lead_type: BacklogLeadType;
+  area: string;
+  source_label: string | null;
+  source_url: string | null;
+  source_poster_name: string | null;
+  summary: string;
+  notes: string;
   created_at: string;
 };

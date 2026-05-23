@@ -17,12 +17,14 @@ import {
   updateSaleEvent,
   updateOutreachStatus,
 } from "@/lib/actions";
+import { centralIllinoisEventLeads } from "@/data/event-leads";
+import { backlogLeads } from "@/data/backlog-leads";
 import { eventPath, eventTypeLabel, eventTypeOptions, formatEventHours } from "@/lib/events";
 import { claimUrl, formatSaleHours, fullAddress, salePath, saleUrl } from "@/lib/format";
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { missingGeneralFallbackImageNeeds, salePreviewImageNeed } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
-import type { ClaimRequest, FeedbackRequest, ListingRequest, LocalEvent, OutreachStatus, Sale } from "@/lib/types";
+import type { ClaimRequest, EventLeadStatus, FeedbackRequest, ListingRequest, LocalEvent, OutreachStatus, Sale } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "SaleTrail admin",
@@ -65,6 +67,13 @@ const completedOutreachStatuses = new Set<OutreachStatus>([
   "claimed",
 ]);
 
+const eventLeadStatusLabels: Record<EventLeadStatus, string> = {
+  needs_source: "Needs source",
+  verified: "Verified",
+  added: "Added",
+  ignored: "Ignored",
+};
+
 function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url">) {
   if (sale.categories?.includes("City-wide sale")) return false;
   const sourceUrl = (sale.source_url || "").toLowerCase();
@@ -72,7 +81,9 @@ function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url
 }
 
 async function getQueues(enabled: boolean) {
-  if (!enabled || !isSupabaseConfigured) return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [] };
+  if (!enabled || !isSupabaseConfigured) {
+    return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [] };
+  }
   const supabase = getSupabaseAdmin();
   const [
     { data: outreach },
@@ -364,6 +375,7 @@ export default async function AdminPage({ searchParams }: Props) {
   const expiredOutreach = outreach.filter((sale) => isExpired(sale));
   const missingPhotos = photoNeeds(photoSales);
   const missingGeneralPhotos = generalPhotoNeeds();
+  const activeEventLeads = centralIllinoisEventLeads;
 
   return (
     <main className="page">
@@ -407,6 +419,8 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
             <a href="#admin-feedback">Feedback ({feedback.length})</a>
             <a href="#admin-events">Events ({events.length})</a>
+            <a href="#admin-event-leads">Event leads ({activeEventLeads.length})</a>
+            <a href="#admin-backlog-leads">Future leads ({backlogLeads.length})</a>
             <a href="#admin-photo-needs">Photo needs ({missingPhotos.length + missingGeneralPhotos.length})</a>
             <a href="#admin-outreach">Outreach ({activeOutreach.length})</a>
             <a href="#admin-expired">Expired ({expiredOutreach.length})</a>
@@ -687,15 +701,80 @@ export default async function AdminPage({ searchParams }: Props) {
             ) : null}
           </section>
 
+          <section className="panel stack" id="admin-event-leads">
+            <div>
+              <p className="eyebrow">Private research</p>
+              <h2>Event leads</h2>
+              <p className="muted">
+                Admin-only list of possible city-wide or community sale events to verify. Do not publish these until an
+                official page, town post, organizer post, or reliable source confirms the details.
+              </p>
+            </div>
+            {activeEventLeads.length === 0 ? <p className="muted">No active event leads.</p> : null}
+            <div className="grid two">
+              {activeEventLeads.map((lead) => (
+                <article className="card compact" key={lead.id}>
+                  <div>
+                    <p className="eyebrow">{eventLeadStatusLabels[lead.status]}</p>
+                    <h3>{lead.title}</h3>
+                    <p className="muted">
+                      {lead.city}, {lead.state} · {lead.date_text}
+                    </p>
+                    <p>{eventTypeLabel(lead.event_type)}</p>
+                    {lead.source_label ? <p className="muted">Source: {lead.source_label}</p> : null}
+                    {lead.source_notes ? <p className="muted whitespace">{lead.source_notes}</p> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel stack" id="admin-backlog-leads">
+            <div>
+              <p className="eyebrow">Future Localized.life products</p>
+              <h2>Backlog leads</h2>
+              <p className="muted">
+                Admin-only ideas and source leads that do not belong in SaleTrail yet. These are saved for future local
+                goods, food, tools, gardens, services, or exchange products.
+              </p>
+            </div>
+            <div className="grid two">
+              {backlogLeads.map((lead) => (
+                <article className="card compact" key={lead.id}>
+                  <p className="eyebrow">{lead.lead_type.replaceAll("_", " ")}</p>
+                  <h3>{lead.title}</h3>
+                  <p className="muted">{lead.area}</p>
+                  <p>{lead.summary}</p>
+                  {lead.source_url ? (
+                    <p>
+                      <a className="text-link" href={lead.source_url} target="_blank" rel="noopener noreferrer">
+                        Open source
+                      </a>
+                    </p>
+                  ) : null}
+                  <details className="admin-details">
+                    <summary>Notes</summary>
+                    <p className="muted whitespace">
+                      {lead.source_label || "No source label"}
+                      {lead.source_poster_name ? `\nSource poster: ${lead.source_poster_name}` : ""}
+                      {"\n"}
+                      {lead.notes}
+                    </p>
+                  </details>
+                </article>
+              ))}
+            </div>
+          </section>
+
           <section className="panel stack" id="admin-photo-needs">
             <div>
               <p className="eyebrow">Branded image queue</p>
               <h2>Photos to create</h2>
               <p className="muted">
-                Active listings without organizer-uploaded photos use branded fallback images. Will County is the open
-                region, so only listings detected inside Will County get town image requests. Other areas use county
-                images until that county is opened. If a town cannot be matched to a real county, it appears as a county
-                mapping item instead of creating a fake county image request.
+                Active listings without organizer-uploaded photos use branded fallback images. Will County and
+                Kankakee County are opened regions, so listings detected inside those counties get town image requests.
+                Other areas use county images until that county is opened. If a town cannot be matched to a real county,
+                it appears as a county mapping item instead of creating a fake county image request.
               </p>
             </div>
             {missingPhotos.length === 0 ? (
