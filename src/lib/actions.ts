@@ -952,8 +952,9 @@ export async function updateOutreachStatus(formData: FormData) {
   const status = required(formData, "outreach_status") as OutreachStatus;
   if (!outreachStatuses.has(status)) throw new Error("Invalid outreach status.");
 
+  const databaseStatus: OutreachStatus = status === "outreach_complete" ? "localized_group_posted" : status;
   const updatePayload: Record<string, unknown> = {
-    outreach_status: status,
+    outreach_status: databaseStatus,
     outreach_last_at: new Date().toISOString(),
   };
   if (status === "not_contacted") {
@@ -1003,7 +1004,7 @@ export async function updateOutreachChecklist(formData: FormData) {
   const privateDone = formData.get("outreach_private_done") === "on";
   const groupDone = formData.get("outreach_group_done") === "on";
   const now = new Date().toISOString();
-  const status: OutreachStatus = privateDone && groupDone ? "outreach_complete" : groupDone ? "localized_group_posted" : privateDone ? "message_sent" : "not_contacted";
+  const status: OutreachStatus = groupDone ? "localized_group_posted" : privateDone ? "message_sent" : "not_contacted";
   const updatePayload: Record<string, unknown> = {
     outreach_private_done: privateDone,
     outreach_private_done_at: privateDone ? now : null,

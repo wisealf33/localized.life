@@ -91,6 +91,11 @@ const completedOutreachStatuses = new Set<OutreachStatus>([
   "claimed",
 ]);
 
+function isCompletedOutreach(sale: Pick<Sale, "outreach_status" | "outreach_private_done" | "outreach_group_done">) {
+  if (completedOutreachStatuses.has(sale.outreach_status || "not_contacted")) return true;
+  return Boolean(sale.outreach_private_done && sale.outreach_group_done);
+}
+
 const eventLeadStatusLabels: Record<EventLeadStatus, string> = {
   needs_source: "Needs source",
   verified: "Verified",
@@ -337,7 +342,7 @@ function generalPhotoNeeds() {
 
 function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boolean }) {
   const messages = outreachMessages(sale);
-  const outreachStatus: OutreachStatus = sale.outreach_status || "not_contacted";
+  const outreachStatus: OutreachStatus = isCompletedOutreach(sale) ? "outreach_complete" : sale.outreach_status || "not_contacted";
   const destination = regionDestinationForSale(sale);
   const destinationName = destination.isDedicated ? destination.name : "General Localized.life group/page";
 
@@ -452,12 +457,12 @@ export default async function AdminPage({ searchParams }: Props) {
   const enabled = await isAdminAuthenticated();
   const { outreach, claims, requests, feedback, photoSales, events, attachSales, monetizationLeads } = await getQueues(enabled);
   const activeOutreach = outreach.filter(
-    (sale) => !isExpired(sale) && !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
+    (sale) => !isExpired(sale) && !isCompletedOutreach(sale),
   );
   const openedAreaOutreach = activeOutreach.filter(isOpenedAreaSale);
   const otherAreaOutreach = activeOutreach.filter((sale) => !isOpenedAreaSale(sale));
   const completedOutreach = outreach.filter(
-    (sale) => !isExpired(sale) && completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
+    (sale) => !isExpired(sale) && isCompletedOutreach(sale),
   );
   const expiredOutreach = outreach.filter((sale) => isExpired(sale));
   const missingPhotos = photoNeeds(photoSales);
