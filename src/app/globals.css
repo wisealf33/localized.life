@@ -1109,18 +1109,22 @@ h2 {
 }
 
 .search {
-  grid-template-columns: auto minmax(220px, 1fr) 130px 170px 180px auto;
+  grid-template-columns: minmax(220px, 1fr) 130px 170px 180px auto;
   align-items: end;
+}
+
+.search-filter-row {
+  grid-column: 1 / -1;
 }
 
 .location-search-action {
   display: grid;
   gap: 6px;
   position: relative;
-  align-self: end;
+  align-self: center;
 }
 
-.location-search-action .button {
+.location-search-action .location-toggle {
   border-color: #93c5fd;
   background: #f8fbff;
   box-shadow:
@@ -1131,13 +1135,23 @@ h2 {
   white-space: nowrap;
 }
 
-.location-search-action .button:hover {
+.location-search-action .location-toggle:hover {
   border-color: var(--primary);
   background: #eff6ff;
   box-shadow:
     0 0 0 3px rgba(59, 130, 246, 0.22),
     0 0 0 8px rgba(59, 130, 246, 0.12),
     0 0 30px rgba(59, 130, 246, 0.32);
+}
+
+.location-search-action .location-toggle.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.2),
+    0 0 0 8px rgba(59, 130, 246, 0.1),
+    0 0 28px rgba(59, 130, 246, 0.3);
 }
 
 .location-search-message {

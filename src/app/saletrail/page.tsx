@@ -308,7 +308,6 @@ export default async function SaleTrailHome({ searchParams }: Props) {
 
       <section className="panel">
         <form className="search">
-          <UseLocationButton initialLat={params.lat || ""} initialLng={params.lng || ""} />
           <label>
             City, state, ZIP, or keyword
             <input name="q" defaultValue={params.q || ""} placeholder="Your city, ZIP code, or location" />
@@ -342,26 +341,27 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           <button className="button primary" type="submit">
             Search
           </button>
+          <div className="quick-filters search-filter-row" aria-label="Location and quick date filters">
+            <UseLocationButton initialLat={params.lat || ""} initialLng={params.lng || ""} />
+            {rangeOptions.map((option) => (
+              <Link
+                className={range === option.value ? "filter-chip active" : "filter-chip"}
+                href={directoryUrl({
+                  q: params.q,
+                  range: option.value,
+                  category,
+                  radius,
+                  lat: params.lat,
+                  lng: params.lng,
+                  perPage,
+                })}
+                key={option.value}
+              >
+                {option.label}
+              </Link>
+            ))}
+          </div>
         </form>
-        <div className="quick-filters" aria-label="Quick date filters">
-          {rangeOptions.map((option) => (
-            <Link
-              className={range === option.value ? "filter-chip active" : "filter-chip"}
-              href={directoryUrl({
-                q: params.q,
-                range: option.value,
-                category,
-                radius,
-                lat: params.lat,
-                lng: params.lng,
-                perPage,
-              })}
-              key={option.value}
-            >
-              {option.label}
-            </Link>
-          ))}
-        </div>
       </section>
 
       <section className="directory-controls">
