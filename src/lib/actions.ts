@@ -872,6 +872,26 @@ export async function updateOutreachStatus(formData: FormData) {
     outreach_status: status,
     outreach_last_at: new Date().toISOString(),
   };
+  if (status === "not_contacted") {
+    updatePayload.outreach_private_done = false;
+    updatePayload.outreach_private_done_at = null;
+    updatePayload.outreach_group_done = false;
+    updatePayload.outreach_group_done_at = null;
+  }
+  if (status === "message_sent") {
+    updatePayload.outreach_private_done = true;
+    updatePayload.outreach_private_done_at = new Date().toISOString();
+  }
+  if (status === "localized_group_posted") {
+    updatePayload.outreach_group_done = true;
+    updatePayload.outreach_group_done_at = new Date().toISOString();
+  }
+  if (status === "outreach_complete") {
+    updatePayload.outreach_private_done = true;
+    updatePayload.outreach_private_done_at = new Date().toISOString();
+    updatePayload.outreach_group_done = true;
+    updatePayload.outreach_group_done_at = new Date().toISOString();
+  }
   const notes = value(formData, "outreach_notes");
   if (notes) updatePayload.outreach_notes = notes;
   if (status === "removed") updatePayload.visibility_status = "removed";
@@ -885,6 +905,37 @@ export async function updateOutreachStatus(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail/admin");
   revalidatePath("/saletrail");
+}
+
+export async function updateOutreachChecklist(formData: FormData) {
+  await requireAdmin();
+
+  const supabase = getSupabaseAdmin();
+  const saleId = required(formData, "sale_id");
+  const privateDone = formData.get("outreach_private_done") === "on";
+  const groupDone = formData.get("outreach_group_done") === "on";
+  const now = new Date().toISOString();
+  const status: OutreachStatus = privateDone && groupDone ? "outreach_complete" : groupDone ? "localized_group_posted" : privateDone ? "message_sent" : "not_contacted";
+  const updatePayload: Record<string, unknown> = {
+    outreach_private_done: privateDone,
+    outreach_private_done_at: privateDone ? now : null,
+    outreach_group_done: groupDone,
+    outreach_group_done_at: groupDone ? now : null,
+    outreach_status: status,
+    outreach_last_at: privateDone || groupDone ? now : null,
+  };
+
+  const notes = value(formData, "outreach_notes");
+  if (notes) updatePayload.outreach_notes = notes;
+
+  const { error } = await supabase
+    .from("sales")
+    .update(updatePayload)
+    .eq("id", saleId)
+    .eq("source_type", "community_added");
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
 }
 
 export async function createLocalEvent(formData: FormData) {

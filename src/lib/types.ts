@@ -54,6 +54,10 @@ export type Sale = {
   outreach_status: OutreachStatus | null;
   outreach_last_at: string | null;
   outreach_notes: string | null;
+  outreach_private_done: boolean | null;
+  outreach_private_done_at: string | null;
+  outreach_group_done: boolean | null;
+  outreach_group_done_at: string | null;
   event_id: string | null;
   manage_token_hash: string | null;
   claimed_at: string | null;

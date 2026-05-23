@@ -14,6 +14,7 @@ import {
   rejectClaim,
   resolveFeedbackRequest,
   resolveListingRequest,
+  updateOutreachChecklist,
   updateSaleEvent,
   updateOutreachStatus,
 } from "@/lib/actions";
@@ -35,8 +36,10 @@ type Props = {
   searchParams: Promise<{ approved?: string; manage?: string; updated?: string; batch?: string; skipped?: string; auth?: string }>;
 };
 
-const outreachSaleColumns =
+const baseOutreachSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_platform, source_url, source_poster_name, source_notes, raw_source_text, outreach_status, outreach_last_at, outreach_notes, claimed_at, created_at, updated_at";
+const outreachSaleColumns =
+  `${baseOutreachSaleColumns}, outreach_private_done, outreach_private_done_at, outreach_group_done, outreach_group_done_at`;
 
 const photoNeedSaleColumns =
   "id, slug, title, city, state, starts_at, ends_at, sale_schedule, photo_urls, status, source_type, claim_status, visibility_status";
@@ -58,9 +61,6 @@ const outreachStatusLabels: Record<OutreachStatus, string> = {
 };
 
 const completedOutreachStatuses = new Set<OutreachStatus>([
-  "message_sent",
-  "comment_posted",
-  "localized_group_posted",
   "outreach_complete",
   "do_not_contact",
   "removed",
@@ -85,8 +85,18 @@ async function getQueues(enabled: boolean) {
     return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [] };
   }
   const supabase = getSupabaseAdmin();
+  const outreachQuery = (columns: string) =>
+    supabase
+      .from("sales")
+      .select(columns)
+      .eq("source_type", "community_added")
+      .neq("claim_status", "claimed")
+      .neq("visibility_status", "removed")
+      .order("outreach_status", { ascending: true })
+      .order("starts_at", { ascending: true });
+
   const [
-    { data: outreach },
+    outreachResult,
     { data: claims },
     { data: requests },
     { data: feedback },
@@ -94,14 +104,7 @@ async function getQueues(enabled: boolean) {
     eventsResult,
     attachSalesResult,
   ] = await Promise.all([
-    supabase
-      .from("sales")
-      .select(outreachSaleColumns)
-      .eq("source_type", "community_added")
-      .neq("claim_status", "claimed")
-      .neq("visibility_status", "removed")
-      .order("outreach_status", { ascending: true })
-      .order("starts_at", { ascending: true }),
+    outreachQuery(outreachSaleColumns),
     supabase
       .from("claim_requests")
       .select("*, sales(title, slug, city, state)")
@@ -134,8 +137,15 @@ async function getQueues(enabled: boolean) {
       .order("starts_at", { ascending: true }),
   ]);
 
+  const fallbackOutreach =
+    outreachResult.error?.message.includes("outreach_private_done") ||
+    outreachResult.error?.message.includes("outreach_group_done")
+      ? await outreachQuery(baseOutreachSaleColumns)
+      : null;
+  const outreach = (fallbackOutreach?.data || outreachResult.data || []) as unknown as Sale[];
+
   return {
-    outreach: ((outreach || []) as Sale[]).filter(isFacebookOutreachCandidate),
+    outreach: outreach.filter(isFacebookOutreachCandidate),
     claims: (claims || []) as ClaimRequest[],
     requests: (requests || []) as ListingRequest[],
     feedback: (feedback || []) as FeedbackRequest[],
@@ -194,6 +204,35 @@ function CopyOutreach({ label, text }: { label: string; text: string }) {
       <textarea readOnly rows={5} value={text} />
       <CopyIconButton text={text} label={`Copy ${label}`} />
     </div>
+  );
+}
+
+function OutreachChecklist({ sale }: { sale: Sale }) {
+  return (
+    <form action={updateOutreachChecklist} className="outreach-checklist">
+      <input type="hidden" name="sale_id" value={sale.id} />
+      <label className="check-row">
+        <input name="outreach_private_done" type="checkbox" defaultChecked={Boolean(sale.outreach_private_done)} />
+        <span>
+          <strong>Private message sent</strong>
+          <small>Message the original poster manually, then check this.</small>
+        </span>
+      </label>
+      <label className="check-row">
+        <input name="outreach_group_done" type="checkbox" defaultChecked={Boolean(sale.outreach_group_done)} />
+        <span>
+          <strong>Posted in Localized group</strong>
+          <small>Post the listing in the correct Localized Facebook group, then check this.</small>
+        </span>
+      </label>
+      <label>
+        Outreach note
+        <textarea name="outreach_notes" rows={2} defaultValue={sale.outreach_notes || ""} />
+      </label>
+      <button className="button primary" type="submit">
+        Save checklist
+      </button>
+    </form>
   );
 }
 
@@ -314,7 +353,7 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
         <>
           <div className="grid two">
             <CopyOutreach label="Private message" text={messages.privateMessage} />
-            <CopyOutreach label="Localized group post/comment" text={messages.localizedGroupPost} />
+            <CopyOutreach label="Localized group post" text={messages.localizedGroupPost} />
           </div>
 
           <details className="admin-details">
@@ -322,20 +361,10 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
             <CopyOutreach label="Original-post comment" text={messages.originalPostComment} />
           </details>
 
-          <form action={updateOutreachStatus} className="outreach-note-form">
-            <input type="hidden" name="sale_id" value={sale.id} />
-            <input type="hidden" name="outreach_status" value={outreachStatus} />
-            <label>
-              Outreach note
-              <textarea name="outreach_notes" rows={2} defaultValue={sale.outreach_notes || ""} />
-            </label>
-            <button className="button" type="submit">
-              Save note
-            </button>
-          </form>
+          <OutreachChecklist sale={sale} />
 
           <div className="outreach-actions simplified">
-            <OutreachStatusButton primary saleId={sale.id} status="message_sent">
+            <OutreachStatusButton primary saleId={sale.id} status="outreach_complete">
               Mark outreach complete
             </OutreachStatusButton>
             <OutreachStatusButton saleId={sale.id} status="follow_up_needed">

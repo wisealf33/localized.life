@@ -41,6 +41,10 @@ create table if not exists public.sales (
   ),
   outreach_last_at timestamptz,
   outreach_notes text,
+  outreach_private_done boolean not null default false,
+  outreach_private_done_at timestamptz,
+  outreach_group_done boolean not null default false,
+  outreach_group_done_at timestamptz,
   event_id uuid,
   manage_token_hash text unique,
   claimed_at timestamptz,
@@ -98,7 +102,11 @@ alter table public.sales
   add column if not exists source_poster_name text,
   add column if not exists outreach_status text not null default 'not_contacted',
   add column if not exists outreach_last_at timestamptz,
-  add column if not exists outreach_notes text;
+  add column if not exists outreach_notes text,
+  add column if not exists outreach_private_done boolean not null default false,
+  add column if not exists outreach_private_done_at timestamptz,
+  add column if not exists outreach_group_done boolean not null default false,
+  add column if not exists outreach_group_done_at timestamptz;
 
 alter table public.sales
   add column if not exists event_id uuid;
