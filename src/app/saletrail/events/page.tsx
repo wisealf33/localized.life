@@ -13,6 +13,7 @@ const eventSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
 const eventLikeCategories = [
   "City-wide sale",
+  "Route sale",
   "Community sale",
   "Flea market",
   "Swap meet",

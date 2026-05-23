@@ -12,7 +12,12 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-function lead(city: string, dateText: string, eventType: LocalEventType = "city_wide_garage_sale"): EventLead {
+function lead(
+  city: string,
+  dateText: string,
+  eventType: LocalEventType = "city_wide_garage_sale",
+  overrides: Partial<Pick<EventLead, "source_label" | "source_notes" | "status" | "admin_notes">> = {},
+): EventLead {
   return {
     id: `${slugify(city)}-${slugify(dateText)}`,
     slug: `${slugify(city)}-${slugify(dateText)}`,
@@ -27,6 +32,7 @@ function lead(city: string, dateText: string, eventType: LocalEventType = "city_
     admin_notes: null,
     created_at: createdAt,
     updated_at: createdAt,
+    ...overrides,
   };
 }
 
@@ -36,7 +42,13 @@ export const centralIllinoisEventLeads: EventLead[] = [
   lead("Lovington", "May 28-30, 2026"),
   lead("Mt. Zion", "May 30-June 2, 2026"),
   lead("Marshall", "May 30, 2026"),
-  lead("Rt 40 Sales", "May 27-31, 2026", "community_sale"),
+  lead("Rt 40 Sales", "May 27-31, 2026", "community_sale", {
+    source_label: "National Road Heritage Foundation",
+    source_notes:
+      "Official 23rd Annual Historic National Road Yard Sale Festival source: https://nationalrdfoundation.org/event/yardsale-2026/. Maryland sales/stores PDF saved as source material: https://nationalrdfoundation.org/wp-content/uploads/MD_SalesStores-NationalRoadYardSale26_revisedMay04.pdf. Treat as a multi-state route sale, not a normal city-wide event.",
+    status: "added",
+    admin_notes: "Added as a Route sale hub. Add individual stops later by state/area after deciding coverage.",
+  }),
   lead("Strasburg", "June 5-6, 2026"),
   lead("Rt 111 Sales", "June 5-6, 2026", "community_sale"),
   lead("Arthur", "June 5-6, 2026"),

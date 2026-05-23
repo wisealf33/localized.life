@@ -4,6 +4,7 @@ import { dedicatedAreaShareNote } from "./regions";
 export const categoryOptions = [
   "Garage sale",
   "City-wide sale",
+  "Route sale",
   "Estate sale",
   "Rummage sale",
   "Community sale",

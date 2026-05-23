@@ -76,6 +76,35 @@ function isCityWideSale(sale: Pick<Sale, "categories">) {
   return sale.categories?.includes("City-wide sale") || false;
 }
 
+function isEventHubSale(sale: Pick<Sale, "categories">) {
+  return isCityWideSale(sale) || sale.categories?.includes("Route sale") || false;
+}
+
+function eventHubLabel(sale: Pick<Sale, "categories">) {
+  if (sale.categories?.includes("Route sale")) return "Route sale event";
+  return "City-wide event";
+}
+
+function eventHubDescription(sale: Pick<Sale, "categories">) {
+  if (sale.categories?.includes("Route sale")) {
+    return {
+      name: "route sale",
+      summary:
+        "This route sale page is managed by SaleTrail as a community event hub. Individual participating sales can be viewed, saved, and added to your route below when they are added.",
+      claim:
+        "If one of the individual sale listings belongs to you, claim that individual listing instead of this route sale hub page.",
+    };
+  }
+
+  return {
+    name: "city-wide event",
+    summary:
+      "This city-wide sale page is managed by SaleTrail as a community event hub. Individual participating sales can be viewed, saved, and added to your route below.",
+    claim:
+      "If one of the individual sale listings belongs to you, claim that individual listing instead of this city-wide hub page.",
+  };
+}
+
 function streetTitle(address: string) {
   const cleaned = address
     .replace(/^(?:\d+[A-Za-z]?|Mizera Building),?\s*/i, "")
@@ -103,7 +132,7 @@ function participantTitle(sale: Pick<Sale, "title" | "address_line" | "categorie
 }
 
 async function getCityWideParticipatingSales(sale: Sale) {
-  if (!isSupabaseConfigured || !isCityWideSale(sale)) return [];
+  if (!isSupabaseConfigured || !isEventHubSale(sale)) return [];
 
   const { data, error } = await getSupabaseAdmin()
     .from("sales")
@@ -121,7 +150,7 @@ async function getCityWideParticipatingSales(sale: Sale) {
   if (error || !data) return [];
 
   return (data as Sale[])
-    .filter((item) => !isCityWideSale(item))
+    .filter((item) => !isEventHubSale(item))
     .sort((a, b) => {
       const dateCompare = new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
       if (dateCompare !== 0) return dateCompare;
@@ -191,13 +220,14 @@ export default async function SalePage({ params, searchParams }: Props) {
   const query = await searchParams;
   const sale = await getSale(slug);
   if (!sale) notFound();
-  const isCityWide = isCityWideSale(sale);
+  const isEventHub = isEventHubSale(sale);
+  const hubDescription = eventHubDescription(sale);
   const participatingSales = await getCityWideParticipatingSales(sale);
   const previewImage = salePreviewImage(sale);
   const structuredData = saleStructuredData(sale);
 
   return (
-    <main className={isCityWide ? "page citywide-page" : "page narrow"}>
+    <main className={isEventHub ? "page citywide-page" : "page narrow"}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
@@ -206,13 +236,13 @@ export default async function SalePage({ params, searchParams }: Props) {
 
       {query.request === "received" ? <div className="notice good">Request received for manual review.</div> : null}
 
-      <section className={isCityWide ? "stack listing-detail citywide-hero" : "stack listing-detail"}>
-        {isCityWide ? <span className="badge plain">City-wide event</span> : <StatusBadge sale={sale} />}
-        <div className={isCityWide ? "listing-title-row citywide-title-row" : "listing-title-row"}>
+      <section className={isEventHub ? "stack listing-detail citywide-hero" : "stack listing-detail"}>
+        {isEventHub ? <span className="badge plain">{eventHubLabel(sale)}</span> : <StatusBadge sale={sale} />}
+        <div className={isEventHub ? "listing-title-row citywide-title-row" : "listing-title-row"}>
           <h1>{sale.title}</h1>
           <BackToListingsButton />
         </div>
-        {isCityWide ? (
+        {isEventHub ? (
           <div className="citywide-event-summary">
             <p>
               <strong>{participatingSales.length} participating sales</strong>
@@ -248,18 +278,12 @@ export default async function SalePage({ params, searchParams }: Props) {
             ))}
           </div>
         ) : null}
-        {sale.description ? <p className={isCityWide ? "citywide-description" : undefined}>{sale.description}</p> : null}
+        {sale.description ? <p className={isEventHub ? "citywide-description" : undefined}>{sale.description}</p> : null}
 
-        {isCityWide ? (
+        {isEventHub ? (
           <div className="notice stack small-gap">
-            <p>
-              This city-wide sale page is managed by SaleTrail as a community event hub. Individual participating sales
-              can be viewed, saved, and added to your route below.
-            </p>
-            <p>
-              If one of the individual sale listings belongs to you, claim that individual listing instead of this
-              city-wide hub page.
-            </p>
+            <p>{hubDescription.summary}</p>
+            <p>{hubDescription.claim}</p>
           </div>
         ) : sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
           <div className="notice stack small-gap">
@@ -283,7 +307,7 @@ export default async function SalePage({ params, searchParams }: Props) {
         ) : null}
 
         <div className="toolbar">
-          {isCityWide ? (
+          {isEventHub ? (
             <a className="button primary" href="#participating-sales">
               View participating sales
             </a>
@@ -306,7 +330,7 @@ export default async function SalePage({ params, searchParams }: Props) {
           <Link className="button" href={saleSharePath(sale)}>
             Share kit
           </Link>
-          {!isCityWide && sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
+          {!isEventHub && sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
             <Link className="button" href={`/saletrail/claim/${sale.slug}`}>
               Claim this listing
             </Link>
@@ -314,13 +338,13 @@ export default async function SalePage({ params, searchParams }: Props) {
         </div>
       </section>
 
-      {isCityWide ? (
+      {isEventHub ? (
         <section className="panel stack citywide-participants-panel" id="participating-sales">
           <div>
             <p className="eyebrow">Participating sales</p>
             <h2>
               {participatingSales.length
-                ? `${participatingSales.length} sale${participatingSales.length === 1 ? "" : "s"} in this city-wide event`
+                ? `${participatingSales.length} sale${participatingSales.length === 1 ? "" : "s"} in this ${hubDescription.name}`
                 : "Participating sales will appear here"}
             </h2>
           </div>
@@ -339,7 +363,7 @@ export default async function SalePage({ params, searchParams }: Props) {
         </section>
       ) : null}
 
-      {!isCityWide && sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
+      {!isEventHub && sale.source_type === "community_added" && sale.claim_status !== "claimed" ? (
         <section className="panel claim-listing-panel">
           <div>
             <p className="eyebrow">Organizer access</p>

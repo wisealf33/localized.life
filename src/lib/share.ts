@@ -59,6 +59,7 @@ function stateImagePath(state: string) {
 
 function saleTypeFallbackPath(sale: ShareImageSale) {
   const categories = sale.categories || [];
+  if (categories.includes("Route sale")) return "/og/city-wide-sale.jpg";
   if (categories.includes("City-wide sale")) return "/og/city-wide-sale.jpg";
   if (categories.includes("Estate sale")) return "/og/estate-sale.jpg";
   return null;

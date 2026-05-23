@@ -45,7 +45,7 @@ const rangeOptions = [
   { value: "week", label: "Next week" },
   { value: "weekend", label: "Weekend" },
 ];
-const eventOnlyCategories = ["Flea market", "Swap meet", "Farmers market", "Local market", "Vintage market"];
+const eventOnlyCategories = ["Route sale", "Flea market", "Swap meet", "Farmers market", "Local market", "Vintage market"];
 
 function numberParam(value: string | undefined, fallback: number) {
   const parsed = Number(value);
