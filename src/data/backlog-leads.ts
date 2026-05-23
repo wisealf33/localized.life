@@ -14,4 +14,18 @@ export const backlogLeads: BacklogLead[] = [
       "Not a SaleTrail garage sale or event. Save as a future Localized.life local goods / farm stand / local food lead. Do not publish publicly until that product area exists and the source is reviewed again.",
     created_at: "2026-05-22T05:36:00.000Z",
   },
+  {
+    id: "marshall-area-chamber-event-calendar-2026-05-22",
+    title: "Marshall Area Chamber event calendar",
+    lead_type: "other",
+    area: "Marshall / Clark County, IL",
+    source_label: "Marshall Area Chamber event calendar",
+    source_url: "https://www.marshallilchamber.com/events/eventcalendar",
+    source_poster_name: null,
+    summary:
+      "Official Marshall Area Chamber calendar source for local community events, chamber activities, festivals, markets, and future Localized event discovery.",
+    notes:
+      "Save as a future Localized.life events/calendar source. Do not auto-publish publicly; review individual events and decide whether they belong in SaleTrail Events or a broader Localized events section.",
+    created_at: "2026-05-22T23:25:00.000Z",
+  },
 ];
