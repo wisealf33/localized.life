@@ -1116,6 +1116,7 @@ h2 {
 .location-search-action {
   display: grid;
   gap: 6px;
+  position: relative;
   align-self: end;
 }
 
@@ -1140,7 +1141,16 @@ h2 {
 }
 
 .location-search-message {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 2;
   max-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 650;
