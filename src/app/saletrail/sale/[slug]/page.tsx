@@ -5,6 +5,7 @@ import { BackToListingsButton } from "@/components/BackToListingsButton";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
+import { isSaleEventHub } from "@/lib/eventHubs";
 import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath, splitSaleSchedule } from "@/lib/format";
 import { saleMetadata, saleStructuredData } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
@@ -72,12 +73,8 @@ async function getSale(slug: string) {
   return data as Sale;
 }
 
-function isCityWideSale(sale: Pick<Sale, "categories">) {
-  return sale.categories?.includes("City-wide sale") || false;
-}
-
-function isEventHubSale(sale: Pick<Sale, "categories">) {
-  return isCityWideSale(sale) || sale.categories?.includes("Route sale") || false;
+function isEventHubSale(sale: Pick<Sale, "title" | "address_line" | "categories">) {
+  return isSaleEventHub(sale);
 }
 
 function eventHubLabel(sale: Pick<Sale, "categories">) {

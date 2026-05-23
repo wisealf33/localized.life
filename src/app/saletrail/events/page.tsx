@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
+import { isSaleEventHub } from "@/lib/eventHubs";
 import { eventPath, eventPreviewImagePath, eventTypeLabel, formatEventHours } from "@/lib/events";
 import { formatSaleHours, salePath } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
@@ -67,7 +68,7 @@ async function getEventLikeSales() {
   }
 
   return Array.from(byId.values())
-    .filter((sale) => !sale.categories?.includes("Estate sale"))
+    .filter((sale) => isSaleEventHub(sale) && !sale.categories?.includes("Estate sale"))
     .sort(compareByStartDate);
 }
 
@@ -83,7 +84,7 @@ function compareByStartDate(a: Pick<Sale | LocalEvent, "starts_at" | "ends_at">,
 
 export default async function EventsPage() {
   const events = await getEvents();
-  const eventSales = events.length === 0 ? await getEventLikeSales() : [];
+  const eventSales = await getEventLikeSales();
 
   return (
     <main className="page">
