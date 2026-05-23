@@ -45,6 +45,7 @@ const rangeOptions = [
   { value: "week", label: "Next week" },
   { value: "weekend", label: "Weekend" },
 ];
+const eventOnlyCategories = ["Flea market", "Swap meet", "Farmers market", "Local market", "Vintage market"];
 
 function numberParam(value: string | undefined, fallback: number) {
   const parsed = Number(value);
@@ -189,6 +190,10 @@ async function getSales(
     .order("source_type", { ascending: false })
     .order("claim_status", { ascending: true })
     .range(from, to);
+
+  for (const eventCategory of eventOnlyCategories) {
+    query = query.not("categories", "cs", `{"${eventCategory}"}`);
+  }
 
   if (q && !isRadiusSearch) {
     query = query.or(`city.ilike.%${q}%,state.ilike.%${q}%,zip.ilike.%${q}%,title.ilike.%${q}%`);
