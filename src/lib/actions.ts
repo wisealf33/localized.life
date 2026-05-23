@@ -9,7 +9,16 @@ import { categoryOptions, salePath, saleSharePath } from "./format";
 import { geocodeAddress } from "./geocode";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
-import type { FeedbackRequestType, ListingRequestType, LocalEventType, OutreachStatus, SaleStatus } from "./types";
+import type {
+  FeedbackRequestType,
+  ListingRequestType,
+  LocalEventType,
+  MonetizationLeadCategory,
+  MonetizationLeadPriority,
+  MonetizationLeadStatus,
+  OutreachStatus,
+  SaleStatus,
+} from "./types";
 
 const photoBucket = "saletrail-photos";
 const maxPhotos = 2;
@@ -35,6 +44,25 @@ const outreachStatuses = new Set<OutreachStatus>([
 const feedbackRequestTypes = new Set<FeedbackRequestType>(["feature", "bug", "general"]);
 const feedbackStatuses = new Set(["pending", "reviewed", "resolved", "rejected"]);
 const localEventTypes = new Set<LocalEventType>(eventTypeOptions.map((option) => option.value));
+const monetizationLeadCategories = new Set<MonetizationLeadCategory>([
+  "local_sponsor",
+  "print_partner",
+  "estate_sale_company",
+  "citywide_partner",
+  "affiliate",
+  "local_business",
+  "grant",
+  "other",
+]);
+const monetizationLeadStatuses = new Set<MonetizationLeadStatus>([
+  "idea",
+  "researching",
+  "contacted",
+  "interested",
+  "not_fit",
+  "active",
+]);
+const monetizationLeadPriorities = new Set<MonetizationLeadPriority>(["low", "medium", "high"]);
 
 type BatchListingDay = {
   date?: string;
@@ -855,6 +883,62 @@ export async function resolveFeedbackRequest(formData: FormData) {
   const status = required(formData, "status");
   if (!feedbackStatuses.has(status)) throw new Error("Invalid feedback status.");
   const { error } = await supabase.from("feedback_requests").update({ status }).eq("id", requestId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  redirect("/saletrail/admin?updated=1");
+}
+
+export async function createMonetizationLead(formData: FormData) {
+  await requireAdmin();
+
+  const supabase = getSupabaseAdmin();
+  const category = required(formData, "category") as MonetizationLeadCategory;
+  const priority = required(formData, "priority") as MonetizationLeadPriority;
+  if (!monetizationLeadCategories.has(category)) throw new Error("Invalid monetization category.");
+  if (!monetizationLeadPriorities.has(priority)) throw new Error("Invalid monetization priority.");
+
+  const { error } = await supabase.from("monetization_leads").insert({
+    title: required(formData, "title"),
+    category,
+    priority,
+    status: "idea",
+    area: value(formData, "area"),
+    company_name: value(formData, "company_name"),
+    contact_name: value(formData, "contact_name"),
+    contact_email: value(formData, "contact_email"),
+    contact_url: value(formData, "contact_url"),
+    estimated_value: value(formData, "estimated_value"),
+    fit_notes: value(formData, "fit_notes"),
+    next_step: value(formData, "next_step"),
+    admin_notes: value(formData, "admin_notes"),
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  redirect("/saletrail/admin?updated=1");
+}
+
+export async function updateMonetizationLead(formData: FormData) {
+  await requireAdmin();
+
+  const supabase = getSupabaseAdmin();
+  const leadId = required(formData, "lead_id");
+  const status = required(formData, "status") as MonetizationLeadStatus;
+  const priority = required(formData, "priority") as MonetizationLeadPriority;
+  if (!monetizationLeadStatuses.has(status)) throw new Error("Invalid monetization status.");
+  if (!monetizationLeadPriorities.has(priority)) throw new Error("Invalid monetization priority.");
+
+  const { error } = await supabase
+    .from("monetization_leads")
+    .update({
+      status,
+      priority,
+      next_step: value(formData, "next_step"),
+      admin_notes: value(formData, "admin_notes"),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", leadId);
+
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail/admin");
   redirect("/saletrail/admin?updated=1");

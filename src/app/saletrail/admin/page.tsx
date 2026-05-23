@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { adminLogin, adminLogout, isAdminAuthenticated } from "@/lib/admin";
 import {
   approveClaim,
+  createMonetizationLead,
   createLocalEvent,
   createCommunitySalesBatch,
   createCommunitySale,
@@ -16,6 +17,7 @@ import {
   resolveListingRequest,
   updateOutreachChecklist,
   updateSaleEvent,
+  updateMonetizationLead,
   updateOutreachStatus,
 } from "@/lib/actions";
 import { centralIllinoisEventLeads } from "@/data/event-leads";
@@ -25,7 +27,19 @@ import { claimUrl, formatSaleHours, fullAddress, salePath, saleUrl } from "@/lib
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { missingGeneralFallbackImageNeeds, salePreviewImageNeed } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
-import type { ClaimRequest, EventLeadStatus, FeedbackRequest, ListingRequest, LocalEvent, OutreachStatus, Sale } from "@/lib/types";
+import type {
+  ClaimRequest,
+  EventLeadStatus,
+  FeedbackRequest,
+  ListingRequest,
+  LocalEvent,
+  MonetizationLead,
+  MonetizationLeadCategory,
+  MonetizationLeadPriority,
+  MonetizationLeadStatus,
+  OutreachStatus,
+  Sale,
+} from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "SaleTrail admin",
@@ -47,6 +61,8 @@ const eventColumns =
   "id, slug, title, event_type, description, address_line, city, state, zip, county, latitude, longitude, starts_at, ends_at, event_schedule, source_url, source_platform, source_notes, status, visibility_status, created_at, updated_at";
 const eventAttachSaleColumns =
   "id, slug, title, address_line, city, state, zip, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, event_id";
+const monetizationLeadColumns =
+  "id, title, category, status, priority, area, company_name, contact_name, contact_email, contact_url, estimated_value, fit_notes, next_step, admin_notes, created_at, updated_at";
 
 const outreachStatusLabels: Record<OutreachStatus, string> = {
   not_contacted: "Not contacted",
@@ -74,6 +90,32 @@ const eventLeadStatusLabels: Record<EventLeadStatus, string> = {
   ignored: "Ignored",
 };
 
+const monetizationCategoryLabels: Record<MonetizationLeadCategory, string> = {
+  local_sponsor: "Local sponsor",
+  print_partner: "Print partner",
+  estate_sale_company: "Estate sale company",
+  citywide_partner: "City-wide partner",
+  affiliate: "Affiliate idea",
+  local_business: "Local business",
+  grant: "Grant",
+  other: "Other",
+};
+
+const monetizationStatusLabels: Record<MonetizationLeadStatus, string> = {
+  idea: "Idea",
+  researching: "Researching",
+  contacted: "Contacted",
+  interested: "Interested",
+  not_fit: "Not a fit",
+  active: "Active",
+};
+
+const monetizationPriorityLabels: Record<MonetizationLeadPriority, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
+
 function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url">) {
   if (sale.categories?.includes("City-wide sale")) return false;
   const sourceUrl = (sale.source_url || "").toLowerCase();
@@ -82,7 +124,7 @@ function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url
 
 async function getQueues(enabled: boolean) {
   if (!enabled || !isSupabaseConfigured) {
-    return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [] };
+    return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [], monetizationLeads: [] };
   }
   const supabase = getSupabaseAdmin();
   const outreachQuery = (columns: string) =>
@@ -103,6 +145,7 @@ async function getQueues(enabled: boolean) {
     { data: photoSales },
     eventsResult,
     attachSalesResult,
+    monetizationResult,
   ] = await Promise.all([
     outreachQuery(outreachSaleColumns),
     supabase
@@ -135,6 +178,12 @@ async function getQueues(enabled: boolean) {
       .eq("status", "active")
       .gte("ends_at", new Date().toISOString())
       .order("starts_at", { ascending: true }),
+    supabase
+      .from("monetization_leads")
+      .select(monetizationLeadColumns)
+      .order("status", { ascending: true })
+      .order("priority", { ascending: false })
+      .order("updated_at", { ascending: false }),
   ]);
 
   const fallbackOutreach =
@@ -152,6 +201,7 @@ async function getQueues(enabled: boolean) {
     photoSales: (photoSales || []) as Sale[],
     events: eventsResult.error ? [] : ((eventsResult.data || []) as LocalEvent[]),
     attachSales: attachSalesResult.error ? [] : ((attachSalesResult.data || []) as Sale[]),
+    monetizationLeads: monetizationResult.error ? [] : ((monetizationResult.data || []) as MonetizationLead[]),
   };
 }
 
@@ -392,7 +442,7 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
 export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
   const enabled = await isAdminAuthenticated();
-  const { outreach, claims, requests, feedback, photoSales, events, attachSales } = await getQueues(enabled);
+  const { outreach, claims, requests, feedback, photoSales, events, attachSales, monetizationLeads } = await getQueues(enabled);
   const activeOutreach = outreach.filter(
     (sale) => !isExpired(sale) && !completedOutreachStatuses.has(sale.outreach_status || "not_contacted"),
   );
@@ -447,6 +497,7 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-claims">Claims ({claims.length})</a>
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
             <a href="#admin-feedback">Feedback ({feedback.length})</a>
+            <a href="#admin-monetization">Monetization ({monetizationLeads.length})</a>
             <a href="#admin-events">Events ({events.length})</a>
             <a href="#admin-event-leads">Event leads ({activeEventLeads.length})</a>
             <a href="#admin-backlog-leads">Future leads ({backlogLeads.length})</a>
@@ -577,6 +628,172 @@ export default async function AdminPage({ searchParams }: Props) {
                 </form>
               </article>
             ))}
+          </section>
+
+          <section className="panel stack" id="admin-monetization">
+            <div>
+              <p className="eyebrow">Launch 1.4 private research</p>
+              <h2>Monetization research</h2>
+              <p className="muted">
+                Admin-only queue for possible sponsors, partners, affiliate ideas, local businesses, estate sale
+                companies, and other ways SaleTrail or future Localized.life tools might make money later.
+              </p>
+            </div>
+
+            <details className="admin-details" open>
+              <summary>Add research lead</summary>
+              <form action={createMonetizationLead} className="form">
+                <div className="grid two">
+                  <label>
+                    Research title
+                    <input name="title" placeholder="Local print shop flyer sponsor" required />
+                  </label>
+                  <label>
+                    Category
+                    <select name="category" defaultValue="local_sponsor">
+                      {Object.entries(monetizationCategoryLabels).map(([value, label]) => (
+                        <option value={value} key={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    Priority
+                    <select name="priority" defaultValue="medium">
+                      {Object.entries(monetizationPriorityLabels).map(([value, label]) => (
+                        <option value={value} key={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Area
+                    <input name="area" placeholder="Will County, Kankakee County, Illinois" />
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    Company or person
+                    <input name="company_name" placeholder="Business, organizer, or opportunity name" />
+                  </label>
+                  <label>
+                    Contact name
+                    <input name="contact_name" />
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    Contact email
+                    <input name="contact_email" type="email" />
+                  </label>
+                  <label>
+                    Website/source URL
+                    <input name="contact_url" placeholder="https://..." />
+                  </label>
+                </div>
+                <label>
+                  Possible value
+                  <input name="estimated_value" placeholder="$50/mo sponsor, one-time flyer package, affiliate, etc." />
+                </label>
+                <label>
+                  Why it might fit
+                  <textarea name="fit_notes" rows={3} />
+                </label>
+                <label>
+                  Next step
+                  <textarea name="next_step" rows={2} placeholder="Research pricing, write outreach message, call business, etc." />
+                </label>
+                <label>
+                  Admin notes
+                  <textarea name="admin_notes" rows={3} />
+                </label>
+                <button className="button primary" type="submit">
+                  Save research lead
+                </button>
+              </form>
+            </details>
+
+            {monetizationLeads.length === 0 ? (
+              <p className="muted">
+                No monetization research saved yet. Start with practical local ideas like print shops, estate sale
+                companies, storage units, moving companies, and city-wide sale organizers.
+              </p>
+            ) : (
+              <div className="grid two">
+                {monetizationLeads.map((lead) => (
+                  <article className="card compact" key={lead.id}>
+                    <div>
+                      <p className="eyebrow">
+                        {monetizationCategoryLabels[lead.category]} · {monetizationStatusLabels[lead.status]}
+                      </p>
+                      <h3>{lead.title}</h3>
+                      <p className="muted">
+                        Priority: {monetizationPriorityLabels[lead.priority]}
+                        {lead.area ? ` · ${lead.area}` : ""}
+                      </p>
+                      {lead.company_name ? <p>{lead.company_name}</p> : null}
+                      {lead.contact_name || lead.contact_email ? (
+                        <p className="muted">
+                          {[lead.contact_name, lead.contact_email].filter(Boolean).join(" · ")}
+                        </p>
+                      ) : null}
+                      {lead.contact_url ? (
+                        <p>
+                          <a className="text-link" href={lead.contact_url} target="_blank" rel="noopener noreferrer">
+                            Open source
+                          </a>
+                        </p>
+                      ) : null}
+                      {lead.estimated_value ? <p><strong>Possible value:</strong> {lead.estimated_value}</p> : null}
+                      {lead.fit_notes ? <p>{lead.fit_notes}</p> : null}
+                    </div>
+                    <details className="admin-details">
+                      <summary>Update research</summary>
+                      <form action={updateMonetizationLead} className="form">
+                        <input type="hidden" name="lead_id" value={lead.id} />
+                        <div className="grid two">
+                          <label>
+                            Status
+                            <select name="status" defaultValue={lead.status}>
+                              {Object.entries(monetizationStatusLabels).map(([value, label]) => (
+                                <option value={value} key={value}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label>
+                            Priority
+                            <select name="priority" defaultValue={lead.priority}>
+                              {Object.entries(monetizationPriorityLabels).map(([value, label]) => (
+                                <option value={value} key={value}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                        <label>
+                          Next step
+                          <textarea name="next_step" rows={2} defaultValue={lead.next_step || ""} />
+                        </label>
+                        <label>
+                          Admin notes
+                          <textarea name="admin_notes" rows={3} defaultValue={lead.admin_notes || ""} />
+                        </label>
+                        <button className="button primary" type="submit">
+                          Update research
+                        </button>
+                      </form>
+                    </details>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className="panel stack" id="admin-events">

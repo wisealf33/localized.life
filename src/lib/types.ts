@@ -6,6 +6,17 @@ export type ListingRequestType = "correction" | "removal";
 export type FeedbackRequestType = "feature" | "bug" | "general";
 export type EventLeadStatus = "needs_source" | "verified" | "added" | "ignored";
 export type BacklogLeadType = "local_goods" | "services" | "tools" | "gardens" | "food" | "local_exchange" | "other";
+export type MonetizationLeadCategory =
+  | "local_sponsor"
+  | "print_partner"
+  | "estate_sale_company"
+  | "citywide_partner"
+  | "affiliate"
+  | "local_business"
+  | "grant"
+  | "other";
+export type MonetizationLeadStatus = "idea" | "researching" | "contacted" | "interested" | "not_fit" | "active";
+export type MonetizationLeadPriority = "low" | "medium" | "high";
 export type LocalEventType =
   | "city_wide_garage_sale"
   | "community_sale"
@@ -160,4 +171,23 @@ export type BacklogLead = {
   summary: string;
   notes: string;
   created_at: string;
+};
+
+export type MonetizationLead = {
+  id: string;
+  title: string;
+  category: MonetizationLeadCategory;
+  status: MonetizationLeadStatus;
+  priority: MonetizationLeadPriority;
+  area: string | null;
+  company_name: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_url: string | null;
+  estimated_value: string | null;
+  fit_notes: string | null;
+  next_step: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
 };
