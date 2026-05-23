@@ -99,6 +99,20 @@ function directoryUrl(params: {
   return query ? `/saletrail?${query}` : "/saletrail";
 }
 
+function paginationItems(currentPage: number, totalPages: number) {
+  const visible = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1].filter((page) => page >= 1 && page <= totalPages));
+  const pages = Array.from(visible).sort((a, b) => a - b);
+  const items: Array<number | "ellipsis"> = [];
+
+  pages.forEach((page, index) => {
+    const previous = pages[index - 1];
+    if (previous && page - previous > 1) items.push("ellipsis");
+    items.push(page);
+  });
+
+  return items;
+}
+
 function milesBetween(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
   const earthRadiusMiles = 3958.8;
   const toRadians = (value: number) => (value * Math.PI) / 180;
@@ -289,7 +303,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const safePage = Math.min(currentPage, totalPages);
   const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
   const resultEnd = Math.min(safePage * perPage, total);
-  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const pages = paginationItems(safePage, totalPages);
   return (
     <main className="page">
       <SiteHeader active="find" />
@@ -503,8 +517,12 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             <span className="button disabled">Previous</span>
           )}
           <div className="pagination-pages" aria-label={`Page ${safePage} of ${totalPages}`}>
-            {pageNumbers.map((pageNumber) =>
-              pageNumber === safePage ? (
+            {pages.map((pageNumber, index) =>
+              pageNumber === "ellipsis" ? (
+                <span className="page-ellipsis" aria-hidden="true" key={`ellipsis-${index}`}>
+                  ...
+                </span>
+              ) : pageNumber === safePage ? (
                 <span className="page-link active" aria-current="page" key={pageNumber}>
                   {pageNumber}
                 </span>
