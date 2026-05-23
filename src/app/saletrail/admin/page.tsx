@@ -47,7 +47,15 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ approved?: string; manage?: string; updated?: string; batch?: string; skipped?: string; auth?: string }>;
+  searchParams: Promise<{
+    approved?: string;
+    manage?: string;
+    updated?: string;
+    batch?: string;
+    skipped?: string;
+    auth?: string;
+    outreach?: string;
+  }>;
 };
 
 const baseOutreachSaleColumns =
@@ -484,6 +492,9 @@ export default async function AdminPage({ searchParams }: Props) {
           <div className="notice">
             Admin session needs to be refreshed. Sign in once, then outreach buttons should work normally.
           </div>
+        ) : null}
+        {params.outreach === "updated" ? (
+          <div className="notice good">Outreach saved. The queue below is updated from the database.</div>
         ) : null}
         {enabled ? (
           <form action={adminLogout}>

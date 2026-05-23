@@ -980,15 +980,19 @@ export async function updateOutreachStatus(formData: FormData) {
   if (notes) updatePayload.outreach_notes = notes;
   if (status === "removed") updatePayload.visibility_status = "removed";
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("sales")
     .update(updatePayload)
     .eq("id", saleId)
-    .eq("source_type", "community_added");
+    .eq("source_type", "community_added")
+    .select("id")
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
+  if (!data) throw new Error("Outreach item was not found or is not community-added.");
   revalidatePath("/saletrail/admin");
   revalidatePath("/saletrail");
+  redirect("/saletrail/admin?outreach=updated#admin-outreach");
 }
 
 export async function updateOutreachChecklist(formData: FormData) {
@@ -1012,14 +1016,18 @@ export async function updateOutreachChecklist(formData: FormData) {
   const notes = value(formData, "outreach_notes");
   if (notes) updatePayload.outreach_notes = notes;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("sales")
     .update(updatePayload)
     .eq("id", saleId)
-    .eq("source_type", "community_added");
+    .eq("source_type", "community_added")
+    .select("id")
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
+  if (!data) throw new Error("Outreach item was not found or is not community-added.");
   revalidatePath("/saletrail/admin");
+  redirect("/saletrail/admin?outreach=updated#admin-outreach");
 }
 
 export async function createLocalEvent(formData: FormData) {
