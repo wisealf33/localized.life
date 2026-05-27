@@ -14,7 +14,6 @@ export function UseLocationButton({ initialLat = "", initialLng = "", initialNea
   const lngInput = useRef<HTMLInputElement>(null);
   const nearInput = useRef<HTMLInputElement>(null);
   const isInitiallyActive = initialNear === "1" && Boolean(initialLat && initialLng);
-  const [message, setMessage] = useState(isInitiallyActive ? "Using your location for this search." : "");
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(isInitiallyActive);
 
@@ -38,7 +37,6 @@ export function UseLocationButton({ initialLat = "", initialLng = "", initialNea
       if (!active) return;
       if (locationInput instanceof HTMLInputElement && !locationInput.value.startsWith("Near ")) {
         clearLocationSearch(form);
-        setMessage("Location search turned off. Searching the area you typed instead.");
       }
     }
 
@@ -51,7 +49,6 @@ export function UseLocationButton({ initialLat = "", initialLng = "", initialNea
 
     if (active) {
       clearLocationSearch(form);
-      setMessage("Location search turned off.");
 
       window.setTimeout(() => {
         form?.requestSubmit();
@@ -60,12 +57,10 @@ export function UseLocationButton({ initialLat = "", initialLng = "", initialNea
     }
 
     if (!("geolocation" in navigator)) {
-      setMessage("Your browser does not support location search. Enter a city or ZIP instead.");
       return;
     }
 
     setLoading(true);
-    setMessage("Waiting for browser permission...");
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -91,7 +86,6 @@ export function UseLocationButton({ initialLat = "", initialLng = "", initialNea
         if (locationInput instanceof HTMLInputElement) locationInput.value = label;
         setActive(true);
         setLoading(false);
-        setMessage(`Searching ${label.toLowerCase()}.`);
 
         window.setTimeout(() => {
           form?.requestSubmit();
@@ -99,7 +93,6 @@ export function UseLocationButton({ initialLat = "", initialLng = "", initialNea
       },
       () => {
         setLoading(false);
-        setMessage("No problem. Enter a city or ZIP code to search nearby sales.");
       },
       {
         enableHighAccuracy: false,
@@ -117,11 +110,6 @@ export function UseLocationButton({ initialLat = "", initialLng = "", initialNea
       <button className={`button location-toggle${active ? " active" : ""}`} disabled={loading} type="button" onClick={useLocation}>
         {loading ? "Finding..." : active ? "Using my location" : "Use my location"}
       </button>
-      {message ? (
-        <small className="location-search-message" aria-live="polite">
-          {message}
-        </small>
-      ) : null}
     </div>
   );
 }
