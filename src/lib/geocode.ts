@@ -14,7 +14,28 @@ type NominatimResult = {
   lon?: string;
 };
 
+type NominatimReverseResult = {
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    hamlet?: string;
+    suburb?: string;
+    county?: string;
+    state?: string;
+    postcode?: string;
+  };
+};
+
 const nominatimUrl = "https://nominatim.openstreetmap.org/search";
+const nominatimReverseUrl = "https://nominatim.openstreetmap.org/reverse";
+
+function nominatimHeaders() {
+  return {
+    "User-Agent": `SaleTrail by Localized.life (${process.env.SALETRAIL_CONTACT_EMAIL || "claims@localized.life"})`,
+    Referer: process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life",
+  };
+}
 
 async function lookup(query: string): Promise<Omit<GeocodeResult, "precision"> | null> {
   const params = new URLSearchParams({
@@ -26,10 +47,7 @@ async function lookup(query: string): Promise<Omit<GeocodeResult, "precision"> |
 
   try {
     const response = await fetch(`${nominatimUrl}?${params.toString()}`, {
-      headers: {
-        "User-Agent": `SaleTrail by Localized.life (${process.env.SALETRAIL_CONTACT_EMAIL || "claims@localized.life"})`,
-        Referer: process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life",
-      },
+      headers: nominatimHeaders(),
     });
 
     if (!response.ok) return null;
@@ -50,6 +68,34 @@ async function lookup(query: string): Promise<Omit<GeocodeResult, "precision"> |
 
 export async function geocodeSearch(query: string): Promise<Omit<GeocodeResult, "precision"> | null> {
   return lookup(query);
+}
+
+export async function reverseGeocodeLabel(latitude: number, longitude: number): Promise<string | null> {
+  const params = new URLSearchParams({
+    lat: String(latitude),
+    lon: String(longitude),
+    format: "jsonv2",
+    zoom: "14",
+    addressdetails: "1",
+  });
+
+  try {
+    const response = await fetch(`${nominatimReverseUrl}?${params.toString()}`, {
+      headers: nominatimHeaders(),
+    });
+    if (!response.ok) return null;
+
+    const result = (await response.json()) as NominatimReverseResult;
+    const address = result.address;
+    if (!address) return null;
+
+    const locality = address.city || address.town || address.village || address.hamlet || address.suburb || address.county;
+    const state = address.state;
+    const postcode = address.postcode;
+    return [locality, state, postcode].filter(Boolean).join(", ") || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function geocodeAddress(address: AddressInput): Promise<GeocodeResult | null> {

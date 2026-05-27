@@ -26,6 +26,7 @@ type Props = {
     radius?: string;
     lat?: string;
     lng?: string;
+    near?: string;
   }>;
 };
 
@@ -80,6 +81,7 @@ function directoryUrl(params: {
   radius?: number;
   lat?: string;
   lng?: string;
+  near?: string;
   page?: number;
   perPage?: number;
 }) {
@@ -93,6 +95,7 @@ function directoryUrl(params: {
     next.set("lat", params.lat);
     next.set("lng", params.lng);
   }
+  if (params.near) next.set("near", params.near);
   if (params.perPage && params.perPage !== 10) next.set("perPage", String(params.perPage));
   if (params.page && params.page > 1) next.set("page", String(params.page));
   const query = next.toString();
@@ -286,8 +289,8 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const zip = zipParam(params.q);
   const latitude = coordinateParam(params.lat, -90, 90);
   const longitude = coordinateParam(params.lng, -180, 180);
-  const hasManualQuery = Boolean(params.q?.trim());
-  const userLocation = !hasManualQuery && latitude !== null && longitude !== null ? { latitude, longitude } : null;
+  const isLocationSearch = params.near === "1" && latitude !== null && longitude !== null;
+  const userLocation = isLocationSearch ? { latitude, longitude } : null;
   const hasUserLocation = Boolean(userLocation);
   const { sales, total } = await getSales(
     params.q,
@@ -361,7 +364,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             Search
           </button>
           <div className="quick-filters search-filter-row" aria-label="Location and quick date filters">
-            <UseLocationButton initialLat={params.lat || ""} initialLng={params.lng || ""} />
+            <UseLocationButton initialLat={params.lat || ""} initialLng={params.lng || ""} initialNear={params.near || ""} />
             {rangeOptions.map((option) => (
               <Link
                 className={range === option.value ? "filter-chip active" : "filter-chip"}
@@ -372,6 +375,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                   radius,
                   lat: params.lat,
                   lng: params.lng,
+                  near: params.near,
                   perPage,
                 })}
                 key={option.value}
@@ -401,6 +405,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           {range ? <input name="range" type="hidden" value={range} /> : null}
           {category ? <input name="category" type="hidden" value={category} /> : null}
           {zip || hasUserLocation ? <input name="radius" type="hidden" value={radius} /> : null}
+          {params.near ? <input name="near" type="hidden" value={params.near} /> : null}
           {params.lat && params.lng ? (
             <>
               <input name="lat" type="hidden" value={params.lat} />
@@ -507,6 +512,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 radius,
                 lat: params.lat,
                 lng: params.lng,
+                near: params.near,
                 perPage,
                 page: safePage - 1,
               })}
@@ -537,6 +543,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                     radius,
                     lat: params.lat,
                     lng: params.lng,
+                    near: params.near,
                     perPage,
                     page: pageNumber,
                   })}
@@ -558,6 +565,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 radius,
                 lat: params.lat,
                 lng: params.lng,
+                near: params.near,
                 perPage,
                 page: safePage + 1,
               })}
