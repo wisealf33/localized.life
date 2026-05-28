@@ -279,6 +279,68 @@ function canClaim(sale: Pick<Sale, "source_type" | "claim_status">) {
   return sale.source_type === "community_added" && sale.claim_status !== "claimed";
 }
 
+function SaleCard({ sale }: { sale: Sale }) {
+  const image = salePreviewImage(sale);
+  const schedule = splitSaleSchedule(sale);
+
+  return (
+    <article className="card sale-card">
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="sale-card-image" src={image.src} alt={`${sale.title} preview`} />
+      ) : null}
+      <div className="card-top">
+        <StatusBadge sale={sale} />
+        <span className="muted">
+          {sale.city}, {sale.state}
+        </span>
+      </div>
+      <h2>
+        <Link href={salePath(sale)}>{sale.title}</Link>
+      </h2>
+      <p>
+        <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
+          {fullAddress(sale)}
+        </a>
+      </p>
+      <div className="sale-card-schedule">
+        {schedule.dates.map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+        {schedule.note ? <small>{schedule.note}</small> : null}
+      </div>
+      <div className="sale-card-footer">
+        {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
+        <div className="card-actions">
+          <Link className="button primary" href={salePath(sale)}>
+            View listing
+          </Link>
+          <SaveSaleButton
+            sale={{
+              slug: sale.slug,
+              title: sale.title,
+              address: fullAddress(sale),
+              city: sale.city,
+              state: sale.state,
+              startsAt: sale.starts_at,
+              href: salePath(sale),
+              latitude: sale.latitude,
+              longitude: sale.longitude,
+              locationPrecision: sale.location_precision,
+            }}
+            variant="secondary"
+          />
+          {canClaim(sale) ? (
+            <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
+              Claim listing
+            </Link>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default async function SaleTrailHome({ searchParams }: Props) {
   const params = await searchParams;
   const perPage = pageSizeParam(params.perPage);
@@ -302,6 +364,9 @@ export default async function SaleTrailHome({ searchParams }: Props) {
     radius,
     userLocation,
   );
+  const hasSearchFilters = Boolean(params.q?.trim() || params.date || range || category || hasUserLocation || radius !== 10);
+  const alternateResults =
+    total === 0 && hasSearchFilters ? await getSales(undefined, undefined, undefined, undefined, 1, 6) : { sales: [], total: 0 };
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const safePage = Math.min(currentPage, totalPages);
   const resultStart = total === 0 ? 0 : (safePage - 1) * perPage + 1;
@@ -399,6 +464,11 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                     : ""
               }.`}
         </p>
+        {hasSearchFilters ? (
+          <Link className="button" href="/saletrail">
+            Reset search
+          </Link>
+        ) : null}
         <form className="per-page-form">
           {params.q ? <input name="q" type="hidden" value={params.q} /> : null}
           {params.date ? <input name="date" type="hidden" value={params.date} /> : null}
@@ -430,74 +500,44 @@ export default async function SaleTrailHome({ searchParams }: Props) {
 
       <section className="list">
         {sales.length === 0 ? (
-          <div className="empty">
+          <div className="empty" style={{ gridColumn: "1 / -1" }}>
             <h2>No active listings found</h2>
-            <p>Try another city or add the first sale for your area.</p>
+            <p>Try a wider distance, another date, or clear the filters to see all upcoming sales.</p>
+            <div className="card-actions" style={{ justifyContent: "center" }}>
+              <Link className="button primary" href="/saletrail">
+                Reset search
+              </Link>
+              <Link className="button" href="/saletrail/new">
+                List a sale
+              </Link>
+            </div>
           </div>
         ) : (
-          sales.map((sale) => {
-            const image = salePreviewImage(sale);
-            const schedule = splitSaleSchedule(sale);
-
-            return (
-              <article className="card sale-card" key={sale.id}>
-                {image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="sale-card-image" src={image.src} alt={`${sale.title} preview`} />
-                ) : null}
-                <div className="card-top">
-                  <StatusBadge sale={sale} />
-                  <span className="muted">
-                    {sale.city}, {sale.state}
-                  </span>
-                </div>
-                <h2>
-                  <Link href={salePath(sale)}>{sale.title}</Link>
-                </h2>
-                <p>
-                  <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
-                    {fullAddress(sale)}
-                  </a>
-                </p>
-                <div className="sale-card-schedule">
-                  {schedule.dates.map((line) => (
-                    <span key={line}>{line}</span>
-                  ))}
-                  {schedule.note ? <small>{schedule.note}</small> : null}
-                </div>
-                <div className="sale-card-footer">
-                  {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
-                  <div className="card-actions">
-                    <Link className="button primary" href={salePath(sale)}>
-                      View listing
-                    </Link>
-                    <SaveSaleButton
-                      sale={{
-                        slug: sale.slug,
-                        title: sale.title,
-                        address: fullAddress(sale),
-                        city: sale.city,
-                        state: sale.state,
-                        startsAt: sale.starts_at,
-                        href: salePath(sale),
-                        latitude: sale.latitude,
-                        longitude: sale.longitude,
-                        locationPrecision: sale.location_precision,
-                      }}
-                      variant="secondary"
-                    />
-                    {canClaim(sale) ? (
-                      <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
-                        Claim listing
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
-              </article>
-            );
-          })
+          sales.map((sale) => <SaleCard sale={sale} key={sale.id} />)
         )}
       </section>
+
+      {sales.length === 0 && alternateResults.sales.length > 0 ? (
+        <section style={{ marginTop: "34px" }}>
+          <div className="directory-controls">
+            <div>
+              <p className="eyebrow">Other options</p>
+              <h2>Other upcoming sales to check</h2>
+            </div>
+            <Link className="button" href="/saletrail">
+              View all sales
+            </Link>
+          </div>
+          <p className="muted">
+            These are outside your current search filters, but they may still be worth checking.
+          </p>
+          <div className="list" style={{ marginTop: "16px" }}>
+            {alternateResults.sales.map((sale) => (
+              <SaleCard sale={sale} key={sale.id} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {totalPages > 1 ? (
         <nav className="pagination" aria-label="Listings pages">
