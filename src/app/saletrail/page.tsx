@@ -425,9 +425,16 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             </select>
           </label>
           <input name="perPage" type="hidden" value={perPage} />
-          <button className="button primary" type="submit">
-            Search
-          </button>
+          <div style={{ display: "grid", gap: "8px" }}>
+            <button className="button primary" type="submit">
+              Search
+            </button>
+            {hasSearchFilters ? (
+              <Link className="button" href="/saletrail" style={{ minHeight: "34px", padding: "7px 10px", fontSize: "0.86rem" }}>
+                Reset search
+              </Link>
+            ) : null}
+          </div>
           <div className="quick-filters search-filter-row" aria-label="Location and quick date filters">
             <UseLocationButton initialLat={params.lat || ""} initialLng={params.lng || ""} initialNear={params.near || ""} />
             {rangeOptions.map((option) => (
@@ -464,11 +471,6 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                     : ""
               }.`}
         </p>
-        {hasSearchFilters ? (
-          <Link className="button" href="/saletrail">
-            Reset search
-          </Link>
-        ) : null}
         <form className="per-page-form">
           {params.q ? <input name="q" type="hidden" value={params.q} /> : null}
           {params.date ? <input name="date" type="hidden" value={params.date} /> : null}
