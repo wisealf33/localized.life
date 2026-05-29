@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Get Involved | localized.life harvest</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="localized.life harvest home">
+        <span class="brand-mark" aria-hidden="true">lh</span>
+        <span>
+          <strong>localized.life</strong>
+          <small>harvest</small>
+        </span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="index.html#registry">Harvest Registry</a>
+        <a href="pawpaw.html">Paw Paw Revival</a>
+        <a href="involved.html">Get Involved</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="involved-section page-section" id="involved">
+        <div class="involved-intro">
+          <p class="eyebrow">Get involved</p>
+          <h1>Raise your hand for the part of the harvest network you can help with.</h1>
+          <p>
+            Some people know where plants are. Some can pick, transport, plant, host, fund, or coordinate an area. This is where all of those offers can land.
+          </p>
+          <div class="involved-count">
+            <strong id="involvedCount">0</strong>
+            <span>people ready to help</span>
+          </div>
+        </div>
+
+        <div class="involvement-options" aria-label="Ways to get involved">
+          <article>
+            <span>01</span>
+            <h3>Plant spotter</h3>
+            <p>Share fruit trees, nut trees, berry bushes, pawpaws, and other harvestable plants.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Harvest</h3>
+            <p>Pick, sort, pack, and preserve food during harvest windows.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Transport</h3>
+            <p>Move harvested food, supplies, trees, tools, and volunteers where they need to go.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Plant trees</h3>
+            <p>Help with sponsored tree plantings, seedling care, site prep, and long-term stewardship.</p>
+          </article>
+          <article>
+            <span>05</span>
+            <h3>Community host</h3>
+            <p>Offer a school, pantry, garden, nursery, farm, faith site, or public place for local work.</p>
+          </article>
+          <article>
+            <span>06</span>
+            <h3>Funding and support</h3>
+            <p>Support trees, tools, ladders, crates, processing, education, transport, and outreach.</p>
+          </article>
+          <article>
+            <span>07</span>
+            <h3>Area coordinator</h3>
+            <p>Help organize a town, neighborhood, campus, or region with permissions, routes, and crews.</p>
+          </article>
+        </div>
+
+        <form class="involved-form" id="involvedForm">
+          <h3>Tell us how you want to help</h3>
+          <label>
+            Your name
+            <input name="name" type="text" placeholder="Your name" required />
+          </label>
+          <label>
+            Your email
+            <input name="email" type="email" placeholder="you@example.com" required />
+          </label>
+          <label>
+            City or ZIP
+            <input name="place" type="text" placeholder="Where are you local?" required />
+          </label>
+          <fieldset>
+            <legend>I can help with</legend>
+            <label><input name="roles" type="checkbox" value="Plant spotter" /> Plant spotting</label>
+            <label><input name="roles" type="checkbox" value="Harvest" /> Harvesting</label>
+            <label><input name="roles" type="checkbox" value="Transport" /> Transportation</label>
+            <label><input name="roles" type="checkbox" value="Plant trees" /> Tree planting</label>
+            <label><input name="roles" type="checkbox" value="Community host" /> Community host site</label>
+            <label><input name="roles" type="checkbox" value="Funding and support" /> Funding and support</label>
+            <label><input name="roles" type="checkbox" value="Area coordinator" /> Area coordination</label>
+          </fieldset>
+          <label>
+            Notes
+            <textarea name="notes" placeholder="Tell us what you can offer, what you need, or who should be connected."></textarea>
+          </label>
+          <button class="button primary" type="submit">Add me to the network</button>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <strong>localized.life harvest</strong>
+      <span>People make the harvest network real.</span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

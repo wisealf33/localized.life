@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paw Paw Revival | localized.life harvest</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="localized.life harvest home">
+        <span class="brand-mark" aria-hidden="true">lh</span>
+        <span>
+          <strong>localized.life</strong>
+          <small>harvest</small>
+        </span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="index.html#registry">Harvest Registry</a>
+        <a href="pawpaw.html">Paw Paw Revival</a>
+        <a href="involved.html">Get Involved</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="campaign page-section" id="pawpaw">
+        <div class="campaign-copy">
+          <p class="eyebrow">First fundraiser</p>
+          <h1>Paw Paw Revival</h1>
+          <p>
+            Paw Paw Revival is the first sponsored-tree campaign inside localized.life harvest. It begins with pawpaws and grows toward one million pawpaw trees across America.
+          </p>
+          <figure class="campaign-image">
+            <img src="assets/pawpaw-hero.jpg" alt="Pawpaw fruit growing on a leafy tree branch" />
+            <figcaption>Pawpaw is the first sponsored tree campaign. More sponsored trees can follow.</figcaption>
+          </figure>
+          <div class="campaign-metrics">
+            <div>
+              <strong id="donorCount">0</strong>
+              <span>pledges</span>
+            </div>
+            <div>
+              <strong id="campaignPledged">$0</strong>
+              <span>pledged for pawpaws</span>
+            </div>
+            <div>
+              <strong id="treeEstimate">0</strong>
+              <span>small trees sponsored</span>
+            </div>
+            <div>
+              <strong id="seedEstimate">0</strong>
+              <span>seed plantings sponsored</span>
+            </div>
+          </div>
+          <div class="goal-meter" aria-label="One million pawpaw tree goal">
+            <div>
+              <strong>1,000,000</strong>
+              <span>pawpaw tree goal</span>
+            </div>
+            <progress id="treeGoalProgress" value="0" max="1000000"></progress>
+            <p id="treeGoalText">0 of 1,000,000 small trees sponsored so far.</p>
+          </div>
+          <div class="sponsor-levels" aria-label="Example sponsorship levels">
+            <article>
+              <span>$5</span>
+              <h3>Seed Start</h3>
+              <p>Plant one pawpaw seed.</p>
+            </article>
+            <article>
+              <span>$25</span>
+              <h3>Single Tree</h3>
+              <p>Plant one small pawpaw tree.</p>
+            </article>
+            <article>
+              <span>$50</span>
+              <h3>Pollinator Pair</h3>
+              <p>Plant two small pawpaw trees.</p>
+            </article>
+            <article>
+              <span>$100</span>
+              <h3>Small Patch</h3>
+              <p>Plant four small pawpaw trees.</p>
+            </article>
+            <article>
+              <span>$250</span>
+              <h3>Starter Grove</h3>
+              <p>Plant ten small pawpaw trees.</p>
+            </article>
+            <article>
+              <span>$500</span>
+              <h3>Community Grove</h3>
+              <p>Plant twenty small pawpaw trees.</p>
+            </article>
+            <article>
+              <span>$1,000</span>
+              <h3>Revival Grove</h3>
+              <p>Plant forty small pawpaw trees or two hundred pawpaw seeds.</p>
+            </article>
+          </div>
+        </div>
+        <form class="pledge-form" id="pledgeForm">
+          <h3>Join the sponsorship waitlist</h3>
+          <p class="form-note">
+            Checkout is being connected. Reserve the number of pawpaw seeds or trees you want to sponsor, join the SendFox mailing list, then use Bridge Bucks if you are ready to fund through the current bank flow.
+          </p>
+          <label>
+            Supporter name
+            <input name="name" type="text" placeholder="Your name" required />
+          </label>
+          <label>
+            Supporter email
+            <input name="email" type="email" placeholder="you@example.com" required />
+          </label>
+          <label>
+            Pawpaw seeds at $5 each
+            <input name="seedCount" type="number" min="0" step="1" value="0" inputmode="numeric" />
+          </label>
+          <label>
+            Small pawpaw trees at $25 each
+            <input name="treeCount" type="number" min="0" step="1" value="1" inputmode="numeric" />
+          </label>
+          <div class="pledge-total" aria-live="polite">
+            <span>Waitlist pledge</span>
+            <strong id="pledgeTotal">$25</strong>
+          </div>
+          <label>
+            Message
+            <textarea name="message" placeholder="Why pawpaws? Where should we plant first?"></textarea>
+          </label>
+          <button class="button primary" type="submit">Join waitlist</button>
+          <a class="button bridge-button" id="bridgeBucksLink" href="https://www.bridgebucksbank.com/" target="_blank" rel="noopener">Continue to Bridge Bucks</a>
+          <p class="form-note">
+            SendFox signups are routed to the Paw Paw Revival list. Send the exact Paw Paw Revival Bridge Bucks account link when it is ready, and this button can point directly there.
+          </p>
+          <div class="form-success" id="pledgeSuccess" hidden></div>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <strong>localized.life harvest</strong>
+      <span>Paw Paw Revival is the first fundraiser.</span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

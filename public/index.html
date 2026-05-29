@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>localized.life harvest</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="localized.life harvest home">
+        <span class="brand-mark" aria-hidden="true">lh</span>
+        <span>
+          <strong>localized.life</strong>
+          <small>harvest</small>
+        </span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="index.html#registry">Harvest Registry</a>
+        <a href="pawpaw.html">Paw Paw Revival</a>
+        <a href="involved.html">Get Involved</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <img src="assets/harvest-hero.jpg" alt="Apples growing on a fruit tree in an orchard" />
+        <div class="hero-copy">
+          <p class="eyebrow">Tree registry first. Harvest network next.</p>
+          <h1>localized.life harvest</h1>
+          <p>
+            A registry for fruit trees, nut trees, berry bushes, and other perennial food plants, built so local harvest teams can find, care for, and share abundance when the network is ready.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#registry">Register a plant</a>
+            <a class="button secondary" href="pawpaw.html">First fundraiser</a>
+            <a class="button secondary" href="involved.html">Get involved</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-band" aria-label="Registry totals">
+        <div>
+          <strong id="totalPlants">0</strong>
+          <span>registered plants</span>
+        </div>
+        <div>
+          <strong id="readySoon">0</strong>
+          <span>possible harvest sites</span>
+        </div>
+        <div>
+          <strong id="registryTypes">0</strong>
+          <span>plant categories</span>
+        </div>
+      </section>
+
+      <section class="overview-section" aria-labelledby="overviewTitle">
+        <div>
+          <p class="eyebrow">The project</p>
+          <h2 id="overviewTitle">A local food system that starts with a map.</h2>
+          <p>
+            localized.life harvest begins as a registry. Over time, it can become the coordination layer for harvest permissions, volunteer crews, food transport, preservation, tree planting, and community distribution.
+          </p>
+        </div>
+        <div class="overview-steps">
+          <article>
+            <span>01</span>
+            <h3>Register plants</h3>
+            <p>Record harvestable plants before the fruit, nuts, and berries are ready.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Build capacity</h3>
+            <p>Invite plant spotters, harvesters, transport help, area coordinators, and hosts.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Fund planting</h3>
+            <p>Start with Paw Paw Revival, then add more sponsored tree campaigns later.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="split-section" id="registry">
+        <div class="section-intro">
+          <p class="eyebrow">Part one: harvest registry</p>
+          <h2>Start by mapping the food already growing nearby.</h2>
+          <p>
+            The core localized.life harvest idea is simple: build a living registry of harvestable trees and perennial plants now, then use it to organize permissions, harvest windows, volunteers, and food movement later.
+          </p>
+        </div>
+
+        <form class="registry-form" id="plantForm">
+          <label>
+            Plant name
+            <input name="plantName" type="text" placeholder="Meyer lemon, black walnut, pawpaw..." required />
+          </label>
+          <label>
+            Registry type
+            <select name="plantType" required>
+              <option value="Fruit tree">Fruit tree</option>
+              <option value="Nut tree">Nut tree</option>
+              <option value="Berry bush">Berry bush</option>
+              <option value="Other plant">Other plant</option>
+            </select>
+          </label>
+          <label>
+            Location
+            <input name="location" type="text" placeholder="Neighborhood, city, or landmark" required />
+          </label>
+          <label>
+            Harvest window
+            <input name="harvestWindow" type="text" placeholder="Late August, October, summer..." />
+          </label>
+          <label>
+            Access status
+            <select name="access">
+              <option value="Needs owner contact">Needs owner contact</option>
+              <option value="Owner interested">Owner interested</option>
+              <option value="Public access">Public access</option>
+              <option value="Harvest-ready">Harvest-ready</option>
+            </select>
+          </label>
+          <label>
+            Notes
+            <textarea name="notes" placeholder="Tree health, estimated yield, contact context, pickup needs..."></textarea>
+          </label>
+          <button class="button primary" type="submit">Add to registry</button>
+        </form>
+      </section>
+
+      <section class="registry-list-section" aria-labelledby="registryListTitle">
+        <div class="list-header">
+          <div>
+            <p class="eyebrow">Living list</p>
+            <h2 id="registryListTitle">Registered harvest sites</h2>
+          </div>
+          <div class="filters" aria-label="Registry filters">
+            <button class="filter is-active" type="button" data-filter="All">All</button>
+            <button class="filter" type="button" data-filter="Fruit tree">Fruit</button>
+            <button class="filter" type="button" data-filter="Nut tree">Nuts</button>
+            <button class="filter" type="button" data-filter="Berry bush">Berries</button>
+            <button class="filter" type="button" data-filter="Other plant">Other</button>
+          </div>
+        </div>
+        <div class="plant-grid" id="plantGrid" aria-live="polite"></div>
+      </section>
+
+    </main>
+
+    <footer>
+      <strong>localized.life harvest</strong>
+      <span>Registry first. Harvest network next.</span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
