@@ -29,7 +29,8 @@ body {
   margin: 0;
   color: var(--foreground);
   background:
-    radial-gradient(circle at top left, #eaf3ff 0, transparent 34rem),
+    radial-gradient(circle at 8% 12%, #eaf3ff 0, transparent 30rem),
+    radial-gradient(circle at 92% 18%, rgb(238 245 223 / 76%) 0, transparent 26rem),
     var(--background);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -86,13 +87,13 @@ h2 {
 }
 
 .front-shell {
-  width: min(1180px, calc(100% - 32px));
+  width: 100%;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 24px 0 70px;
+  padding: 0 0 70px;
   display: grid;
   align-content: start;
-  gap: 54px;
+  gap: 0;
 }
 
 .site-header {
@@ -101,8 +102,10 @@ h2 {
   justify-content: space-between;
   gap: 18px;
   border-bottom: 1px solid var(--line);
-  margin-bottom: clamp(24px, 3vw, 34px);
-  padding: 0 0 18px;
+  margin-bottom: 0;
+  padding: 18px max(16px, calc((100vw - 1180px) / 2));
+  background: rgb(248 251 255 / 72%);
+  backdrop-filter: blur(14px);
 }
 
 .site-brand {
@@ -117,6 +120,19 @@ h2 {
   font-size: clamp(1.45rem, 2vw, 1.9rem);
   font-weight: 900;
   line-height: 1;
+}
+
+.site-wordmark::before {
+  content: "";
+  display: inline-block;
+  width: 0.64em;
+  height: 0.64em;
+  margin-right: 0.35em;
+  border-radius: 50% 50% 50% 0;
+  background: linear-gradient(135deg, var(--primary), #2d5a38);
+  transform: rotate(-45deg);
+  vertical-align: 0.02em;
+  box-shadow: 0 0 0 5px rgb(59 130 246 / 10%);
 }
 
 .site-product {
@@ -149,16 +165,37 @@ h2 {
 }
 
 .front-hero {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(340px, 0.82fr);
-  gap: clamp(32px, 6vw, 72px);
   align-items: center;
+  min-height: clamp(610px, 78vh, 820px);
+  overflow: hidden;
+  padding: clamp(64px, 10vw, 118px) max(16px, calc((100vw - 1180px) / 2)) clamp(42px, 7vw, 76px);
+}
+
+.front-hero > img {
+  z-index: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.front-hero::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  background:
+    linear-gradient(90deg, rgb(7 14 24 / 82%) 0%, rgb(7 14 24 / 58%) 34%, rgb(7 14 24 / 14%) 64%, rgb(7 14 24 / 0%) 100%),
+    linear-gradient(0deg, rgb(7 14 24 / 36%) 0%, transparent 38%);
 }
 
 .front-copy {
+  position: relative;
+  z-index: 2;
   display: grid;
-  gap: 20px;
-  max-width: 760px;
+  gap: 22px;
+  max-width: 690px;
+  color: #ffffff;
 }
 
 .front-copy h1 {
@@ -176,20 +213,78 @@ h2 {
   font-weight: 900;
 }
 
+.front-copy .front-badge {
+  background: rgb(255 255 255 / 18%);
+  color: #fff7ed;
+  border: 1px solid rgb(255 255 255 / 24%);
+}
+
+.front-signal-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 620px;
+}
+
+.front-signal-row span {
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  padding: 8px 11px;
+  background: rgb(255 255 255 / 14%);
+  color: #eef6ff;
+  font-size: 0.9rem;
+  font-weight: 850;
+  backdrop-filter: blur(10px);
+}
+
 .front-product-card {
   display: grid;
-  gap: 20px;
+  gap: 16px;
   align-content: start;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: clamp(24px, 4vw, 34px);
-  background: var(--panel);
-  box-shadow: var(--shadow);
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 8px;
+  padding: clamp(20px, 3vw, 26px);
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 22px 48px rgb(7 14 24 / 20%);
+  backdrop-filter: blur(18px);
+}
+
+.front-product-card > :not(.front-card-image) {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.front-product-card > :last-child {
+  margin-bottom: 0;
 }
 
 .front-product-card h2 {
   margin-bottom: 0;
   font-size: 2.15rem;
+}
+
+.front-product-card p:not(.front-badge) {
+  line-height: 1.45;
+}
+
+.front-product-band {
+  width: min(1180px, calc(100% - 32px));
+  margin: clamp(-34px, -3vw, -18px) auto 0;
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.harvest-teaser-card {
+  border-color: #d8d0b9;
+  background: rgb(255 253 247 / 92%);
+}
+
+.harvest-teaser-card .front-badge {
+  background: #eef5df;
+  color: #2d5a38;
 }
 
 .mini-list {
@@ -226,12 +321,19 @@ h2 {
 
 .front-about {
   border-top: 1px solid var(--line);
-  padding-top: 30px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding-top: clamp(42px, 6vw, 64px);
+  display: grid;
+  grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 52px);
+  align-items: start;
 }
 
 .front-about h2 {
   margin-bottom: 12px;
-  font-size: 1.8rem;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  line-height: 1.05;
 }
 
 .front-about p {
@@ -241,7 +343,35 @@ h2 {
   line-height: 1.65;
 }
 
+.front-note-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.front-field-note {
+  display: grid;
+  gap: 6px;
+  max-width: 620px;
+  border-left: 4px solid #d8a331;
+  padding: 16px 18px;
+  background: rgb(255 253 247 / 82%);
+  color: #17231c;
+  box-shadow: var(--shadow-soft);
+}
+
+.front-field-note strong {
+  font-size: 1.08rem;
+}
+
+.front-field-note span {
+  color: #5f695f;
+  font-weight: 700;
+}
+
 .front-tool-section {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding-top: 54px;
   display: grid;
   gap: 22px;
 }
@@ -259,9 +389,9 @@ h2 {
 
 .tool-card {
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 8px;
   padding: 22px;
-  background: var(--panel);
+  background: rgb(255 255 255 / 88%);
   box-shadow: var(--shadow-soft);
 }
 
@@ -285,6 +415,11 @@ h2 {
   color: var(--muted);
   font-size: clamp(1.08rem, 2vw, 1.18rem);
   line-height: 1.6;
+}
+
+.front-copy .lede {
+  color: #e6eef8;
+  text-wrap: pretty;
 }
 
 .eyebrow {
@@ -1160,6 +1295,15 @@ h2 {
   align-items: end;
 }
 
+.search-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.search-actions .button {
+  min-height: 48px;
+}
+
 .search-filter-row {
   grid-column: 1 / -1;
 }
@@ -1384,6 +1528,418 @@ textarea {
   border-color: #fca5a5;
   background: #fff1f2;
   color: #991b1b;
+}
+
+.harvest-page {
+  min-height: 100vh;
+  background: #fbf8ef;
+  color: #17231c;
+}
+
+.harvest-header-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(251, 248, 239, 0.94);
+  border-bottom: 1px solid #ded7c6;
+  backdrop-filter: blur(16px);
+}
+
+.harvest-header-wrap .site-header {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  border-bottom: 0;
+  padding: 14px 0;
+}
+
+.harvest-header-wrap .site-nav-link:hover,
+.harvest-header-wrap .site-nav-link.active {
+  background: #eef5df;
+  color: #183826;
+}
+
+.harvest-hero {
+  position: relative;
+  display: grid;
+  min-height: min(760px, 82vh);
+  overflow: hidden;
+}
+
+.harvest-hero img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.harvest-hero::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, rgb(18 31 21 / 84%) 0%, rgb(18 31 21 / 63%) 44%, rgb(18 31 21 / 8%) 100%);
+}
+
+.harvest-hero-copy {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  width: min(760px, calc(100% - 44px));
+  margin-left: max(22px, calc((100vw - 1180px) / 2));
+  padding: 86px 0;
+  color: #fffdf4;
+}
+
+.harvest-hero-copy h1,
+.harvest-section-intro h2,
+.harvest-overview h2,
+.harvest-campaign h2,
+.harvest-involved h2,
+.harvest-plant-card h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
+.harvest-hero-copy h1 {
+  margin-bottom: 22px;
+  font-size: clamp(3.1rem, 8vw, 7rem);
+  line-height: 0.95;
+}
+
+.harvest-hero-copy p:not(.harvest-eyebrow) {
+  max-width: 620px;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.5;
+}
+
+.harvest-eyebrow {
+  width: fit-content;
+  margin: 0 0 12px;
+  color: #d8a331;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.button.harvest-primary {
+  border-color: #d8a331;
+  background: #d8a331;
+  color: #201807;
+  box-shadow: 0 12px 26px rgb(64 43 8 / 18%);
+}
+
+.button.harvest-primary:hover {
+  border-color: #edbc4c;
+  background: #edbc4c;
+  color: #201807;
+}
+
+.button.harvest-secondary {
+  border-color: rgb(255 253 244 / 48%);
+  background: rgb(255 253 244 / 12%);
+  color: #fffdf4;
+}
+
+.button.harvest-secondary:hover {
+  border-color: rgb(255 253 244 / 78%);
+  background: rgb(255 253 244 / 20%);
+  color: #fffdf4;
+}
+
+.harvest-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: #183826;
+  color: #fffdf4;
+}
+
+.harvest-stats div {
+  border-right: 1px solid rgb(255 253 244 / 18%);
+  padding: 26px clamp(18px, 4vw, 56px);
+}
+
+.harvest-stats strong {
+  display: block;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 1;
+}
+
+.harvest-stats span {
+  color: #d8ddce;
+}
+
+.harvest-split,
+.harvest-overview,
+.harvest-list-section,
+.harvest-campaign,
+.harvest-involved {
+  padding: clamp(48px, 8vw, 96px) max(18px, calc((100vw - 1180px) / 2));
+}
+
+.harvest-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(320px, 1fr);
+  gap: clamp(28px, 5vw, 72px);
+}
+
+.harvest-section-intro {
+  max-width: 620px;
+}
+
+.harvest-section-intro h2,
+.harvest-overview h2,
+.harvest-campaign h2,
+.harvest-involved h2 {
+  margin-bottom: 18px;
+  font-size: clamp(2.1rem, 4vw, 4.2rem);
+  line-height: 1;
+}
+
+.harvest-section-intro p:not(.harvest-eyebrow),
+.harvest-overview p,
+.harvest-campaign-copy p,
+.harvest-involved p {
+  color: #5f695f;
+  font-size: 1.06rem;
+  line-height: 1.55;
+}
+
+.harvest-form {
+  display: grid;
+  gap: 16px;
+  border: 1px solid #ded7c6;
+  border-radius: 8px;
+  padding: clamp(18px, 3vw, 30px);
+  background: #fffdf7;
+  box-shadow: 0 18px 55px rgb(35 42 31 / 15%);
+}
+
+.harvest-form label {
+  display: grid;
+  gap: 7px;
+  color: #183826;
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.harvest-form input,
+.harvest-form select,
+.harvest-form textarea {
+  border-color: #cfc7b4;
+  border-radius: 8px;
+  background: #fffef9;
+  color: #17231c;
+}
+
+.harvest-form input:focus,
+.harvest-form select:focus,
+.harvest-form textarea:focus {
+  border-color: #6f8c3f;
+  box-shadow: 0 0 0 3px rgb(111 140 63 / 18%);
+}
+
+.harvest-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(24px, 5vw, 56px);
+  background: #fffdf7;
+}
+
+.harvest-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.harvest-steps article {
+  border-left: 3px solid #6f8c3f;
+  padding-left: 18px;
+}
+
+.harvest-steps span,
+.harvest-involvement-options span {
+  color: #a95533;
+  font-weight: 950;
+}
+
+.harvest-steps p,
+.harvest-involvement-options p {
+  margin-bottom: 0;
+  color: #5f695f;
+}
+
+.harvest-list-section {
+  background: #f2ecd9;
+}
+
+.harvest-list-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.harvest-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.harvest-filter {
+  min-height: 36px;
+  border: 1px solid #ded7c6;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #fffdf7;
+  color: #5f695f;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.harvest-filter.is-active {
+  border-color: #2d5a38;
+  background: #2d5a38;
+  color: #fffdf4;
+}
+
+.harvest-plant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.harvest-plant-card {
+  min-height: 230px;
+  border: 1px solid #ded7c6;
+  border-radius: 8px;
+  padding: 20px;
+  background: #fffdf7;
+}
+
+.harvest-type {
+  color: #a95533;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.harvest-plant-card h3 {
+  margin: 10px 0;
+  font-size: 1.65rem;
+  line-height: 1.05;
+}
+
+.harvest-plant-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.harvest-plant-card div {
+  display: grid;
+  gap: 2px;
+}
+
+.harvest-plant-card dt {
+  color: #5f695f;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.harvest-plant-card dd {
+  margin: 0;
+}
+
+.harvest-empty {
+  grid-column: 1 / -1;
+  border: 1px dashed #b9ad93;
+  border-radius: 8px;
+  padding: 30px;
+  background: rgb(255 253 247 / 72%);
+  color: #5f695f;
+  text-align: center;
+}
+
+.harvest-campaign {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
+  gap: clamp(28px, 5vw, 68px);
+  background: #2d5a38;
+  color: #fffdf4;
+}
+
+.harvest-campaign-copy p,
+.harvest-campaign-image figcaption {
+  color: #e5ebdd;
+}
+
+.harvest-campaign-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.harvest-campaign-metrics div {
+  min-width: 150px;
+  border: 1px solid rgb(255 253 244 / 22%);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgb(255 253 244 / 11%);
+}
+
+.harvest-campaign-metrics strong {
+  display: block;
+  font-size: 2.25rem;
+  line-height: 1;
+}
+
+.harvest-campaign-metrics span {
+  color: #dbe2d5;
+}
+
+.harvest-campaign-image {
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid rgb(255 253 244 / 20%);
+  border-radius: 8px;
+  background: rgb(255 253 244 / 8%);
+}
+
+.harvest-campaign-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.harvest-campaign-image figcaption {
+  padding: 12px 14px 14px;
+  font-size: 0.92rem;
+}
+
+.harvest-involved {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1fr);
+  gap: clamp(26px, 4vw, 48px);
+}
+
+.harvest-involvement-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.harvest-involvement-options article {
+  border: 1px solid #ded7c6;
+  border-left: 3px solid #d8a331;
+  border-radius: 8px;
+  padding: 18px 18px 18px 20px;
+  background: rgb(255 253 247 / 72%);
 }
 
 .icon-button {
@@ -1646,6 +2202,8 @@ code {
   .list,
   .search,
   .front-hero,
+  .front-about,
+  .front-product-band,
   .tool-card-grid,
   .compact,
   .admin-meta-grid,
@@ -1654,6 +2212,52 @@ code {
   .share-link-card,
   .share-action-grid {
     grid-template-columns: 1fr;
+  }
+
+  .harvest-stats,
+  .harvest-split,
+  .harvest-overview,
+  .harvest-steps,
+  .harvest-campaign,
+  .harvest-involved,
+  .harvest-involvement-options {
+    grid-template-columns: 1fr;
+  }
+
+  .harvest-teaser-card {
+    transform: none;
+  }
+
+  .front-product-band {
+    margin-top: 18px;
+  }
+
+  .harvest-header-wrap {
+    position: static;
+  }
+
+  .harvest-hero {
+    min-height: 720px;
+  }
+
+  .harvest-hero::after {
+    background: linear-gradient(180deg, rgb(18 31 21 / 88%) 0%, rgb(18 31 21 / 70%) 58%, rgb(18 31 21 / 18%) 100%);
+  }
+
+  .harvest-hero-copy {
+    align-self: start;
+    margin-left: 22px;
+    padding-top: 74px;
+  }
+
+  .harvest-list-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .harvest-stats div {
+    border-right: 0;
+    border-bottom: 1px solid rgb(255 253 244 / 18%);
   }
 
   .share-tools {

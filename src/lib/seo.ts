@@ -7,9 +7,9 @@ import { saleOgImageUrl } from "./og";
 
 export const siteName = "Localized.life";
 export const productName = "SaleTrail";
-export const defaultTitle = "Localized.life | SaleTrail garage sale directory";
+export const defaultTitle = "Localized.life | Local tools for real-world community";
 export const defaultDescription =
-  "Find local garage sales, create clean listings, share flyers with QR codes, and save sales to a simple route with SaleTrail by Localized.life.";
+  "Localized.life builds practical local tools, including SaleTrail for garage sales and Harvest for mapping local food abundance.";
 
 export function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life").replace(/\/$/, "");

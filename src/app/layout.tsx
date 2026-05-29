@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Localized.life",
   },
   description: defaultDescription,
-  applicationName: "SaleTrail",
+  applicationName: "Localized.life",
   authors: [{ name: "Localized.life" }],
   creator: "Localized.life",
   publisher: "Localized.life",

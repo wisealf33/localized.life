@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/saletrail", "/saletrail/map", "/saletrail/new"],
+        allow: ["/", "/harvest", "/saletrail", "/saletrail/map", "/saletrail/new"],
         disallow: ["/saletrail/admin", "/saletrail/manage", "/saletrail/claim"],
       },
     ],

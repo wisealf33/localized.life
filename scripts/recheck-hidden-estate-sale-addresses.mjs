@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import dns from "node:dns";
 import { createClient } from "@supabase/supabase-js";
 
 function loadDotEnvLocal() {
@@ -30,7 +31,36 @@ if (!supabaseUrl || !serviceRoleKey) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableNetworkError(err) {
+  const code = err?.cause?.code || err?.code;
+  return ["ENOTFOUND", "EAI_AGAIN", "ECONNRESET", "ETIMEDOUT", "ECONNREFUSED"].includes(code);
+}
+
+async function resilientFetch(url, init) {
+  const maxAttempts = 4;
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastError = err;
+      if (!isRetryableNetworkError(err) || attempt === maxAttempts) throw err;
+      await sleep(250 * 2 ** (attempt - 1));
+    }
+  }
+
+  throw lastError;
+}
+
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { persistSession: false },
+  global: { fetch: resilientFetch },
+});
 
 function isHiddenAddress(addressLine) {
   const normalized = String(addressLine || "").toLowerCase();
@@ -45,7 +75,7 @@ async function geocode(query) {
     countrycodes: "us",
   });
 
-  const response = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
+  const response = await resilientFetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
     headers: {
       "User-Agent": `SaleTrail by Localized.life (${process.env.SALETRAIL_CONTACT_EMAIL || "claims@localized.life"})`,
       Referer: process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life",
@@ -62,6 +92,23 @@ async function geocode(query) {
 }
 
 function extractAddressFromHtml(html) {
+  // Prefer structured data. EstateSales.org exposes full addresses here once public.
+  const street = html.match(/streetAddress"\s*:\s*"([^"]+)"/i)?.[1];
+  const structuredCity = html.match(/addressLocality"\s*:\s*"([^"]+)"/i)?.[1];
+  const region = html.match(/addressRegion"\s*:\s*"([^"]+)"/i)?.[1];
+  const postal = html.match(/postalCode"\s*:\s*"([^"]+)"/i)?.[1];
+  if (street && structuredCity && region && postal) {
+    const state = region === "Illinois" ? "IL" : region;
+    if (/^il$/i.test(state) || /^illinois$/i.test(state)) {
+      return {
+        addressLine: street.replace(/\s+/g, " ").trim(),
+        city: structuredCity.replace(/\s+/g, " ").trim(),
+        state: "IL",
+        zip: String(postal).slice(0, 5),
+      };
+    }
+  }
+
   const text = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -79,11 +126,20 @@ function extractAddressFromHtml(html) {
   const city = match[2].replace(/\s+/g, " ").trim();
   const state = match[3] === "Illinois" ? "IL" : match[3];
   const zip = match[4];
+
+   // Guardrail: avoid false positives like times (e.g. "00 AM CDT") or incomplete street lines.
+  const hasStreetSuffix =
+    /\b(st|street|ave|avenue|blvd|boulevard|dr|drive|rd|road|ln|lane|ct|court|cir|circle|pkwy|parkway|way|pl|place|ter|terrace|trl|trail|run)\b/i.test(
+      addressLine,
+    );
+  const badCityTokens = /\b(am|pm|cst|cdt|est|edt|mst|mdt|pst|pdt)\b/i.test(city);
+  if (!hasStreetSuffix || badCityTokens) return null;
+
   return { addressLine, city, state, zip };
 }
 
 async function fetchHtml(url) {
-  const response = await fetch(url, {
+  const response = await resilientFetch(url, {
     redirect: "follow",
     headers: {
       "User-Agent":
@@ -104,6 +160,16 @@ const knownHiddenTitles = [
 ];
 
 async function main() {
+  const supabaseHostname = new URL(supabaseUrl).hostname;
+  try {
+    await dns.promises.lookup(supabaseHostname);
+  } catch (err) {
+    const code = err?.code || err?.cause?.code || "UNKNOWN";
+    throw new Error(
+      `Supabase hostname did not resolve (${supabaseHostname}, ${code}). Fix DNS/network and rerun this script.`,
+    );
+  }
+
   const { data: candidates, error } = await supabase
     .from("sales")
     .select("id, slug, title, address_line, city, state, zip, latitude, longitude, location_precision, source_url, source_platform, source_notes, starts_at, ends_at")
@@ -182,4 +248,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

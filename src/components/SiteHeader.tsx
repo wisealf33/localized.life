@@ -1,23 +1,27 @@
 import Link from "next/link";
 
-type ActiveNav = "home" | "find" | "events" | "map" | "list" | "route";
+type ActiveNav = "home" | "harvest" | "find" | "events" | "map" | "list" | "route";
 
 type SiteHeaderProps = {
   active?: ActiveNav;
+  product?: "SaleTrail" | "Harvest" | "Project hub";
 };
 
 function navClass(active: ActiveNav | undefined, item: ActiveNav) {
   return active === item ? "site-nav-link active" : "site-nav-link";
 }
 
-export function SiteHeader({ active }: SiteHeaderProps) {
+export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
   return (
     <header className="site-header">
       <Link className="site-brand" href="/">
         <span className="site-wordmark">Localized.life</span>
-        <span className="site-product">SaleTrail</span>
+        <span className="site-product">{product}</span>
       </Link>
-      <nav className="site-nav" aria-label="SaleTrail navigation">
+      <nav className="site-nav" aria-label="Localized.life navigation">
+        <Link className={navClass(active, "harvest")} href="/harvest">
+          Harvest
+        </Link>
         <Link className={navClass(active, "find")} href="/saletrail">
           Find sales
         </Link>

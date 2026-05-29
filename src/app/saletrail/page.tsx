@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AutoSubmitSearchForm } from "@/components/AutoSubmitSearchForm";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UseLocationButton } from "@/components/UseLocationButton";
+import { rangeDates, rangeOptions, rangeParam } from "@/lib/dateFilters";
 import { categoryOptions, fullAddress, mapSearchUrl, salePath, splitSaleSchedule } from "@/lib/format";
 import { geocodeSearch } from "@/lib/geocode";
 import { pageMetadata } from "@/lib/seo";
@@ -40,12 +42,6 @@ export const metadata: Metadata = pageMetadata({
 
 const pageSizes = [10, 20, 50];
 const radiusOptions = [10, 20, 30, 50];
-const rangeOptions = [
-  { value: "today", label: "Today" },
-  { value: "next3", label: "Next 3 days" },
-  { value: "week", label: "Next week" },
-  { value: "weekend", label: "Weekend" },
-];
 const eventOnlyCategories = ["Route sale", "Flea market", "Swap meet", "Farmers market", "Local market", "Vintage market"];
 
 function numberParam(value: string | undefined, fallback: number) {
@@ -141,42 +137,6 @@ function compareSalesByDate(a: Sale, b: Sale) {
 
 function categoryParam(value: string | undefined) {
   return value && categoryOptions.includes(value) ? value : "";
-}
-
-function rangeParam(value: string | undefined) {
-  return rangeOptions.some((option) => option.value === value) ? value : "";
-}
-
-function chicagoDate(offsetDays = 0) {
-  const date = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Chicago",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
-}
-
-function chicagoDayOfWeek() {
-  const weekday = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Chicago",
-    weekday: "short",
-  }).format(new Date());
-  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
-}
-
-function rangeDates(range: string) {
-  if (range === "today") return { from: chicagoDate(), to: chicagoDate() };
-  if (range === "next3") return { from: chicagoDate(), to: chicagoDate(3) };
-  if (range === "week") return { from: chicagoDate(), to: chicagoDate(7) };
-  if (range === "weekend") {
-    const day = chicagoDayOfWeek();
-    const daysToSaturday = day >= 0 ? (6 - day + 7) % 7 : 0;
-    return { from: chicagoDate(daysToSaturday), to: chicagoDate(daysToSaturday + 1) };
-  }
-  return null;
 }
 
 async function getSales(
@@ -394,7 +354,8 @@ export default async function SaleTrailHome({ searchParams }: Props) {
       </section>
 
       <section className="panel">
-        <form className="search">
+        <form className="search" id="saletrail-search-form">
+          <AutoSubmitSearchForm formId="saletrail-search-form" />
           <label>
             City, state, ZIP, or keyword
             <input name="q" defaultValue={params.q || ""} placeholder="Your city, ZIP code, or location" />
@@ -425,15 +386,11 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             </select>
           </label>
           <input name="perPage" type="hidden" value={perPage} />
-          <div style={{ display: "grid", gap: "8px" }}>
+          {range ? <input name="range" type="hidden" value={range} /> : null}
+          <div className="search-actions">
             <button className="button primary" type="submit">
               Search
             </button>
-            {hasSearchFilters ? (
-              <Link className="button" href="/saletrail" style={{ minHeight: "34px", padding: "7px 10px", fontSize: "0.86rem" }}>
-                Reset search
-              </Link>
-            ) : null}
           </div>
           <div className="quick-filters search-filter-row" aria-label="Location and quick date filters">
             <UseLocationButton initialLat={params.lat || ""} initialLng={params.lng || ""} initialNear={params.near || ""} />
@@ -455,6 +412,20 @@ export default async function SaleTrailHome({ searchParams }: Props) {
                 {option.label}
               </Link>
             ))}
+            <Link
+              className={!range && !params.date ? "filter-chip active" : "filter-chip"}
+              href={directoryUrl({
+                q: params.q,
+                category,
+                radius,
+                lat: params.lat,
+                lng: params.lng,
+                near: params.near,
+                perPage,
+              })}
+            >
+              All dates
+            </Link>
           </div>
         </form>
       </section>

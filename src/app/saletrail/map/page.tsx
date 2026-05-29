@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SaleMap, type MappedSale } from "@/components/SaleMap";
 import { SiteHeader } from "@/components/SiteHeader";
+import { rangeDates, rangeOptions, rangeParam } from "@/lib/dateFilters";
 import { formatSaleHours, fullAddress, salePath } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -24,40 +25,78 @@ const mapSaleColumnsWithoutPrecision =
 const mapSaleColumnsWithoutCoordinates =
   "id, slug, title, address_line, city, state, zip, starts_at, ends_at, sale_schedule, status, source_type, claim_status, visibility_status, created_at, updated_at";
 
-async function getMapSales() {
+type Props = {
+  searchParams: Promise<{
+    date?: string;
+    range?: string;
+  }>;
+};
+
+function mapUrl(params: { date?: string; range?: string }) {
+  const next = new URLSearchParams();
+  if (params.date) next.set("date", params.date);
+  if (params.range) next.set("range", params.range);
+  const query = next.toString();
+  return query ? `/saletrail/map?${query}` : "/saletrail/map";
+}
+
+function applyDateFilter<T extends { lte: (column: string, value: string) => T; gte: (column: string, value: string) => T }>(
+  query: T,
+  date?: string,
+  range?: string,
+) {
+  const selectedRange = range ? rangeDates(range) : null;
+  if (date) return query.lte("starts_at", `${date}T23:59:59`).gte("ends_at", `${date}T00:00:00`);
+  if (selectedRange) return query.lte("starts_at", `${selectedRange.to}T23:59:59`).gte("ends_at", `${selectedRange.from}T00:00:00`);
+  return query;
+}
+
+async function getMapSales(date?: string, range?: string) {
   if (!isSupabaseConfigured) return [];
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
+  const { data, error } = await applyDateFilter(
+    supabase
     .from("sales")
     .select(mapSaleColumns)
     .eq("visibility_status", "public")
     .eq("status", "active")
     .gte("ends_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
-    .limit(200);
+      .limit(200),
+    date,
+    range,
+  );
 
   if (error?.message.includes("location_precision")) {
-    const fallback = await supabase
+    const fallback = await applyDateFilter(
+      supabase
       .from("sales")
       .select(mapSaleColumnsWithoutPrecision)
       .eq("visibility_status", "public")
       .eq("status", "active")
       .gte("ends_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
-      .limit(200);
+        .limit(200),
+      date,
+      range,
+    );
     if (fallback.error) throw new Error(fallback.error.message);
     return ((fallback.data || []) as Sale[]).map((sale) => ({ ...sale, location_precision: null }));
   }
 
   if (error?.message.includes("latitude") || error?.message.includes("longitude")) {
-    const fallback = await supabase
+    const fallback = await applyDateFilter(
+      supabase
       .from("sales")
       .select(mapSaleColumnsWithoutCoordinates)
       .eq("visibility_status", "public")
       .eq("status", "active")
       .gte("ends_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
-      .limit(200);
+        .limit(200),
+      date,
+      range,
+    );
     if (fallback.error) throw new Error(fallback.error.message);
     return ((fallback.data || []) as Sale[]).map((sale) => ({
       ...sale,
@@ -86,8 +125,10 @@ function toMappedSale(sale: Sale): MappedSale {
   };
 }
 
-export default async function SaleTrailMapPage() {
-  const sales = await getMapSales();
+export default async function SaleTrailMapPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const range = rangeParam(params.range);
+  const sales = await getMapSales(params.date, range);
   const mappedSales = sales.map(toMappedSale);
   const mappedCount = mappedSales.filter((sale) => sale.latitude !== null && sale.longitude !== null).length;
   const approximateCount = mappedSales.filter((sale) => sale.locationPrecision === "area").length;
@@ -108,6 +149,20 @@ export default async function SaleTrailMapPage() {
           </Link>
           <Link className="button primary" href="/saletrail/route">
             My route
+          </Link>
+        </div>
+        <div className="quick-filters map-filter-row" aria-label="Map date filters">
+          {rangeOptions.map((option) => (
+            <Link
+              className={range === option.value ? "filter-chip active" : "filter-chip"}
+              href={mapUrl({ range: option.value })}
+              key={option.value}
+            >
+              {option.label}
+            </Link>
+          ))}
+          <Link className={!range && !params.date ? "filter-chip active" : "filter-chip"} href="/saletrail/map">
+            All dates
           </Link>
         </div>
       </section>

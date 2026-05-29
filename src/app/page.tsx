@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -6,7 +7,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Localized.life | Local tools for real-world community",
   description:
-    "Localized.life is building practical local tools, starting with SaleTrail: a garage sale directory, flyer generator, and simple route planner.",
+    "Localized.life is building practical local tools, including SaleTrail for garage sales and Harvest for mapping local food abundance.",
   path: "/",
   image: "/og/default-saletrail.jpg",
 });
@@ -14,70 +15,96 @@ export const metadata: Metadata = pageMetadata({
 export default function Home() {
   return (
     <main className="front-shell">
-      <SiteHeader active="home" />
+      <SiteHeader active="home" product="Project hub" />
 
       <section className="front-hero">
+        <Image
+          src="/home/community-hero.png"
+          alt="Neighbors gathering on a sunny neighborhood street with sale tables and fresh produce"
+          fill
+          priority
+          sizes="100vw"
+        />
         <div className="front-copy">
-          <p className="front-badge">First local tool now live</p>
-          <h1>Local tools for real-world community.</h1>
+          <p className="front-badge">A neighborhood operating system</p>
+          <h1>Useful local life, pulled out of the noise.</h1>
           <p className="lede">
-            We&apos;re starting with SaleTrail — a garage sale directory that helps sellers create clean listings, share
-            them anywhere, and helps shoppers save sales to a simple route.
+            Localized.life turns the scattered stuff of a place into tools people can act on: weekend sales worth
+            routing, harvestable trees worth mapping, and local knowledge that should not disappear in a feed.
           </p>
           <div className="toolbar">
             <Link className="button primary" href="/saletrail">
-              Find garage sales
+              Open SaleTrail
             </Link>
-            <Link className="button" href="/saletrail/new">
-              List a garage sale
+            <Link className="button" href="/harvest">
+              Open Harvest
             </Link>
+          </div>
+          <div className="front-signal-row" aria-label="Localized.life project signals">
+            <span>Garage sales</span>
+            <span>Fruit trees</span>
+            <span>Routes</span>
+            <span>Local abundance</span>
           </div>
         </div>
 
-        <div className="front-product-card">
-          <p className="front-badge">Now live</p>
-          <h2>SaleTrail</h2>
-          <p>
-            Create a garage sale listing, generate a flyer with a QR code, share it to Facebook, Nextdoor, or
-            Craigslist, and help shoppers add your sale to their route.
-          </p>
-          <div className="mini-list">
-            <span>Find nearby garage sales</span>
-            <span>Create a free listing</span>
-            <span>Share with a flyer and QR code</span>
-            <span>Save sales to a route</span>
-          </div>
-          <Link className="button primary" href="/saletrail">
-            Open SaleTrail
-          </Link>
-        </div>
       </section>
 
-      <section className="front-about">
-        <h2>What is Localized.life?</h2>
-        <p>
-          Localized.life is a growing home for practical local tools — starting with garage sales, then expanding toward
-          gardens, tools, food, services, events, and local exchange.
-        </p>
+      <section className="front-product-band" aria-label="Localized.life tools">
+        <article className="front-product-card">
+          <p className="front-badge">Garage sales</p>
+          <h2>SaleTrail</h2>
+          <p>A cleaner way to list sales, find nearby stops, and turn a messy Saturday plan into a route.</p>
+          <Link className="button primary" href="/saletrail">
+            Find garage sales
+          </Link>
+        </article>
+
+        <article className="front-product-card harvest-teaser-card">
+          <p className="front-badge">Food abundance</p>
+          <h2>Harvest</h2>
+          <p>A registry for fruit trees, nut trees, berry bushes, and the future crews that can help share them.</p>
+          <Link className="button" href="/harvest">
+            Explore Harvest
+          </Link>
+        </article>
+      </section>
+
+      <section className="front-about" aria-labelledby="localizedFieldDesk">
+        <div>
+          <p className="front-badge">Field notes</p>
+          <h2 id="localizedFieldDesk">Built for the ordinary magic of nearby.</h2>
+        </div>
+        <div className="front-note-grid">
+          <p>
+            Localized.life is a growing home for practical local tools: small systems that help neighbors find useful
+            things nearby, organize what is already happening, and turn scattered local knowledge into something easier
+            to act on.
+          </p>
+          <aside className="front-field-note" aria-label="Localized.life motto">
+            <strong>Start small. Make it findable. Help it move.</strong>
+            <span>That is the shape of both SaleTrail and Harvest.</span>
+          </aside>
+        </div>
       </section>
 
       <section className="front-tool-section">
         <div>
-          <p className="front-badge">First tool</p>
-          <h2>SaleTrail</h2>
+          <p className="front-badge">Project areas</p>
+          <h2>SaleTrail and Harvest</h2>
         </div>
         <div className="tool-card-grid">
           <article className="tool-card">
-            <h3>For sellers</h3>
-            <p>Create one listing, get a flyer, QR code, and share-ready text.</p>
+            <h3>SaleTrail sellers</h3>
+            <p>Create one listing, get a flyer, QR code, and share-ready text for garage sale promotion.</p>
           </article>
           <article className="tool-card">
-            <h3>For shoppers</h3>
+            <h3>SaleTrail shoppers</h3>
             <p>Find nearby garage sales, save favorites, and build a simple route.</p>
           </article>
           <article className="tool-card">
-            <h3>For communities</h3>
-            <p>Turn scattered posts into organized local listings people can actually use.</p>
+            <h3>Harvest communities</h3>
+            <p>Map harvestable plants, build volunteer capacity, and prepare for local food sharing.</p>
           </article>
         </div>
       </section>

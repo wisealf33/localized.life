@@ -43,6 +43,14 @@ function publicFileExists(publicPath: string) {
   return existsSync(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")));
 }
 
+function townStateImagePath(sale: Pick<ShareImageSale, "city" | "state">) {
+  return `/og/${urlSegment(sale.city)}-${urlSegment(sale.state)}.jpg`;
+}
+
+function legacyTownImagePath(city: string) {
+  return `/og/${urlSegment(city)}.jpg`;
+}
+
 function stateImagePath(state: string) {
   const normalized = state.trim().toLowerCase();
   const stateNames: Record<string, string> = {
@@ -67,8 +75,11 @@ function saleTypeFallbackPath(sale: ShareImageSale) {
 
 export function saleFallbackImagePath(sale: ShareImageSale) {
   const destination = regionDestinationForSale(sale);
-  const cityPath = `/og/${urlSegment(sale.city)}.jpg`;
-  if (destination.isDedicated && publicFileExists(cityPath)) return cityPath;
+  const cityStatePath = townStateImagePath(sale);
+  if (destination.isDedicated && publicFileExists(cityStatePath)) return cityStatePath;
+
+  const legacyCityPath = legacyTownImagePath(sale.city);
+  if (destination.isDedicated && publicFileExists(legacyCityPath)) return legacyCityPath;
 
   const countyPath = `/og/${urlSegment(destination.county)}.jpg`;
   if (publicFileExists(countyPath)) return countyPath;
@@ -106,13 +117,14 @@ export function salePreviewImageNeed(sale: ShareImageSale) {
 
   const destination = regionDestinationForSale(sale);
   const county = countyForSale(sale);
-  const cityPath = `/og/${urlSegment(sale.city)}.jpg`;
+  const cityPath = townStateImagePath(sale);
+  const legacyCityPath = legacyTownImagePath(sale.city);
 
-  if (destination.isDedicated && !publicFileExists(cityPath)) {
+  if (destination.isDedicated && !publicFileExists(cityPath) && !publicFileExists(legacyCityPath)) {
     return {
       scope: "town" as const,
       label: `${sale.city}, ${sale.state}`,
-      filename: `${urlSegment(sale.city)}.jpg`,
+      filename: `${urlSegment(sale.city)}-${urlSegment(sale.state)}.jpg`,
       publicPath: cityPath,
     };
   }

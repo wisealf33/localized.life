@@ -36,9 +36,12 @@ function publicFileExists(publicPath: string) {
   return existsSync(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")));
 }
 
-export function eventPreviewImagePath(event: Pick<LocalEvent, "city">) {
-  const cityPath = `/og/${urlSegment(event.city)}.jpg`;
-  if (publicFileExists(cityPath)) return cityPath;
+export function eventPreviewImagePath(event: Pick<LocalEvent, "city" | "state">) {
+  const cityStatePath = `/og/${urlSegment(event.city)}-${urlSegment(event.state)}.jpg`;
+  if (publicFileExists(cityStatePath)) return cityStatePath;
+
+  const legacyCityPath = `/og/${urlSegment(event.city)}.jpg`;
+  if (publicFileExists(legacyCityPath)) return legacyCityPath;
 
   const cityWidePath = "/og/city-wide-sale.jpg";
   if (publicFileExists(cityWidePath)) return cityWidePath;
