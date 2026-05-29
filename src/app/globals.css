@@ -582,6 +582,25 @@ h2 {
   font-size: clamp(1.08rem, 1.8vw, 1.28rem);
 }
 
+.event-filter-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.event-filter-panel h2 {
+  margin: 0 0 6px;
+}
+
+.event-filter-row {
+  align-items: center;
+}
+
+.estate-filter-chip {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: var(--primary-strong);
+}
+
 .event-card .button {
   width: fit-content;
 }
