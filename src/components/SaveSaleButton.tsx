@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type SavedSale = {
   slug: string;
@@ -25,15 +25,39 @@ function readSaved(): SavedSale[] {
   }
 }
 
+function listingCode(slug: string) {
+  return slug.split("/").pop()?.split("-").filter(Boolean).at(-1) || slug;
+}
+
+function sameSavedSale(left: SavedSale, right: SavedSale) {
+  return left.slug === right.slug || listingCode(left.slug) === listingCode(right.slug);
+}
+
+function refreshSavedCopy(sale: SavedSale) {
+  const current = readSaved();
+  const index = current.findIndex((item) => sameSavedSale(item, sale));
+  if (index === -1) return false;
+
+  const next = [...current];
+  next[index] = { ...next[index], ...sale };
+  window.localStorage.setItem(key, JSON.stringify(next));
+  window.dispatchEvent(new Event("saletrail:saved"));
+  return true;
+}
+
 export function SaveSaleButton({ sale, variant = "primary" }: { sale: SavedSale; variant?: "primary" | "secondary" }) {
   const [saved, setSaved] = useState(() => {
     if (typeof window === "undefined") return false;
-    return readSaved().some((item) => item.slug === sale.slug);
+    return readSaved().some((item) => sameSavedSale(item, sale));
   });
+
+  useEffect(() => {
+    refreshSavedCopy(sale);
+  }, [sale]);
 
   function toggle() {
     const current = readSaved();
-    const next = saved ? current.filter((item) => item.slug !== sale.slug) : [...current, sale];
+    const next = saved ? current.filter((item) => !sameSavedSale(item, sale)) : [...current, sale];
     window.localStorage.setItem(key, JSON.stringify(next));
     setSaved(!saved);
     window.dispatchEvent(new Event("saletrail:saved"));
