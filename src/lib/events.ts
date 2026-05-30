@@ -5,7 +5,7 @@ import { urlSegment } from "./format";
 
 export const eventTypeOptions: { value: LocalEventType; label: string }[] = [
   { value: "city_wide_garage_sale", label: "City-wide garage sale" },
-  { value: "community_sale", label: "Community sale" },
+  { value: "community_sale", label: "Community event" },
   { value: "flea_market", label: "Flea market" },
   { value: "swap_meet", label: "Swap meet" },
   { value: "farmers_market", label: "Farmers market" },
