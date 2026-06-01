@@ -36,7 +36,11 @@ export function formatDateRange(sale: Pick<Sale, "starts_at" | "ends_at">) {
 }
 
 export function formatSaleHours(sale: Pick<Sale, "starts_at" | "ends_at" | "sale_schedule">) {
-  return sale.sale_schedule?.trim() || formatDateRange(sale);
+  const schedule = sale.sale_schedule
+    ?.replace(/\n?Confirm details before going\.?/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return schedule || formatDateRange(sale);
 }
 
 export function splitSaleSchedule(sale: Pick<Sale, "starts_at" | "ends_at" | "sale_schedule">) {
