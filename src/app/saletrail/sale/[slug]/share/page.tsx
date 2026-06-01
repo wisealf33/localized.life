@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { FlyerPreview } from "@/components/FlyerPreview";
 import { ShareActions } from "@/components/ShareActions";
 import { SiteHeader } from "@/components/SiteHeader";
-import { salePath, saleUrl, socialCopy } from "@/lib/format";
+import { saleDisplayTitle, salePath, saleUrl, socialCopy } from "@/lib/format";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
@@ -50,6 +50,7 @@ export default async function SharePage({ params, searchParams }: Props) {
   const url = saleUrl(sale);
   const qr = await QRCode.toDataURL(url, { margin: 1, width: 280 });
   const copy = socialCopy(sale, url);
+  const displayTitle = saleDisplayTitle(sale);
   const manageLink = query.manage ? `/saletrail/manage/${query.manage}` : null;
 
   return (
@@ -58,7 +59,7 @@ export default async function SharePage({ params, searchParams }: Props) {
       <section className="hero compact-hero share-hero">
         <div className="stack small-gap">
           <p className="eyebrow">Share kit</p>
-          <h1>{sale.title}</h1>
+          <h1>{displayTitle}</h1>
           <p>
             Share the public listing, copy ready-to-post text, or use the flyer QR code to send shoppers back to
             SaleTrail.
@@ -98,7 +99,7 @@ export default async function SharePage({ params, searchParams }: Props) {
         </aside>
         <ShareActions
           listingUrl={url}
-          title={sale.title}
+          title={displayTitle}
           postText={copy.publicPost}
         />
       </section>

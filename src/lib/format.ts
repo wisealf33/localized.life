@@ -76,6 +76,27 @@ export function fullAddress(sale: Pick<Sale, "address_line" | "city" | "state" |
   return `${sale.address_line}, ${sale.city}, ${sale.state} ${sale.zip}`;
 }
 
+function saleKind(sale: Pick<Sale, "categories">) {
+  const categories = sale.categories || [];
+  if (categories.includes("Estate sale")) return "Estate Sale";
+  if (categories.includes("Moving sale")) return "Moving Sale";
+  if (categories.includes("Multi-family")) return "Multi-Family Garage Sale";
+  if (categories.includes("Rummage sale")) return "Rummage Sale";
+  return "Garage Sale";
+}
+
+function isGeneralLocation(address: string) {
+  return /^(participating homes|village-wide|city-wide|community-wide|exact address hidden|near |around |west side|sandalwood subdivision|neighborhood|subdivision)/i.test(
+    address.trim(),
+  );
+}
+
+export function saleDisplayTitle(sale: Pick<Sale, "title" | "address_line" | "city" | "state" | "categories">) {
+  const address = sale.address_line.trim();
+  if (!address || isGeneralLocation(address)) return sale.title;
+  return `${address} in ${sale.city}, ${sale.state} - ${saleKind(sale)}`;
+}
+
 export function mapSearchUrl(sale: Pick<Sale, "address_line" | "city" | "state" | "zip">) {
   const params = new URLSearchParams({
     api: "1",
@@ -144,7 +165,7 @@ export function socialCopy(sale: Sale, url: string) {
   const when = formatSaleHours(sale);
   const address = fullAddress(sale);
   const categories = sale.categories?.length ? `\nItems: ${sale.categories.join(", ")}` : "";
-  const publicPost = `Garage sale: ${sale.title}\n\n${when}\n${address}${categories}\n\n${sale.description || ""}\n\nDetails, map, and route save link: ${url}${dedicatedAreaShareNote(sale)}`;
+  const publicPost = `Garage sale: ${saleDisplayTitle(sale)}\n\n${when}\n${address}${categories}\n\n${sale.description || ""}\n\nDetails, map, and route save link: ${url}${dedicatedAreaShareNote(sale)}`;
 
   return {
     publicPost,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatSaleHours, fullAddress } from "@/lib/format";
+import { formatSaleHours, fullAddress, saleDisplayTitle } from "@/lib/format";
 import { saleFlyerImage } from "@/lib/share";
 import type { Sale } from "@/lib/types";
 
@@ -11,14 +11,15 @@ type FlyerPreviewProps = {
 
 export function FlyerPreview({ qr, sale, url }: FlyerPreviewProps) {
   const image = saleFlyerImage(sale);
+  const displayTitle = saleDisplayTitle(sale);
 
   return (
     <div className="flyer">
       <p className="eyebrow">SaleTrail by Localized.life</p>
-      <h2>{sale.title}</h2>
+      <h2>{displayTitle}</h2>
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="flyer-photo" src={image.src} alt={`${sale.title} preview`} />
+        <img className="flyer-photo" src={image.src} alt={`${displayTitle} preview`} />
       ) : (
         <div className="flyer-photo-placeholder">
           <strong>Add a sale photo</strong>
@@ -40,4 +41,3 @@ export function FlyerPreview({ qr, sale, url }: FlyerPreviewProps) {
     </div>
   );
 }
-

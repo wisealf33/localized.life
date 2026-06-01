@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { CopyIconButton } from "@/components/CopyIconButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { submitClaimRequest } from "@/lib/actions";
-import { listingId, publicClaimMessageForSale, salePath } from "@/lib/format";
+import { listingId, publicClaimMessageForSale, saleDisplayTitle, salePath } from "@/lib/format";
 import { facebookDestinationInstruction, regionDestinationForSale } from "@/lib/regions";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -116,7 +116,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
     <main className="page narrow">
       <SiteHeader />
       <p className="eyebrow">Claim listing</p>
-      <h1>{sale.title}</h1>
+      <h1>{saleDisplayTitle(sale)}</h1>
       <p className="lede">
         Step 1: tell us who is claiming this listing. Step 2 will give you a public message to post on Facebook so admin
         can manually confirm the claim.

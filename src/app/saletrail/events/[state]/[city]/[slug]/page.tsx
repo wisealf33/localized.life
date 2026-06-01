@@ -5,7 +5,7 @@ import { EventRouteSelector } from "@/components/EventRouteSelector";
 import { SaleMap } from "@/components/SaleMap";
 import { SiteHeader } from "@/components/SiteHeader";
 import { eventPath, eventTypeLabel, formatEventHours } from "@/lib/events";
-import { fullAddress, salePath, splitSaleSchedule } from "@/lib/format";
+import { fullAddress, saleDisplayTitle, salePath, splitSaleSchedule } from "@/lib/format";
 import { absoluteUrl, cleanDescription, pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocalEvent, Sale } from "@/lib/types";
@@ -62,7 +62,7 @@ export default async function EventDetailPage({ params }: Props) {
   const sales = await getEventSales(event.id);
   const mappedSales = sales.map((sale) => ({
     slug: sale.slug,
-    title: sale.title,
+    title: saleDisplayTitle(sale),
     address: fullAddress(sale),
     city: sale.city,
     state: sale.state,
@@ -136,10 +136,11 @@ export default async function EventDetailPage({ params }: Props) {
           <div className="list compact-list">
             {sales.map((sale) => {
               const schedule = splitSaleSchedule(sale);
+              const displayTitle = saleDisplayTitle(sale);
               return (
                 <article className="card sale-card mini-sale-card" key={sale.id}>
                   <h3>
-                    <Link href={salePath(sale)}>{sale.title}</Link>
+                    <Link href={salePath(sale)}>{displayTitle}</Link>
                   </h3>
                   <p>
                     <Link className="text-link sale-card-address" href={salePath(sale)}>

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { isSaleEventHub } from "@/lib/eventHubs";
 import { eventPath, eventPreviewImagePath, eventTypeLabel, eventTypeOptions, formatEventHours } from "@/lib/events";
-import { formatSaleHours, salePath } from "@/lib/format";
+import { formatSaleHours, saleDisplayTitle, salePath } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocalEvent, LocalEventType, Sale } from "@/lib/types";
@@ -195,16 +195,17 @@ export default async function EventsPage({ searchParams }: Props) {
             })}
             {eventSales.map((sale) => {
               const image = eventPreviewImagePath(sale);
+              const displayTitle = saleDisplayTitle(sale);
               return (
                 <article className="card event-card" key={sale.id}>
                   {image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img className="sale-card-image" src={image} alt={`${sale.title} preview`} />
+                    <img className="sale-card-image" src={image} alt={`${displayTitle} preview`} />
                   ) : null}
                   <div>
                     <p className="eyebrow">{saleEventLabel(sale)}</p>
                     <h2>
-                      <Link href={salePath(sale)}>{sale.title}</Link>
+                      <Link href={salePath(sale)}>{displayTitle}</Link>
                     </h2>
                     <p className="muted">
                       {sale.city}, {sale.state}

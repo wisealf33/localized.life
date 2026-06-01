@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UseLocationButton } from "@/components/UseLocationButton";
 import { rangeDates, rangeOptions, rangeParam } from "@/lib/dateFilters";
-import { categoryOptions, fullAddress, mapSearchUrl, salePath, splitSaleSchedule } from "@/lib/format";
+import { categoryOptions, fullAddress, mapSearchUrl, saleDisplayTitle, salePath, splitSaleSchedule } from "@/lib/format";
 import { geocodeSearch } from "@/lib/geocode";
 import { pageMetadata } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
@@ -242,12 +242,13 @@ function canClaim(sale: Pick<Sale, "source_type" | "claim_status">) {
 function SaleCard({ sale }: { sale: Sale }) {
   const image = salePreviewImage(sale);
   const schedule = splitSaleSchedule(sale);
+  const displayTitle = saleDisplayTitle(sale);
 
   return (
     <article className="card sale-card">
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="sale-card-image" src={image.src} alt={`${sale.title} preview`} />
+        <img className="sale-card-image" src={image.src} alt={`${displayTitle} preview`} />
       ) : null}
       <div className="card-top">
         <StatusBadge sale={sale} />
@@ -256,7 +257,7 @@ function SaleCard({ sale }: { sale: Sale }) {
         </span>
       </div>
       <h2>
-        <Link href={salePath(sale)}>{sale.title}</Link>
+        <Link href={salePath(sale)}>{displayTitle}</Link>
       </h2>
       <p>
         <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
@@ -278,7 +279,7 @@ function SaleCard({ sale }: { sale: Sale }) {
           <SaveSaleButton
             sale={{
               slug: sale.slug,
-              title: sale.title,
+              title: displayTitle,
               address: fullAddress(sale),
               city: sale.city,
               state: sale.state,

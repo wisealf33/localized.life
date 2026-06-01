@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { SaleMap, type MappedSale } from "@/components/SaleMap";
 import { SiteHeader } from "@/components/SiteHeader";
 import { rangeDates, rangeOptions, rangeParam } from "@/lib/dateFilters";
-import { formatSaleHours, fullAddress, salePath } from "@/lib/format";
+import { formatSaleHours, fullAddress, saleDisplayTitle, salePath } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
@@ -113,7 +113,7 @@ async function getMapSales(date?: string, range?: string) {
 function toMappedSale(sale: Sale): MappedSale {
   return {
     slug: sale.slug,
-    title: sale.title,
+    title: saleDisplayTitle(sale),
     address: fullAddress(sale),
     city: sale.city,
     state: sale.state,
@@ -184,7 +184,7 @@ export default async function SaleTrailMapPage({ searchParams }: Props) {
             <article className="card compact" key={sale.id}>
               <div>
                 <h2>
-                  <Link href={salePath(sale)}>{sale.title}</Link>
+                  <Link href={salePath(sale)}>{saleDisplayTitle(sale)}</Link>
                 </h2>
                 <p className="muted">
                   {sale.city}, {sale.state} · <span className="whitespace">{formatSaleHours(sale)}</span>

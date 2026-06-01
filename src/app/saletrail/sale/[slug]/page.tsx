@@ -6,7 +6,15 @@ import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { isSaleEventHub } from "@/lib/eventHubs";
-import { formatSaleHours, fullAddress, mapSearchUrl, salePath, saleSharePath, splitSaleSchedule } from "@/lib/format";
+import {
+  formatSaleHours,
+  fullAddress,
+  mapSearchUrl,
+  saleDisplayTitle,
+  salePath,
+  saleSharePath,
+  splitSaleSchedule,
+} from "@/lib/format";
 import { saleMetadata, saleStructuredData } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -102,32 +110,6 @@ function eventHubDescription(sale: Pick<Sale, "categories">) {
   };
 }
 
-function streetTitle(address: string) {
-  const cleaned = address
-    .replace(/^(?:\d+[A-Za-z]?|Mizera Building),?\s*/i, "")
-    .replace(/\s*,?\s*(?:Raymond|Bloomington),?\s*IL.*$/i, "")
-    .replace(/\bN\b/i, "North")
-    .replace(/\bS\b/i, "South")
-    .replace(/\bE\b/i, "East")
-    .replace(/\bW\b/i, "West")
-    .replace(/\bSt\b\.?/i, "Street")
-    .replace(/\bRd\b\.?/i, "Road")
-    .replace(/\bDr\b\.?/i, "Drive")
-    .replace(/\bLn\b\.?/i, "Lane")
-    .replace(/\bCt\b\.?/i, "Court")
-    .replace(/\bCir\b\.?/i, "Circle")
-    .trim();
-
-  if (!cleaned) return "This location";
-  if (/building/i.test(address)) return "Mizera Building";
-  return cleaned;
-}
-
-function participantTitle(sale: Pick<Sale, "title" | "address_line" | "categories">) {
-  const prefix = sale.categories?.includes("Estate sale") ? "Estate Sale" : "Garage Sale";
-  return `${prefix} on ${streetTitle(sale.address_line)}`;
-}
-
 async function getCityWideParticipatingSales(sale: Sale) {
   if (!isSupabaseConfigured || !isEventHubSale(sale)) return [];
 
@@ -157,12 +139,13 @@ async function getCityWideParticipatingSales(sale: Sale) {
 
 function ParticipatingSaleCard({ sale }: { sale: Sale }) {
   const schedule = splitSaleSchedule(sale);
+  const displayTitle = saleDisplayTitle(sale);
 
   return (
     <article className="card sale-card mini-sale-card">
       <div className="participant-card-main">
         <h3>
-          <Link href={salePath(sale)}>{participantTitle(sale)}</Link>
+          <Link href={salePath(sale)}>{displayTitle}</Link>
         </h3>
         <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
           {fullAddress(sale)}
@@ -183,7 +166,7 @@ function ParticipatingSaleCard({ sale }: { sale: Sale }) {
           <SaveSaleButton
             sale={{
               slug: sale.slug,
-              title: sale.title,
+              title: displayTitle,
               address: fullAddress(sale),
               city: sale.city,
               state: sale.state,
@@ -222,6 +205,7 @@ export default async function SalePage({ params, searchParams }: Props) {
   const participatingSales = await getCityWideParticipatingSales(sale);
   const previewImage = salePreviewImage(sale);
   const structuredData = saleStructuredData(sale);
+  const displayTitle = isEventHub ? sale.title : saleDisplayTitle(sale);
 
   return (
     <main className={isEventHub ? "page citywide-page" : "page narrow"}>
@@ -236,7 +220,7 @@ export default async function SalePage({ params, searchParams }: Props) {
       <section className={isEventHub ? "stack listing-detail citywide-hero" : "stack listing-detail"}>
         {isEventHub ? <span className="badge plain">{eventHubLabel(sale)}</span> : <StatusBadge sale={sale} />}
         <div className={isEventHub ? "listing-title-row citywide-title-row" : "listing-title-row"}>
-          <h1>{sale.title}</h1>
+          <h1>{displayTitle}</h1>
           <BackToListingsButton />
         </div>
         {isEventHub ? (
@@ -265,13 +249,13 @@ export default async function SalePage({ params, searchParams }: Props) {
         )}
         {previewImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="listing-preview-image" src={previewImage.src} alt={`${sale.title} preview`} />
+          <img className="listing-preview-image" src={previewImage.src} alt={`${displayTitle} preview`} />
         ) : null}
         {sale.photo_urls && sale.photo_urls.length > 1 ? (
           <div className="photo-grid compact-photo-grid">
             {sale.photo_urls.slice(1, 2).map((url) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={url} alt={`${sale.title} photo`} key={url} />
+              <img src={url} alt={`${displayTitle} photo`} key={url} />
             ))}
           </div>
         ) : null}
@@ -312,7 +296,7 @@ export default async function SalePage({ params, searchParams }: Props) {
             <SaveSaleButton
               sale={{
                 slug: sale.slug,
-                title: sale.title,
+                title: displayTitle,
                 address: fullAddress(sale),
                 city: sale.city,
                 state: sale.state,

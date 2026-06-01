@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { existsSync } from "fs";
 import path from "path";
 import type { Sale } from "./types";
-import { formatSaleHours, fullAddress, salePath } from "./format";
+import { formatSaleHours, fullAddress, saleDisplayTitle, salePath } from "./format";
 import { saleOgImageUrl } from "./og";
 
 export const siteName = "Localized.life";
@@ -85,9 +85,7 @@ function isHiddenAddress(address: string) {
 }
 
 export function saleMetadata(sale: Sale): Metadata {
-  const titleLocation = sale.title.toLowerCase().includes(sale.city.toLowerCase())
-    ? `${sale.title}, ${sale.state}`
-    : `${sale.title} in ${sale.city}, ${sale.state}`;
+  const titleLocation = saleDisplayTitle(sale);
   const title = `${titleLocation} | SaleTrail`;
   const description = cleanDescription(
     `${titleLocation}. ${formatSaleHours(sale).replace(/\n/g, " ")} ${fullAddress(sale)}. ${
@@ -110,8 +108,8 @@ export function saleStructuredData(sale: Sale) {
   return {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: sale.title,
-    description: cleanDescription(sale.description || `${sale.title} in ${sale.city}, ${sale.state}.`, 300),
+    name: saleDisplayTitle(sale),
+    description: cleanDescription(sale.description || `${saleDisplayTitle(sale)}.`, 300),
     startDate: sale.starts_at,
     endDate: sale.ends_at,
     eventStatus: sale.status === "cancelled" ? "https://schema.org/EventCancelled" : "https://schema.org/EventScheduled",
