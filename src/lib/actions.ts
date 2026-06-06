@@ -266,8 +266,35 @@ function mergeText(existing: string | null | undefined, next: string, label: str
   const cleanExisting = String(existing || "").trim();
   if (!cleanNext) return cleanExisting;
   if (!cleanExisting) return cleanNext;
-  if (normalizeText(cleanExisting).includes(normalizeText(cleanNext))) return cleanExisting;
+  if (normalizeMergeText(cleanExisting).includes(normalizeMergeText(cleanNext))) return cleanExisting;
   return `${cleanExisting}\n\n${label}:\n${cleanNext}`;
+}
+
+function normalizeMergeText(text: string | null | undefined) {
+  const monthAliases: Record<string, string> = {
+    january: "jan",
+    february: "feb",
+    march: "mar",
+    april: "apr",
+    june: "jun",
+    july: "jul",
+    august: "aug",
+    september: "sep",
+    sept: "sep",
+    october: "oct",
+    november: "nov",
+    december: "dec",
+  };
+
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[–—]/g, "-")
+    .replace(/\b(january|february|march|april|june|july|august|september|sept|october|november|december)\b/g, (month) => monthAliases[month] || month)
+    .replace(/(\d{1,2}):00\s*([ap])\.?m\.?/g, "$1$2m")
+    .replace(/(\d{1,2})\s*([ap])\.?m\.?/g, "$1$2m")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function betterDescription(existing: string | null, next: string) {
