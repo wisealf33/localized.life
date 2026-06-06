@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BackToListingsButton } from "@/components/BackToListingsButton";
+import { EventRouteSelector } from "@/components/EventRouteSelector";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -13,7 +14,6 @@ import {
   saleDisplayTitle,
   salePath,
   saleSharePath,
-  splitSaleSchedule,
 } from "@/lib/format";
 import { saleMetadata, saleStructuredData } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
@@ -137,52 +137,6 @@ async function getCityWideParticipatingSales(sale: Sale) {
     });
 }
 
-function ParticipatingSaleCard({ sale }: { sale: Sale }) {
-  const schedule = splitSaleSchedule(sale);
-  const displayTitle = saleDisplayTitle(sale);
-
-  return (
-    <article className="card sale-card mini-sale-card">
-      <div className="participant-card-main">
-        <h3>
-          <Link href={salePath(sale)}>{displayTitle}</Link>
-        </h3>
-        <a className="text-link sale-card-address" href={mapSearchUrl(sale)} target="_blank" rel="noopener noreferrer">
-          {fullAddress(sale)}
-        </a>
-      </div>
-      <div className="sale-card-schedule">
-        {schedule.dates.map((line) => (
-          <span key={line}>{line}</span>
-        ))}
-        {schedule.note ? <small>{schedule.note}</small> : null}
-      </div>
-      <div className="participant-card-bottom">
-        {sale.categories?.length ? <p className="tags">{sale.categories.join(" · ")}</p> : null}
-        <div className="sale-card-footer">
-          <Link className="button primary" href={salePath(sale)}>
-            View listing
-          </Link>
-          <SaveSaleButton
-            sale={{
-              slug: sale.slug,
-              title: displayTitle,
-              address: fullAddress(sale),
-              city: sale.city,
-              state: sale.state,
-              startsAt: sale.starts_at,
-              href: salePath(sale),
-              latitude: sale.latitude,
-              longitude: sale.longitude,
-              locationPrecision: sale.location_precision,
-            }}
-          />
-        </div>
-      </div>
-    </article>
-  );
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const sale = await getSale(slug);
@@ -203,6 +157,18 @@ export default async function SalePage({ params, searchParams }: Props) {
   const isEventHub = isEventHubSale(sale);
   const hubDescription = eventHubDescription(sale);
   const participatingSales = await getCityWideParticipatingSales(sale);
+  const mappedParticipatingSales = participatingSales.map((item) => ({
+    slug: item.slug,
+    title: saleDisplayTitle(item),
+    address: fullAddress(item),
+    city: item.city,
+    state: item.state,
+    startsAt: item.starts_at,
+    href: salePath(item),
+    latitude: item.latitude,
+    longitude: item.longitude,
+    locationPrecision: item.location_precision,
+  }));
   const previewImage = salePreviewImage(sale);
   const structuredData = saleStructuredData(sale);
   const displayTitle = isEventHub ? sale.title : saleDisplayTitle(sale);
@@ -333,11 +299,7 @@ export default async function SalePage({ params, searchParams }: Props) {
             Save the individual stops you want, then open My route to arrange your own SaleTrail.
           </p>
           {participatingSales.length ? (
-            <div className="grid two related-sales-grid">
-              {participatingSales.map((item) => (
-                <ParticipatingSaleCard sale={item} key={item.id} />
-              ))}
-            </div>
+            <EventRouteSelector sales={mappedParticipatingSales} />
           ) : (
             <p className="muted">No individual participating listings have been added yet.</p>
           )}

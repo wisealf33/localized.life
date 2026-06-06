@@ -172,31 +172,34 @@ export default async function EventDetailPage({ params }: Props) {
             </p>
           </div>
           <SaleMap sales={mappedSales} />
-          {event.event_type === "city_wide_garage_sale" ? <EventRouteSelector sales={mappedSales} /> : null}
-          <div className="list compact-list">
-            {sales.map((sale) => {
-              const schedule = splitSaleSchedule(sale);
-              const displayTitle = saleDisplayTitle(sale);
-              return (
-                <article className="card sale-card mini-sale-card" key={sale.id}>
-                  <h3>
-                    <Link href={salePath(sale)}>{displayTitle}</Link>
-                  </h3>
-                  <p>
-                    <Link className="text-link sale-card-address" href={salePath(sale)}>
-                      {fullAddress(sale)}
-                    </Link>
-                  </p>
-                  <div className="sale-card-schedule">
-                    {schedule.dates.map((line) => (
-                      <span key={line}>{line}</span>
-                    ))}
-                    {schedule.note ? <small>{schedule.note}</small> : null}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+          {event.event_type === "city_wide_garage_sale" ? (
+            <EventRouteSelector sales={mappedSales} />
+          ) : (
+            <div className="list compact-list">
+              {sales.map((sale) => {
+                const schedule = splitSaleSchedule(sale);
+                const displayTitle = saleDisplayTitle(sale);
+                return (
+                  <article className="card sale-card mini-sale-card" key={sale.id}>
+                    <h3>
+                      <Link href={salePath(sale)}>{displayTitle}</Link>
+                    </h3>
+                    <p>
+                      <Link className="text-link sale-card-address" href={salePath(sale)}>
+                        {fullAddress(sale)}
+                      </Link>
+                    </p>
+                    <div className="sale-card-schedule">
+                      {schedule.dates.map((line) => (
+                        <span key={line}>{line}</span>
+                      ))}
+                      {schedule.note ? <small>{schedule.note}</small> : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </section>
       ) : (
         <section className="empty">

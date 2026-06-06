@@ -55,13 +55,22 @@ export function EventRouteSelector({ sales }: { sales: SavedSale[] }) {
       </div>
       <div className="event-stop-list">
         {sales.map((sale) => (
-          <label className="event-stop-check" key={sale.slug}>
-            <input checked={selected.has(sale.slug)} type="checkbox" onChange={() => toggle(sale.slug)} />
+          <div className="event-stop-check" key={sale.slug}>
+            <input
+              aria-label={`Include ${sale.title} in my route`}
+              checked={selected.has(sale.slug)}
+              type="checkbox"
+              onChange={() => toggle(sale.slug)}
+            />
             <span>
-              <strong>{sale.title}</strong>
-              <small>{sale.address}</small>
+              <a href={sale.href}>
+                <strong>{sale.title}</strong>
+              </a>
+              <a href={sale.href}>
+                <small>{sale.address}</small>
+              </a>
             </span>
-          </label>
+          </div>
         ))}
       </div>
     </div>

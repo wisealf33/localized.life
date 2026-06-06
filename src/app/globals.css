@@ -671,6 +671,16 @@ h2 {
   gap: 3px;
 }
 
+.event-stop-check a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.event-stop-check a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
 .event-stop-check small {
   color: var(--muted);
   font-weight: 650;
