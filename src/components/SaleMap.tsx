@@ -97,6 +97,7 @@ function buildPopup(
   savedSales: SavedSale[],
   onToggleSaved: (sale: MappedSale) => void,
   onMoveSaved: (sale: MappedSale, direction: -1 | 1) => void,
+  onSetSavedPosition: (sale: MappedSale, position: number) => void,
 ) {
   const popup = document.createElement("div");
   popup.className = "map-popup";
@@ -133,8 +134,38 @@ function buildPopup(
 
       const orderLabel = document.createElement("span");
       orderLabel.className = "map-popup-order";
-      orderLabel.textContent = `Stop ${savedIndex + 1} in My Route`;
+      orderLabel.textContent = "Stop";
       routeOrder.append(orderLabel);
+
+      const orderInput = document.createElement("input");
+      orderInput.className = "map-popup-stop-input";
+      orderInput.type = "number";
+      orderInput.inputMode = "numeric";
+      orderInput.min = "1";
+      orderInput.max = String(savedSales.length);
+      orderInput.value = String(savedIndex + 1);
+      orderInput.setAttribute("aria-label", `Stop number for ${item.title}`);
+
+      const updatePosition = () => {
+        onSetSavedPosition(item, Number(orderInput.value));
+      };
+
+      orderInput.addEventListener("click", (event) => event.stopPropagation());
+      orderInput.addEventListener("change", updatePosition);
+      orderInput.addEventListener("blur", updatePosition);
+      orderInput.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+        if (event.key === "Enter") {
+          event.preventDefault();
+          orderInput.blur();
+        }
+      });
+      routeOrder.append(orderInput);
+
+      const orderTotal = document.createElement("span");
+      orderTotal.className = "map-popup-order";
+      orderTotal.textContent = `of ${savedSales.length} in My Route`;
+      routeOrder.append(orderTotal);
 
       const moveUp = document.createElement("button");
       moveUp.className = "map-popup-nudge";
@@ -301,6 +332,26 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         renderMarkersRef.current?.();
       }
 
+      function setSavedPosition(sale: MappedSale, position: number) {
+        const current = readSavedSales();
+        const index = current.findIndex((item) => sameSavedSale(item, sale));
+        if (index === -1 || !Number.isFinite(position)) return;
+
+        const targetIndex = Math.min(Math.max(Math.round(position) - 1, 0), current.length - 1);
+        if (targetIndex === index) return;
+
+        const next = [...current];
+        const [movedSale] = next.splice(index, 1);
+        next.splice(targetIndex, 0, movedSale);
+        writeSavedSales(next);
+        const nextCodes = new Set(next.map((item) => listingCode(item.slug)));
+        savedSalesRef.current = next;
+        savedCodesRef.current = nextCodes;
+        setSavedSales(next);
+        setSavedCodes(nextCodes);
+        renderMarkersRef.current?.();
+      }
+
       function addMarker(group: MappedSale[], latitude: number, longitude: number) {
         const sale = group[0];
         const latLng = L.latLng(latitude, longitude);
@@ -318,7 +369,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
           fillOpacity: 0.85,
         })
           .addTo(markerLayer)
-          .bindPopup(buildPopup(group, titleText, savedSalesRef.current, toggleSaved, moveSaved));
+          .bindPopup(buildPopup(group, titleText, savedSalesRef.current, toggleSaved, moveSaved, setSavedPosition));
       }
 
       function renderMarkersForZoom() {

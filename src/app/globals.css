@@ -1376,6 +1376,26 @@ h2 {
   font-weight: 850;
 }
 
+.map-popup-stop-input {
+  width: 52px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 4px 6px;
+  background: #ffffff;
+  color: #166534;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.map-popup-stop-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+  outline: none;
+}
+
 .map-popup-nudge {
   display: inline-grid;
   width: 26px;
