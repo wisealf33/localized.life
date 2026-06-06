@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as LeafletMap } from "leaflet";
+import type { SavedSale } from "./SaveSaleButton";
 
 export type MappedSale = {
   slug: string;
@@ -15,6 +16,34 @@ export type MappedSale = {
   longitude: number | null;
   locationPrecision?: "address" | "area" | null;
 };
+
+const savedRouteKey = "saletrail.savedSales";
+
+function readSavedSales(): SavedSale[] {
+  try {
+    return JSON.parse(window.localStorage.getItem(savedRouteKey) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function writeSavedSales(sales: SavedSale[]) {
+  window.localStorage.setItem(savedRouteKey, JSON.stringify(sales));
+  window.dispatchEvent(new Event("saletrail:saved"));
+}
+
+function listingCode(slug: string) {
+  return slug.split("/").pop()?.split("-").filter(Boolean).at(-1) || slug;
+}
+
+function sameSavedSale(left: Pick<SavedSale, "slug">, right: Pick<SavedSale, "slug">) {
+  return left.slug === right.slug || listingCode(left.slug) === listingCode(right.slug);
+}
+
+function savedCodeSet() {
+  if (typeof window === "undefined") return new Set<string>();
+  return new Set(readSavedSales().map((sale) => listingCode(sale.slug)));
+}
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -62,7 +91,7 @@ function offsetCoordinate(latitude: number, longitude: number, index: number, to
   };
 }
 
-function buildPopup(group: MappedSale[], titleText: string) {
+function buildPopup(group: MappedSale[], titleText: string, savedCodes: Set<string>, onToggleSaved: (sale: MappedSale) => void) {
   const popup = document.createElement("div");
   popup.className = "map-popup";
 
@@ -88,6 +117,15 @@ function buildPopup(group: MappedSale[], titleText: string) {
     const listingMeta = document.createElement("p");
     listingMeta.textContent = `${formatDate(item.startsAt)} · ${item.address}`;
     listing.append(listingMeta);
+
+    const routeButton = document.createElement("button");
+    const saved = savedCodes.has(listingCode(item.slug));
+    routeButton.className = saved ? "map-popup-route saved" : "map-popup-route";
+    routeButton.type = "button";
+    routeButton.textContent = saved ? "Remove from route" : "Add to route";
+    routeButton.addEventListener("click", () => onToggleSaved(item));
+    listing.append(routeButton);
+
     popup.append(listing);
   }
 
@@ -116,6 +154,9 @@ function groupSalesForZoom(sales: MappedSale[], zoom: number) {
 export function SaleMap({ sales }: { sales: MappedSale[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
+  const renderMarkersRef = useRef<(() => void) | null>(null);
+  const savedCodesRef = useRef<Set<string>>(new Set());
+  const [savedCodes, setSavedCodes] = useState<Set<string>>(() => savedCodeSet());
   const mappedSales = useMemo(
     () =>
       sales.filter(
@@ -127,6 +168,23 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
       ),
     [sales],
   );
+
+  useEffect(() => {
+    savedCodesRef.current = savedCodes;
+  }, [savedCodes]);
+
+  useEffect(() => {
+    function syncSaved() {
+      setSavedCodes(savedCodeSet());
+    }
+
+    window.addEventListener("saletrail:saved", syncSaved);
+    window.addEventListener("storage", syncSaved);
+    return () => {
+      window.removeEventListener("saletrail:saved", syncSaved);
+      window.removeEventListener("storage", syncSaved);
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || mappedSales.length === 0) return;
@@ -156,9 +214,21 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
 
       const bounds = L.latLngBounds([]);
 
+      function toggleSaved(sale: MappedSale) {
+        const current = readSavedSales();
+        const alreadySaved = current.some((item) => sameSavedSale(item, sale));
+        const next = alreadySaved ? current.filter((item) => !sameSavedSale(item, sale)) : [...current, sale];
+        writeSavedSales(next);
+        const nextCodes = new Set(next.map((item) => listingCode(item.slug)));
+        savedCodesRef.current = nextCodes;
+        setSavedCodes(nextCodes);
+        renderMarkersRef.current?.();
+      }
+
       function addMarker(group: MappedSale[], latitude: number, longitude: number) {
         const sale = group[0];
         const latLng = L.latLng(latitude, longitude);
+        const hasSavedStop = group.some((item) => savedCodesRef.current.has(listingCode(item.slug)));
         const titleText =
           group.length > 1
             ? `${sale.city || "Area"}${sale.state ? `, ${sale.state}` : ""}: ${group.length} sales`
@@ -166,13 +236,13 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
 
         L.circleMarker(latLng, {
           radius: group.length > 1 ? 14 : 9,
-          color: group.some((item) => item.locationPrecision === "area") ? "#f97373" : "#1d4ed8",
+          color: hasSavedStop ? "#15803d" : group.some((item) => item.locationPrecision === "area") ? "#f97373" : "#1d4ed8",
           weight: 3,
-          fillColor: "#3b82f6",
+          fillColor: hasSavedStop ? "#22c55e" : "#3b82f6",
           fillOpacity: 0.85,
         })
           .addTo(markerLayer)
-          .bindPopup(buildPopup(group, titleText));
+          .bindPopup(buildPopup(group, titleText, savedCodesRef.current, toggleSaved));
       }
 
       function renderMarkersForZoom() {
@@ -195,6 +265,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         }
       }
 
+      renderMarkersRef.current = renderMarkersForZoom;
       for (const sale of mappedSales) {
         bounds.extend(L.latLng(sale.latitude || 0, sale.longitude || 0));
       }
