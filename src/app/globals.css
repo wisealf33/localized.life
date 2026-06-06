@@ -101,6 +101,7 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  flex-wrap: nowrap;
   border-bottom: 1px solid var(--line);
   margin-bottom: 0;
   padding: 18px max(16px, calc((100vw - 1180px) / 2));
@@ -112,6 +113,8 @@ h2 {
   display: flex;
   align-items: baseline;
   gap: 10px;
+  flex: 0 1 auto;
+  min-width: 0;
   color: var(--foreground);
   text-decoration: none;
 }
@@ -147,6 +150,8 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
   gap: 10px;
 }
 
@@ -155,7 +160,9 @@ h2 {
   padding: 10px 12px;
   color: var(--muted);
   font-weight: 850;
+  line-height: 1;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .site-nav-link:hover,
@@ -605,6 +612,27 @@ h2 {
   width: fit-content;
 }
 
+.event-add-stop-panel {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.event-add-stop-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 140px;
+  gap: 14px;
+  align-items: end;
+}
+
+.event-add-stop-form .wide-field {
+  grid-column: 1 / -1;
+}
+
+.event-add-stop-form .button {
+  width: fit-content;
+}
+
 .event-attach-card {
   align-items: center;
 }
@@ -838,6 +866,60 @@ h2 {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 14px;
+}
+
+.sales-type-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: -6px 0 24px;
+}
+
+.sales-type-card {
+  display: grid;
+  gap: 6px;
+  min-height: 118px;
+  align-content: start;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #ffffff;
+  padding: 20px;
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+}
+
+.sales-type-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 16px 36px rgba(59, 130, 246, 0.16);
+}
+
+.sales-type-card span {
+  color: var(--foreground);
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.sales-type-card small {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.directory-section {
+  display: grid;
+  gap: 16px;
+  margin: 26px 0;
+}
+
+.featured-list {
+  margin-top: 0;
+}
+
+.community-wide-card {
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
 .filter-chip {
@@ -1478,7 +1560,8 @@ textarea {
 }
 
 .compact-button {
-  width: fit-content;
+  width: max-content;
+  white-space: nowrap;
 }
 
 .schedule-check {
@@ -2229,7 +2312,9 @@ code {
   .share-hero,
   .share-layout,
   .share-link-card,
-  .share-action-grid {
+  .share-action-grid,
+  .event-add-stop-form,
+  .sales-type-strip {
     grid-template-columns: 1fr;
   }
 
@@ -2330,7 +2415,7 @@ code {
   .site-nav .button,
   .site-nav-link {
     width: auto;
-    flex: 1 1 auto;
+    flex: 0 0 auto;
   }
 }
 

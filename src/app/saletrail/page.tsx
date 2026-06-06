@@ -7,15 +7,18 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UseLocationButton } from "@/components/UseLocationButton";
 import { rangeDates, rangeOptions, rangeParam } from "@/lib/dateFilters";
+import { eventPath, eventPreviewImagePath, formatEventHours } from "@/lib/events";
 import { categoryOptions, fullAddress, mapSearchUrl, saleDisplayTitle, salePath, splitSaleSchedule } from "@/lib/format";
 import { geocodeSearch } from "@/lib/geocode";
 import { pageMetadata } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
-import type { Sale } from "@/lib/types";
+import type { LocalEvent, Sale } from "@/lib/types";
 
 const publicSaleColumns =
   "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, claimed_at, created_at, updated_at";
+const publicEventColumns =
+  "id, slug, title, event_type, description, address_line, city, state, zip, county, latitude, longitude, starts_at, ends_at, event_schedule, source_url, source_platform, source_notes, status, visibility_status, created_at, updated_at";
 
 type Props = {
   searchParams: Promise<{
@@ -43,6 +46,23 @@ export const metadata: Metadata = pageMetadata({
 const pageSizes = [10, 20, 50];
 const radiusOptions = [10, 20, 30, 50];
 const eventOnlyCategories = ["Route sale", "Flea market", "Swap meet", "Farmers market", "Local market", "Vintage market"];
+const salesLandingCategories = [
+  {
+    label: "Garage Sales",
+    description: "Single-home, multi-family, church, moving, and rummage sale stops.",
+    href: "/saletrail?category=Garage%20sale",
+  },
+  {
+    label: "Community-Wides",
+    description: "City-wide, town-wide, neighborhood, and community sale hubs.",
+    href: "/saletrail?category=City-wide%20sale",
+  },
+  {
+    label: "Estate Sales",
+    description: "Estate and whole-house sales that shoppers can save to a route.",
+    href: "/saletrail?category=Estate%20sale",
+  },
+];
 
 function numberParam(value: string | undefined, fallback: number) {
   const parsed = Number(value);
@@ -228,6 +248,27 @@ async function getSales(
   };
 }
 
+async function getCommunityWideEvents(category?: string) {
+  if (!isSupabaseConfigured || (category && category !== "City-wide sale" && category !== "Community sale")) return [];
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("local_events")
+    .select(publicEventColumns)
+    .eq("visibility_status", "public")
+    .eq("status", "active")
+    .eq("event_type", "city_wide_garage_sale")
+    .gte("ends_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(12);
+
+  if (error) return [];
+  return ((data || []) as LocalEvent[]).sort((a, b) => {
+    const startCompare = new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+    if (startCompare !== 0) return startCompare;
+    return a.title.localeCompare(b.title);
+  });
+}
+
 function visibilityRank(sale: Pick<Sale, "source_type" | "claim_status">) {
   if (sale.source_type === "seller_created") return 0;
   if (sale.claim_status === "claimed") return 1;
@@ -302,6 +343,47 @@ function SaleCard({ sale }: { sale: Sale }) {
   );
 }
 
+function CommunityWideCard({ event }: { event: LocalEvent }) {
+  const image = eventPreviewImagePath(event);
+
+  return (
+    <article className="card sale-card community-wide-card">
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="sale-card-image" src={image} alt={`${event.title} preview`} />
+      ) : null}
+      <div className="card-top">
+        <span className="badge watch">Community-wide</span>
+        <span className="muted">
+          {event.city}, {event.state}
+        </span>
+      </div>
+      <h2>
+        <Link href={eventPath(event)}>{event.title}</Link>
+      </h2>
+      <div className="sale-card-schedule">
+        {formatEventHours(event)
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .slice(0, 4)
+          .map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+      </div>
+      {event.description ? <p>{event.description}</p> : null}
+      <div className="sale-card-footer">
+        <p className="tags">Community-wide sale · City-wide sale · Route builder</p>
+        <div className="card-actions">
+          <Link className="button primary" href={eventPath(event)}>
+            View community-wide
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default async function SaleTrailHome({ searchParams }: Props) {
   const params = await searchParams;
   const perPage = pageSizeParam(params.perPage);
@@ -325,6 +407,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
     radius,
     userLocation,
   );
+  const communityWideEvents = await getCommunityWideEvents(category);
   const hasSearchFilters = Boolean(params.q?.trim() || params.date || range || category || hasUserLocation || radius !== 10);
   const alternateResults =
     total === 0 && hasSearchFilters ? await getSales(undefined, undefined, undefined, undefined, 1, 6) : { sales: [], total: 0 };
@@ -339,9 +422,9 @@ export default async function SaleTrailHome({ searchParams }: Props) {
       <ConfigNotice />
       <section className="hero">
         <p className="eyebrow">SaleTrail by Localized.life</p>
-        <h1>Find garage sales and build a simple route.</h1>
+        <h1>Find sales and build a simple route.</h1>
         <p>
-          A clean directory for local garage sales, including seller-created listings and clearly labeled
+          A clean directory for garage sales, community-wide sales, estate sales, and clearly labeled
           community-added listings.
         </p>
         <div className="toolbar">
@@ -352,6 +435,15 @@ export default async function SaleTrailHome({ searchParams }: Props) {
             My route
           </Link>
         </div>
+      </section>
+
+      <section className="sales-type-strip" aria-label="Browse sale types">
+        {salesLandingCategories.map((item) => (
+          <Link className="sales-type-card" href={item.href} key={item.label}>
+            <span>{item.label}</span>
+            <small>{item.description}</small>
+          </Link>
+        ))}
       </section>
 
       <section className="panel">
@@ -430,6 +522,31 @@ export default async function SaleTrailHome({ searchParams }: Props) {
           </div>
         </form>
       </section>
+
+      {communityWideEvents.length > 0 ? (
+        <section className="directory-section">
+          <div className="directory-controls">
+            <div>
+              <p className="eyebrow">Community-Wide Sales</p>
+              <h2>City-wide and community-wide sale hubs</h2>
+            </div>
+            {category === "City-wide sale" ? (
+              <Link className="button" href="/saletrail">
+                View all sales
+              </Link>
+            ) : (
+              <Link className="button" href="/saletrail?category=City-wide%20sale">
+                View community-wides
+              </Link>
+            )}
+          </div>
+          <div className="list featured-list">
+            {communityWideEvents.map((event) => (
+              <CommunityWideCard event={event} key={event.id} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="directory-controls">
         <p className="muted">

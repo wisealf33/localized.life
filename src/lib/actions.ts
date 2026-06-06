@@ -1081,6 +1081,90 @@ export async function createLocalEvent(formData: FormData) {
   redirect(eventPath({ slug, city: address.city, state: address.state }));
 }
 
+export async function addHouseholdToCommunityWide(formData: FormData) {
+  const supabase = getSupabaseAdmin();
+  const eventId = required(formData, "event_id");
+
+  const { data: event, error: eventError } = await supabase
+    .from("local_events")
+    .select("id, title, slug, event_type, city, state, zip, starts_at, ends_at, event_schedule, visibility_status, status")
+    .eq("id", eventId)
+    .eq("event_type", "city_wide_garage_sale")
+    .eq("visibility_status", "public")
+    .eq("status", "active")
+    .single();
+
+  if (eventError || !event) throw new Error("Community-wide sale was not found.");
+
+  const address = {
+    address_line: required(formData, "address_line"),
+    city: event.city,
+    state: event.state,
+    zip: value(formData, "zip") || event.zip || "",
+  };
+  if (!address.zip) throw new Error("Add a ZIP code for this household stop.");
+
+  const existing = await supabase
+    .from("sales")
+    .select("slug, city, state")
+    .eq("event_id", event.id)
+    .eq("address_line", address.address_line)
+    .eq("city", address.city)
+    .eq("state", address.state)
+    .eq("zip", address.zip)
+    .limit(1);
+  if (existing.error) throw new Error(existing.error.message);
+  if (existing.data?.[0]) {
+    redirect(`${salePath(existing.data[0])}?already=1`);
+  }
+
+  const title = `${address.address_line} in ${address.city}, ${address.state} - Community-Wide Garage Sale`;
+  const slug = slugifyTitle(title);
+  const manageToken = randomToken();
+  const coordinates = await geocodeAddress(address);
+  const itemNotes = value(formData, "description");
+  const scheduleNote = value(formData, "schedule_note");
+  const saleSchedule = [event.event_schedule || `${event.title} event hours`, scheduleNote ? `Household note: ${scheduleNote}` : ""]
+    .filter(Boolean)
+    .join("\n");
+
+  const insertPayload: Record<string, unknown> = {
+    slug,
+    title,
+    description:
+      itemNotes ||
+      `Household stop added to ${event.title}. Save this stop to include it in your SaleTrail route.`,
+    ...address,
+    latitude: coordinates?.latitude ?? null,
+    longitude: coordinates?.longitude ?? null,
+    location_precision: coordinates?.precision ?? null,
+    starts_at: event.starts_at,
+    ends_at: event.ends_at,
+    sale_schedule: saleSchedule,
+    categories: ["Garage sale", "City-wide sale", "Community sale"],
+    status: "active",
+    source_type: "seller_created",
+    claim_status: "claimed",
+    visibility_status: "public",
+    source_notes: `Added directly by a household from the ${event.title} page.`,
+    event_id: event.id,
+    manage_token_hash: hashSecret(manageToken),
+  };
+
+  const { error } = await supabase.from("sales").insert(insertPayload);
+  if (error?.message.includes("location_precision")) {
+    const retry = await supabase.from("sales").insert(withoutLocationPrecision(insertPayload));
+    if (retry.error) throw new Error(retry.error.message);
+  } else if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(eventPath(event));
+  revalidatePath("/saletrail");
+  revalidatePath("/saletrail/map");
+  redirect(`${saleSharePath({ slug, city: address.city, state: address.state })}?manage=${manageToken}`);
+}
+
 export async function updateSaleEvent(formData: FormData) {
   await requireAdmin();
 
