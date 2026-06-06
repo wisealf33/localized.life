@@ -18,6 +18,7 @@ export type MappedSale = {
 };
 
 const savedRouteKey = "saletrail.savedSales";
+const notInterestedKey = "saletrail.notInterestedSales";
 
 function readSavedSales(): SavedSale[] {
   try {
@@ -29,6 +30,20 @@ function readSavedSales(): SavedSale[] {
 
 function writeSavedSales(sales: SavedSale[]) {
   window.localStorage.setItem(savedRouteKey, JSON.stringify(sales));
+  window.dispatchEvent(new Event("saletrail:saved"));
+}
+
+function readNotInterestedCodes() {
+  try {
+    const values = JSON.parse(window.localStorage.getItem(notInterestedKey) || "[]") as string[];
+    return new Set(values);
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function writeNotInterestedCodes(codes: Set<string>) {
+  window.localStorage.setItem(notInterestedKey, JSON.stringify(Array.from(codes)));
   window.dispatchEvent(new Event("saletrail:saved"));
 }
 
@@ -95,7 +110,9 @@ function buildPopup(
   group: MappedSale[],
   titleText: string,
   savedSales: SavedSale[],
+  notInterestedCodes: Set<string>,
   onToggleSaved: (sale: MappedSale) => void,
+  onToggleNotInterested: (sale: MappedSale) => void,
   onMoveSaved: (sale: MappedSale, direction: -1 | 1) => void,
   onSetSavedPosition: (sale: MappedSale, position: number) => void,
 ) {
@@ -127,6 +144,7 @@ function buildPopup(
 
     const savedIndex = savedSales.findIndex((savedSale) => sameSavedSale(savedSale, item));
     const saved = savedIndex !== -1;
+    const notInterested = notInterestedCodes.has(listingCode(item.slug));
 
     if (saved) {
       const routeOrder = document.createElement("div");
@@ -206,6 +224,18 @@ function buildPopup(
     });
     listing.append(routeButton);
 
+    if (!saved) {
+      const interestButton = document.createElement("button");
+      interestButton.className = notInterested ? "map-popup-interest ignored" : "map-popup-interest";
+      interestButton.type = "button";
+      interestButton.textContent = notInterested ? "Undo not interested" : "Not interested";
+      interestButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        onToggleNotInterested(item);
+      });
+      listing.append(interestButton);
+    }
+
     popup.append(listing);
   }
 
@@ -237,8 +267,12 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
   const renderMarkersRef = useRef<(() => void) | null>(null);
   const savedSalesRef = useRef<SavedSale[]>([]);
   const savedCodesRef = useRef<Set<string>>(new Set());
+  const notInterestedCodesRef = useRef<Set<string>>(new Set());
   const [savedSales, setSavedSales] = useState<SavedSale[]>(() => (typeof window === "undefined" ? [] : readSavedSales()));
   const [savedCodes, setSavedCodes] = useState<Set<string>>(() => savedCodeSet());
+  const [notInterestedCodes, setNotInterestedCodes] = useState<Set<string>>(() =>
+    typeof window === "undefined" ? new Set() : readNotInterestedCodes(),
+  );
   const mappedSales = useMemo(
     () =>
       sales.filter(
@@ -260,10 +294,15 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
   }, [savedSales]);
 
   useEffect(() => {
+    notInterestedCodesRef.current = notInterestedCodes;
+  }, [notInterestedCodes]);
+
+  useEffect(() => {
     function syncSaved() {
       const next = readSavedSales();
       setSavedSales(next);
       setSavedCodes(new Set(next.map((sale) => listingCode(sale.slug))));
+      setNotInterestedCodes(readNotInterestedCodes());
     }
 
     window.addEventListener("saletrail:saved", syncSaved);
@@ -308,10 +347,31 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         const next = alreadySaved ? current.filter((item) => !sameSavedSale(item, sale)) : [...current, sale];
         writeSavedSales(next);
         const nextCodes = new Set(next.map((item) => listingCode(item.slug)));
+        const nextNotInterestedCodes = readNotInterestedCodes();
+        if (!alreadySaved) {
+          nextNotInterestedCodes.delete(listingCode(sale.slug));
+          writeNotInterestedCodes(nextNotInterestedCodes);
+        }
         savedSalesRef.current = next;
         savedCodesRef.current = nextCodes;
+        notInterestedCodesRef.current = nextNotInterestedCodes;
         setSavedSales(next);
         setSavedCodes(nextCodes);
+        setNotInterestedCodes(nextNotInterestedCodes);
+        renderMarkersRef.current?.();
+      }
+
+      function toggleNotInterested(sale: MappedSale) {
+        const code = listingCode(sale.slug);
+        const next = new Set(readNotInterestedCodes());
+        if (next.has(code)) {
+          next.delete(code);
+        } else {
+          next.add(code);
+        }
+        writeNotInterestedCodes(next);
+        notInterestedCodesRef.current = next;
+        setNotInterestedCodes(next);
         renderMarkersRef.current?.();
       }
 
@@ -356,6 +416,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         const sale = group[0];
         const latLng = L.latLng(latitude, longitude);
         const hasSavedStop = group.some((item) => savedCodesRef.current.has(listingCode(item.slug)));
+        const ignored = !hasSavedStop && group.every((item) => notInterestedCodesRef.current.has(listingCode(item.slug)));
         const titleText =
           group.length > 1
             ? `${sale.city || "Area"}${sale.state ? `, ${sale.state}` : ""}: ${group.length} sales`
@@ -363,13 +424,24 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
 
         L.circleMarker(latLng, {
           radius: group.length > 1 ? 14 : 9,
-          color: hasSavedStop ? "#15803d" : group.some((item) => item.locationPrecision === "area") ? "#f97373" : "#1d4ed8",
+          color: hasSavedStop ? "#15803d" : ignored ? "#b91c1c" : "#1d4ed8",
           weight: 3,
-          fillColor: hasSavedStop ? "#22c55e" : "#3b82f6",
+          fillColor: hasSavedStop ? "#22c55e" : ignored ? "#ef4444" : "#3b82f6",
           fillOpacity: 0.85,
         })
           .addTo(markerLayer)
-          .bindPopup(buildPopup(group, titleText, savedSalesRef.current, toggleSaved, moveSaved, setSavedPosition));
+          .bindPopup(
+            buildPopup(
+              group,
+              titleText,
+              savedSalesRef.current,
+              notInterestedCodesRef.current,
+              toggleSaved,
+              toggleNotInterested,
+              moveSaved,
+              setSavedPosition,
+            ),
+          );
       }
 
       function renderMarkersForZoom() {

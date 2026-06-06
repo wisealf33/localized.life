@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { SaleMap } from "./SaleMap";
+import { SaleMap, type MappedSale } from "./SaleMap";
 import type { SavedSale } from "./SaveSaleButton";
 
 const key = "saletrail.savedSales";
@@ -34,7 +34,7 @@ function saveRoute(next: SavedSale[]) {
   window.dispatchEvent(new Event("saletrail:saved"));
 }
 
-export function RoutePlanner() {
+export function RoutePlanner({ allSales = [] }: { allSales?: MappedSale[] }) {
   const [sales, setSales] = useState<SavedSale[]>(() => {
     if (typeof window === "undefined") return [];
     return readSaved();
@@ -56,7 +56,18 @@ export function RoutePlanner() {
       })),
     [sales],
   );
-  const hasMappedStops = mappedSales.some((sale) => sale.latitude !== null && sale.longitude !== null);
+  const routeCodes = useMemo(() => new Set(mappedSales.map((sale) => sale.slug.split("/").pop()?.split("-").filter(Boolean).at(-1) || sale.slug)), [mappedSales]);
+  const mapSales = useMemo(() => {
+    const combined: MappedSale[] = [...mappedSales];
+    for (const sale of allSales) {
+      const code = sale.slug.split("/").pop()?.split("-").filter(Boolean).at(-1) || sale.slug;
+      if (!routeCodes.has(code) && !combined.some((item) => item.slug === sale.slug)) {
+        combined.push(sale);
+      }
+    }
+    return combined;
+  }, [allSales, mappedSales, routeCodes]);
+  const hasMappedStops = mapSales.some((sale) => sale.latitude !== null && sale.longitude !== null);
 
   useEffect(() => {
     const update = () => setSales(readSaved());
@@ -86,10 +97,11 @@ export function RoutePlanner() {
 
   return (
     <div className="stack">
+      {hasMappedStops ? <SaleMap sales={mapSales} /> : null}
       {sales.length === 0 ? (
         <div className="empty">
           <h2>No saved sales yet</h2>
-          <p>Save listings while browsing, then come back here to open your route in Google Maps.</p>
+          <p>Use the map above or browse the directory to add stops to your route.</p>
           <Link className="button" href="/saletrail">
             Browse sales
           </Link>
@@ -104,7 +116,6 @@ export function RoutePlanner() {
               Clear route
             </button>
           </div>
-          {hasMappedStops ? <SaleMap sales={mappedSales} /> : null}
           <div className="route-list">
             {sales.map((sale, index) => (
               <article className="card route-stop" key={sale.slug}>
