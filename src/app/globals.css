@@ -1363,6 +1363,40 @@ h2 {
   padding-top: 7px;
 }
 
+.map-popup-route-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.map-popup-order {
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.map-popup-nudge {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-popup-nudge:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .map-popup-route {
   width: fit-content;
   margin-top: 4px;

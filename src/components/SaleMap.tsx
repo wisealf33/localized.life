@@ -91,7 +91,13 @@ function offsetCoordinate(latitude: number, longitude: number, index: number, to
   };
 }
 
-function buildPopup(group: MappedSale[], titleText: string, savedCodes: Set<string>, onToggleSaved: (sale: MappedSale) => void) {
+function buildPopup(
+  group: MappedSale[],
+  titleText: string,
+  savedSales: SavedSale[],
+  onToggleSaved: (sale: MappedSale) => void,
+  onMoveSaved: (sale: MappedSale, direction: -1 | 1) => void,
+) {
   const popup = document.createElement("div");
   popup.className = "map-popup";
 
@@ -118,12 +124,55 @@ function buildPopup(group: MappedSale[], titleText: string, savedCodes: Set<stri
     listingMeta.textContent = `${formatDate(item.startsAt)} · ${item.address}`;
     listing.append(listingMeta);
 
+    const savedIndex = savedSales.findIndex((savedSale) => sameSavedSale(savedSale, item));
+    const saved = savedIndex !== -1;
+
+    if (saved) {
+      const routeOrder = document.createElement("div");
+      routeOrder.className = "map-popup-route-row";
+
+      const orderLabel = document.createElement("span");
+      orderLabel.className = "map-popup-order";
+      orderLabel.textContent = `Stop ${savedIndex + 1} in My Route`;
+      routeOrder.append(orderLabel);
+
+      const moveUp = document.createElement("button");
+      moveUp.className = "map-popup-nudge";
+      moveUp.type = "button";
+      moveUp.textContent = "↑";
+      moveUp.title = "Move earlier";
+      moveUp.setAttribute("aria-label", `Move ${item.title} earlier in route`);
+      moveUp.disabled = savedIndex === 0;
+      moveUp.addEventListener("click", (event) => {
+        event.stopPropagation();
+        onMoveSaved(item, -1);
+      });
+      routeOrder.append(moveUp);
+
+      const moveDown = document.createElement("button");
+      moveDown.className = "map-popup-nudge";
+      moveDown.type = "button";
+      moveDown.textContent = "↓";
+      moveDown.title = "Move later";
+      moveDown.setAttribute("aria-label", `Move ${item.title} later in route`);
+      moveDown.disabled = savedIndex === savedSales.length - 1;
+      moveDown.addEventListener("click", (event) => {
+        event.stopPropagation();
+        onMoveSaved(item, 1);
+      });
+      routeOrder.append(moveDown);
+
+      listing.append(routeOrder);
+    }
+
     const routeButton = document.createElement("button");
-    const saved = savedCodes.has(listingCode(item.slug));
     routeButton.className = saved ? "map-popup-route saved" : "map-popup-route";
     routeButton.type = "button";
     routeButton.textContent = saved ? "Remove from route" : "Add to route";
-    routeButton.addEventListener("click", () => onToggleSaved(item));
+    routeButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      onToggleSaved(item);
+    });
     listing.append(routeButton);
 
     popup.append(listing);
@@ -155,7 +204,9 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const renderMarkersRef = useRef<(() => void) | null>(null);
+  const savedSalesRef = useRef<SavedSale[]>([]);
   const savedCodesRef = useRef<Set<string>>(new Set());
+  const [savedSales, setSavedSales] = useState<SavedSale[]>(() => (typeof window === "undefined" ? [] : readSavedSales()));
   const [savedCodes, setSavedCodes] = useState<Set<string>>(() => savedCodeSet());
   const mappedSales = useMemo(
     () =>
@@ -174,8 +225,14 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
   }, [savedCodes]);
 
   useEffect(() => {
+    savedSalesRef.current = savedSales;
+  }, [savedSales]);
+
+  useEffect(() => {
     function syncSaved() {
-      setSavedCodes(savedCodeSet());
+      const next = readSavedSales();
+      setSavedSales(next);
+      setSavedCodes(new Set(next.map((sale) => listingCode(sale.slug))));
     }
 
     window.addEventListener("saletrail:saved", syncSaved);
@@ -220,7 +277,26 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         const next = alreadySaved ? current.filter((item) => !sameSavedSale(item, sale)) : [...current, sale];
         writeSavedSales(next);
         const nextCodes = new Set(next.map((item) => listingCode(item.slug)));
+        savedSalesRef.current = next;
         savedCodesRef.current = nextCodes;
+        setSavedSales(next);
+        setSavedCodes(nextCodes);
+        renderMarkersRef.current?.();
+      }
+
+      function moveSaved(sale: MappedSale, direction: -1 | 1) {
+        const current = readSavedSales();
+        const index = current.findIndex((item) => sameSavedSale(item, sale));
+        const nextIndex = index + direction;
+        if (index === -1 || nextIndex < 0 || nextIndex >= current.length) return;
+
+        const next = [...current];
+        [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+        writeSavedSales(next);
+        const nextCodes = new Set(next.map((item) => listingCode(item.slug)));
+        savedSalesRef.current = next;
+        savedCodesRef.current = nextCodes;
+        setSavedSales(next);
         setSavedCodes(nextCodes);
         renderMarkersRef.current?.();
       }
@@ -242,7 +318,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
           fillOpacity: 0.85,
         })
           .addTo(markerLayer)
-          .bindPopup(buildPopup(group, titleText, savedCodesRef.current, toggleSaved));
+          .bindPopup(buildPopup(group, titleText, savedSalesRef.current, toggleSaved, moveSaved));
       }
 
       function renderMarkersForZoom() {
