@@ -98,14 +98,28 @@ h2 {
 
 .site-header {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: center;
-  gap: 18px clamp(28px, 4vw, 58px);
+  grid-template-columns: 1fr;
+  gap: 12px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 0;
   padding: 18px max(16px, calc((100vw - 1180px) / 2));
   background: rgb(248 251 255 / 72%);
   backdrop-filter: blur(14px);
+}
+
+.site-header-main,
+.site-subnav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  width: 100%;
+}
+
+.site-subnav-row {
+  padding-top: 10px;
+  border-top: 1px solid rgb(216 227 240 / 72%);
 }
 
 .site-brand {
@@ -140,12 +154,13 @@ h2 {
 
 .site-product {
   flex: 0 0 auto;
-  border-left: 1px solid var(--line-strong);
-  padding-left: 10px;
+  border-left: 0;
+  padding-left: 0;
   color: var(--muted);
   font-size: 0.95rem;
   font-weight: 850;
   line-height: 1;
+  text-decoration: none;
   white-space: nowrap;
 }
 
@@ -156,6 +171,14 @@ h2 {
   min-width: 0;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.site-global-nav {
+  flex: 0 1 auto;
+}
+
+.site-product-nav {
+  flex: 1 1 auto;
 }
 
 .site-nav-link {
@@ -172,6 +195,23 @@ h2 {
 .site-nav-link.active {
   background: var(--primary-soft);
   color: var(--primary-dark);
+}
+
+.site-subnav-link {
+  border-radius: 999px;
+  padding: 9px 11px;
+  color: var(--muted);
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-subnav-link:hover,
+.site-subnav-link.active {
+  background: #ffffff;
+  color: var(--primary-dark);
+  box-shadow: 0 8px 18px rgb(59 130 246 / 10%);
 }
 
 .front-hero {
@@ -2482,12 +2522,14 @@ code {
 }
 
 @media (max-width: 1100px) {
-  .site-header {
-    grid-template-columns: 1fr;
-    justify-items: start;
+  .site-header-main,
+  .site-subnav-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .site-nav {
+  .site-global-nav,
+  .site-product-nav {
     justify-content: flex-start;
     width: 100%;
   }
@@ -2571,19 +2613,17 @@ code {
   }
 
   .site-header {
-    align-items: start;
-    gap: 14px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
 
-  .site-brand {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  .site-header-main,
+  .site-subnav-row {
+    gap: 10px;
   }
 
   .site-product {
-    border-left: 0;
-    padding-left: 0;
+    font-size: 0.88rem;
   }
 
   .site-nav {

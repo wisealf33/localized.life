@@ -7,43 +7,56 @@ type SiteHeaderProps = {
   product?: "SaleTrail" | "Harvest" | "Project hub";
 };
 
-function navClass(active: ActiveNav | undefined, item: ActiveNav) {
-  return active === item ? "site-nav-link active" : "site-nav-link";
+function navClass(active: ActiveNav | undefined, item: ActiveNav, baseClass = "site-nav-link") {
+  return active === item ? `${baseClass} active` : baseClass;
 }
 
 export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
+  const showSaleTrailNav = product === "SaleTrail";
+  const saleTrailActive = showSaleTrailNav && active !== "home" && active !== "harvest";
+
   return (
     <header className="site-header">
-      <Link className="site-brand" href="/">
-        <span className="site-wordmark">Localized.life</span>
-        <span className="site-product">{product}</span>
-      </Link>
-      <nav className="site-nav" aria-label="Localized.life navigation">
-        <Link className={navClass(active, "harvest")} href="/harvest">
-          Harvest
+      <div className="site-header-main">
+        <Link className="site-brand" href="/">
+          <span className="site-wordmark">Localized.life</span>
         </Link>
-        <Link className={navClass(active, "find")} href="/saletrail">
-          Find sales
-        </Link>
-        <Link className={navClass(active, "events")} href="/saletrail/events">
-          Events
-        </Link>
-        <Link className={navClass(active, "map")} href="/saletrail/map">
-          Map
-        </Link>
-        <Link
-          className={active === "list" ? "button primary compact-button active" : "button primary compact-button"}
-          href="/saletrail/new"
-        >
-          List a sale
-        </Link>
-        <Link
-          className={active === "route" ? "button compact-button active" : "button compact-button"}
-          href="/saletrail/route"
-        >
-          My route
-        </Link>
-      </nav>
+        <nav className="site-nav site-global-nav" aria-label="Localized.life navigation">
+          <Link className={saleTrailActive ? "site-nav-link active" : "site-nav-link"} href="/saletrail">
+            SaleTrail
+          </Link>
+          <Link className={navClass(active, "harvest")} href="/harvest">
+            Harvest
+          </Link>
+        </nav>
+      </div>
+      {showSaleTrailNav ? (
+        <div className="site-subnav-row">
+          <Link className="site-product" href="/saletrail">
+            SaleTrail
+          </Link>
+          <nav className="site-nav site-product-nav" aria-label="SaleTrail navigation">
+            <Link className={navClass(active, "find", "site-subnav-link")} href="/saletrail">
+              Find sales
+            </Link>
+            <Link className={navClass(active, "events", "site-subnav-link")} href="/saletrail/events">
+              Events
+            </Link>
+            <Link className={navClass(active, "map", "site-subnav-link")} href="/saletrail/map">
+              Map
+            </Link>
+            <Link
+              className={active === "list" ? "button primary compact-button active" : "button primary compact-button"}
+              href="/saletrail/new"
+            >
+              List a sale
+            </Link>
+            <Link className={active === "route" ? "button compact-button active" : "button compact-button"} href="/saletrail/route">
+              My route
+            </Link>
+          </nav>
+        </div>
+      ) : null}
     </header>
   );
 }
