@@ -1,6 +1,17 @@
 import Link from "next/link";
 
-type ActiveNav = "home" | "harvest" | "find" | "events" | "map" | "list" | "route";
+type ActiveNav =
+  | "home"
+  | "market"
+  | "local-events"
+  | "saletrail"
+  | "harvest"
+  | "services"
+  | "find"
+  | "events"
+  | "map"
+  | "list"
+  | "route";
 
 type SiteHeaderProps = {
   active?: ActiveNav;
@@ -13,7 +24,7 @@ function navClass(active: ActiveNav | undefined, item: ActiveNav, baseClass = "s
 
 export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
   const showSaleTrailNav = product === "SaleTrail";
-  const saleTrailActive = showSaleTrailNav && active !== "home" && active !== "harvest";
+  const saleTrailActive = showSaleTrailNav || active === "saletrail";
 
   return (
     <header className="site-header">
@@ -22,11 +33,20 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
           <span className="site-wordmark">Localized.life</span>
         </Link>
         <nav className="site-nav site-global-nav" aria-label="Localized.life navigation">
+          <Link className={navClass(active, "market")} href="/local-market">
+            Local Market
+          </Link>
+          <Link className={navClass(active, "local-events")} href="/local-events">
+            Local Events
+          </Link>
           <Link className={saleTrailActive ? "site-nav-link active" : "site-nav-link"} href="/saletrail">
             SaleTrail
           </Link>
           <Link className={navClass(active, "harvest")} href="/harvest">
             Harvest
+          </Link>
+          <Link className={navClass(active, "services")} href="/local-services">
+            Local Services
           </Link>
         </nav>
       </div>
@@ -40,7 +60,7 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
               Find sales
             </Link>
             <Link className={navClass(active, "events", "site-subnav-link")} href="/saletrail/events">
-              Events
+              Sale events
             </Link>
             <Link className={navClass(active, "map", "site-subnav-link")} href="/saletrail/map">
               Map

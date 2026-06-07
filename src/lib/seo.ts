@@ -9,7 +9,7 @@ export const siteName = "Localized.life";
 export const productName = "SaleTrail";
 export const defaultTitle = "Localized.life | Local tools for real-world community";
 export const defaultDescription =
-  "Localized.life builds practical local tools, including SaleTrail for garage sales and Harvest for mapping local food abundance.";
+  "Localized.life is a practical local operating system for finding useful real-world community: local goods, events, sales, abundance, services, and local knowledge.";
 
 export function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life").replace(/\/$/, "");

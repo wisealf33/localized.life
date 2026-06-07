@@ -5,9 +5,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Localized.life | Local tools for real-world community",
+  title: "Localized.life | Useful local life outside noisy feeds",
   description:
-    "Localized.life is building practical local tools, including SaleTrail for garage sales and Harvest for mapping local food abundance.",
+    "Localized.life is a practical local operating system for finding useful real-world community: local goods, events, sales, abundance, services, and local knowledge.",
   path: "/",
   image: "/og/default-saletrail.jpg",
 });
@@ -29,43 +29,106 @@ export default function Home() {
           <p className="front-badge">A neighborhood operating system</p>
           <h1>Useful local life, pulled out of the noise.</h1>
           <p className="lede">
-            Localized.life turns the scattered stuff of a place into tools people can act on: weekend sales worth
-            routing, harvestable trees worth mapping, and local knowledge that should not disappear in a feed.
+            Localized.life is a practical local operating system for finding useful real-world community: local goods,
+            events, sales, abundance, services, and local knowledge.
           </p>
           <div className="toolbar">
             <Link className="button primary" href="/saletrail">
-              Open SaleTrail
+              Find sales
             </Link>
-            <Link className="button" href="/harvest">
-              Open Harvest
+            <Link className="button" href="/local-market">
+              Explore Local Market
             </Link>
           </div>
           <div className="front-signal-row" aria-label="Localized.life project signals">
-            <span>Garage sales</span>
-            <span>Fruit trees</span>
-            <span>Routes</span>
-            <span>Local abundance</span>
+            <span>Local goods</span>
+            <span>Events</span>
+            <span>Sale routes</span>
+            <span>Abundance</span>
+            <span>Services</span>
           </div>
         </div>
 
       </section>
 
-      <section className="front-product-band" aria-label="Localized.life tools">
+      <section className="front-product-band front-door-band" aria-label="Localized.life public doors">
         <article className="front-product-card">
-          <p className="front-badge">Garage sales</p>
+          <p className="front-badge">Local goods</p>
+          <h2>Local Market</h2>
+          <p>Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, and neighborhood makers.</p>
+          <div className="tag-row">
+            <span>Eggs</span>
+            <span>Honey</span>
+            <span>Produce</span>
+            <span>Handmade</span>
+            <span>Farmstands</span>
+            <span>Cottage Food</span>
+          </div>
+          <Link className="button" href="/local-market">
+            View Local Market
+          </Link>
+        </article>
+
+        <article className="front-product-card">
+          <p className="front-badge">Things happening</p>
+          <h2>Local Events</h2>
+          <p>Find farmers markets, craft fairs, vendor pop-ups, workshops, festivals, plant swaps, and community gatherings.</p>
+          <div className="tag-row">
+            <span>Farmers markets</span>
+            <span>Craft fairs</span>
+            <span>Pop-ups</span>
+            <span>Workshops</span>
+            <span>Plant swaps</span>
+          </div>
+          <Link className="button" href="/local-events">
+            View Local Events
+          </Link>
+        </article>
+
+        <article className="front-product-card">
+          <p className="front-badge">Local sales</p>
           <h2>SaleTrail</h2>
-          <p>A cleaner way to list sales, find nearby stops, and turn a messy Saturday plan into a route.</p>
+          <p>Find garage sales, estate sales, rummage sales, moving sales, and build a useful weekend route.</p>
+          <div className="tag-row">
+            <span>Garage sales</span>
+            <span>Estate sales</span>
+            <span>Rummage sales</span>
+            <span>Routes</span>
+          </div>
           <Link className="button primary" href="/saletrail">
-            Find garage sales
+            Open SaleTrail
           </Link>
         </article>
 
         <article className="front-product-card harvest-teaser-card">
-          <p className="front-badge">Food abundance</p>
+          <p className="front-badge">Local abundance</p>
           <h2>Harvest</h2>
-          <p>A registry for fruit trees, nut trees, berry bushes, and the future crews that can help share them.</p>
+          <p>Map fruit trees, gardens, seed sharing, gleaning opportunities, and local food abundance.</p>
+          <div className="tag-row">
+            <span>Fruit trees</span>
+            <span>Gardens</span>
+            <span>Seeds</span>
+            <span>Gleaning</span>
+            <span>Pawpaws</span>
+          </div>
           <Link className="button" href="/harvest">
             Explore Harvest
+          </Link>
+        </article>
+
+        <article className="front-product-card">
+          <p className="front-badge">Practical help</p>
+          <h2>Local Services</h2>
+          <p>Find nearby people offering cleaning, yard help, repairs, hauling, garden help, and other useful local services.</p>
+          <div className="tag-row">
+            <span>Cleaning</span>
+            <span>Handyman</span>
+            <span>Yard help</span>
+            <span>Hauling</span>
+            <span>Garden help</span>
+          </div>
+          <Link className="button" href="/local-services">
+            View Local Services
           </Link>
         </article>
       </section>
@@ -79,32 +142,32 @@ export default function Home() {
           <p>
             Localized.life is a growing home for practical local tools: small systems that help neighbors find useful
             things nearby, organize what is already happening, and turn scattered local knowledge into something easier
-            to act on.
+            to act on without relying on noisy feeds.
           </p>
           <aside className="front-field-note" aria-label="Localized.life motto">
-            <strong>Start small. Make it findable. Help it move.</strong>
-            <span>That is the shape of both SaleTrail and Harvest.</span>
+            <strong>Simple public doors. Flexible connected profiles.</strong>
+            <span>People, farms, makers, organizers, services, and places should be able to appear where they fit.</span>
           </aside>
         </div>
       </section>
 
       <section className="front-tool-section">
         <div>
-          <p className="front-badge">Project areas</p>
-          <h2>SaleTrail and Harvest</h2>
+          <p className="front-badge">How it connects</p>
+          <h2>Not one rigid folder tree.</h2>
         </div>
         <div className="tool-card-grid">
           <article className="tool-card">
-            <h3>SaleTrail sellers</h3>
-            <p>Create one listing, get a flyer, QR code, and share-ready text for garage sale promotion.</p>
+            <h3>Local Profiles</h3>
+            <p>A maker, farm, church, service provider, organizer, or farmstand can become one reusable local profile.</p>
           </article>
           <article className="tool-card">
-            <h3>SaleTrail shoppers</h3>
-            <p>Find nearby garage sales, save favorites, and build a simple route.</p>
+            <h3>Connected listings</h3>
+            <p>A profile can connect to goods, events, sales, harvest items, or services when those pathways make sense.</p>
           </article>
           <article className="tool-card">
-            <h3>Harvest communities</h3>
-            <p>Map harvestable plants, build volunteer capacity, and prepare for local food sharing.</p>
+            <h3>Build in steps</h3>
+            <p>SaleTrail works now. Local Market, Local Services, and broader Events can grow without forcing Harvest to carry everything.</p>
           </article>
         </div>
       </section>
