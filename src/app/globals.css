@@ -1290,6 +1290,30 @@ h2 {
   gap: 14px;
 }
 
+.route-start-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.route-start-card h2 {
+  margin-bottom: 6px;
+}
+
+.route-start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.route-start-status {
+  margin-top: 8px;
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+
 .route-stop-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2486,6 +2510,7 @@ code {
   .share-action-grid,
   .event-add-stop-form,
   .event-stop-list,
+  .route-start-card,
   .sales-type-strip {
     grid-template-columns: 1fr;
   }
@@ -2575,6 +2600,7 @@ code {
   .feedback-panel,
   .outreach-note-form,
   .outreach-actions,
+  .route-start-actions,
   .inline-form {
     align-items: stretch;
     flex-direction: column;

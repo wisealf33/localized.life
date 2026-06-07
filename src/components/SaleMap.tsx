@@ -17,6 +17,12 @@ export type MappedSale = {
   locationPrecision?: "address" | "area" | null;
 };
 
+export type StartLocation = {
+  label: string;
+  latitude: number;
+  longitude: number;
+};
+
 const savedRouteKey = "saletrail.savedSales";
 const notInterestedKey = "saletrail.notInterestedSales";
 
@@ -261,7 +267,7 @@ function groupSalesForZoom(sales: MappedSale[], zoom: number) {
   return Array.from(groups.values());
 }
 
-export function SaleMap({ sales }: { sales: MappedSale[] }) {
+export function SaleMap({ sales, startLocation = null }: { sales: MappedSale[]; startLocation?: StartLocation | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const renderMarkersRef = useRef<(() => void) | null>(null);
@@ -327,7 +333,9 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
       }
 
       const firstSale = mappedSales[0];
-      const center = [firstSale.latitude || 41.5, firstSale.longitude || -87.7] as [number, number];
+      const center = startLocation
+        ? ([startLocation.latitude, startLocation.longitude] as [number, number])
+        : ([firstSale.latitude || 41.5, firstSale.longitude || -87.7] as [number, number]);
       const map = L.map(containerRef.current, {
         scrollWheelZoom: false,
       }).setView(center, 10);
@@ -446,6 +454,26 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
 
       function renderMarkersForZoom() {
         markerLayer.clearLayers();
+        if (startLocation) {
+          const startPopup = document.createElement("div");
+          startPopup.className = "map-popup";
+          const startTitle = document.createElement("strong");
+          startTitle.textContent = "Starting point";
+          const startLabel = document.createElement("p");
+          startLabel.textContent = startLocation.label;
+          startPopup.append(startTitle, startLabel);
+
+          L.circleMarker(L.latLng(startLocation.latitude, startLocation.longitude), {
+            radius: 10,
+            color: "#b45309",
+            weight: 3,
+            fillColor: "#f59e0b",
+            fillOpacity: 0.95,
+          })
+            .addTo(markerLayer)
+            .bindPopup(startPopup);
+        }
+
         const zoom = map.getZoom();
         const groups = groupSalesForZoom(mappedSales, zoom);
         const splitOverlappingPins = zoom >= 15;
@@ -465,6 +493,9 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
       }
 
       renderMarkersRef.current = renderMarkersForZoom;
+      if (startLocation) {
+        bounds.extend(L.latLng(startLocation.latitude, startLocation.longitude));
+      }
       for (const sale of mappedSales) {
         bounds.extend(L.latLng(sale.latitude || 0, sale.longitude || 0));
       }
@@ -486,7 +517,7 @@ export function SaleMap({ sales }: { sales: MappedSale[] }) {
         mapRef.current = null;
       }
     };
-  }, [mappedSales]);
+  }, [mappedSales, startLocation]);
 
   if (mappedSales.length === 0) {
     return (
