@@ -101,8 +101,11 @@ h2 {
   grid-template-columns: 1fr;
   gap: 12px;
   border-bottom: 1px solid var(--line);
+  width: 100vw;
+  margin-right: calc(50% - 50vw);
   margin-bottom: 0;
-  padding: 18px max(16px, calc((100vw - 1180px) / 2));
+  margin-left: calc(50% - 50vw);
+  padding: 18px 0;
   background: rgb(248 251 255 / 72%);
   backdrop-filter: blur(14px);
 }
@@ -113,8 +116,9 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
   min-width: 0;
-  width: 100%;
 }
 
 .site-subnav-row {
@@ -1875,6 +1879,11 @@ textarea {
   margin: 0 auto;
   border-bottom: 0;
   padding: 14px 0;
+}
+
+.harvest-header-wrap .site-header-main,
+.harvest-header-wrap .site-subnav-row {
+  width: 100%;
 }
 
 .harvest-header-wrap .site-nav-link:hover,
