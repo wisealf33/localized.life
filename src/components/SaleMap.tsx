@@ -30,7 +30,7 @@ function readSavedSales(): SavedSale[] {
 
 function writeSavedSales(sales: SavedSale[]) {
   window.localStorage.setItem(savedRouteKey, JSON.stringify(sales));
-  window.dispatchEvent(new Event("saletrail:saved"));
+  window.dispatchEvent(new CustomEvent("saletrail:saved", { detail: { source: "route" } }));
 }
 
 function readNotInterestedCodes() {
@@ -44,7 +44,7 @@ function readNotInterestedCodes() {
 
 function writeNotInterestedCodes(codes: Set<string>) {
   window.localStorage.setItem(notInterestedKey, JSON.stringify(Array.from(codes)));
-  window.dispatchEvent(new Event("saletrail:saved"));
+  window.dispatchEvent(new CustomEvent("saletrail:saved", { detail: { source: "interest" } }));
 }
 
 function listingCode(slug: string) {
