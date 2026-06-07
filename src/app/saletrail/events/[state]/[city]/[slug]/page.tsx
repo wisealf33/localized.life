@@ -122,45 +122,6 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       </section>
 
-      {event.event_type === "city_wide_garage_sale" ? (
-        <section className="panel event-add-stop-panel">
-          <div>
-            <p className="eyebrow">Add a household</p>
-            <h2>Add your address to this community-wide sale</h2>
-            <p className="muted">
-              If your home is participating but is not listed here yet, add it to the SaleTrail list so shoppers can
-              save it to their route.
-            </p>
-          </div>
-          <form action={addHouseholdToCommunityWide} className="event-add-stop-form">
-            <input name="event_id" type="hidden" value={event.id} />
-            <label>
-              Street address
-              <input name="address_line" placeholder={`123 Main St, ${event.city}`} required />
-            </label>
-            <label>
-              ZIP code
-              <input name="zip" defaultValue={event.zip || ""} placeholder="ZIP code" required />
-            </label>
-            <label className="wide-field">
-              What are you selling?
-              <textarea
-                name="description"
-                rows={3}
-                placeholder="Kids clothes, tools, furniture, home goods, books..."
-              />
-            </label>
-            <label className="wide-field">
-              Hours note, if different
-              <input name="schedule_note" placeholder="Example: Saturday only, 9 AM-2 PM" />
-            </label>
-            <button className="button primary" type="submit">
-              Add my household
-            </button>
-          </form>
-        </section>
-      ) : null}
-
       {sales.length ? (
         <section className="panel stack">
           <div>
@@ -207,6 +168,52 @@ export default async function EventDetailPage({ params }: Props) {
           <p>Admin can attach household listings to this event from the admin page.</p>
         </section>
       )}
+
+      {event.event_type === "city_wide_garage_sale" ? (
+        <section className="panel event-add-stop-panel">
+          <details className="event-add-stop-details">
+            <summary>
+              <span>
+                <span className="eyebrow">Add a household</span>
+                <strong>Add your address to this community-wide sale</strong>
+              </span>
+              <span className="summary-button">Open form</span>
+            </summary>
+            <div className="event-add-stop-intro">
+              <p className="muted">
+                If your home is participating but is not listed here yet, add it to the SaleTrail list so shoppers can
+                save it to their route.
+              </p>
+            </div>
+            <form action={addHouseholdToCommunityWide} className="event-add-stop-form">
+              <input name="event_id" type="hidden" value={event.id} />
+              <label>
+                Street address
+                <input name="address_line" placeholder={`123 Main St, ${event.city}`} required />
+              </label>
+              <label>
+                ZIP code
+                <input name="zip" defaultValue={event.zip || ""} placeholder="ZIP code" required />
+              </label>
+              <label className="wide-field">
+                What are you selling?
+                <textarea
+                  name="description"
+                  rows={3}
+                  placeholder="Kids clothes, tools, furniture, home goods, books..."
+                />
+              </label>
+              <label className="wide-field">
+                Hours note, if different
+                <input name="schedule_note" placeholder="Example: Saturday only, 9 AM-2 PM" />
+              </label>
+              <button className="button primary" type="submit">
+                Add my household
+              </button>
+            </form>
+          </details>
+        </section>
+      ) : null}
     </main>
   );
 }

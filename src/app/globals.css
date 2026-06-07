@@ -617,8 +617,54 @@ h2 {
 
 .event-add-stop-panel {
   display: grid;
-  gap: 18px;
-  margin-bottom: 24px;
+  gap: 0;
+  margin-top: 24px;
+}
+
+.event-add-stop-details {
+  display: grid;
+  gap: 16px;
+}
+
+.event-add-stop-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.event-add-stop-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.event-add-stop-details summary strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--foreground);
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  line-height: 1.15;
+}
+
+.event-add-stop-details[open] .summary-button {
+  background: #eff6ff;
+  color: var(--primary-strong);
+}
+
+.summary-button {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #ffffff;
+  color: var(--foreground);
+  font-weight: 850;
+  box-shadow: var(--shadow-soft);
+}
+
+.event-add-stop-intro {
+  margin-top: 18px;
 }
 
 .event-add-stop-form {
@@ -626,6 +672,7 @@ h2 {
   grid-template-columns: minmax(180px, 1fr) 140px;
   gap: 14px;
   align-items: end;
+  margin-top: 14px;
 }
 
 .event-add-stop-form .wide-field {
