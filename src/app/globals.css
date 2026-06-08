@@ -337,8 +337,16 @@ h2 {
 }
 
 .front-door-band {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: stretch;
+}
+
+.front-door-band .front-product-card {
+  grid-column: span 2;
+}
+
+.front-door-band .front-feature-card {
+  grid-column: span 3;
 }
 
 .front-door-intro {
@@ -2640,6 +2648,11 @@ code {
 
   .front-product-band {
     margin-top: 18px;
+  }
+
+  .front-door-band .front-product-card,
+  .front-door-band .front-feature-card {
+    grid-column: auto;
   }
 
   .front-door-intro h2 {

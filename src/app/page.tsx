@@ -61,6 +61,37 @@ export default function Home() {
           </p>
         </div>
 
+        <article className="front-product-card front-feature-card">
+          <p className="front-badge">Local sales</p>
+          <h2>SaleTrail</h2>
+          <p>Find garage sales, estate sales, rummage sales, moving sales, and build a useful weekend route.</p>
+          <div className="tag-row">
+            <span>Garage sales</span>
+            <span>Estate sales</span>
+            <span>Rummage sales</span>
+            <span>Routes</span>
+          </div>
+          <Link className="button primary" href="/saletrail">
+            Open SaleTrail
+          </Link>
+        </article>
+
+        <article className="front-product-card front-feature-card harvest-teaser-card">
+          <p className="front-badge">Local abundance</p>
+          <h2>Harvest</h2>
+          <p>Map fruit trees, gardens, seed sharing, gleaning opportunities, and local food abundance.</p>
+          <div className="tag-row">
+            <span>Fruit trees</span>
+            <span>Gardens</span>
+            <span>Seeds</span>
+            <span>Gleaning</span>
+            <span>Pawpaws</span>
+          </div>
+          <Link className="button" href="/harvest">
+            Explore Harvest
+          </Link>
+        </article>
+
         <article className="front-product-card">
           <p className="front-badge">Local goods</p>
           <h2>Local Market</h2>
@@ -91,37 +122,6 @@ export default function Home() {
           </div>
           <Link className="button" href="/local-events">
             View Local Events
-          </Link>
-        </article>
-
-        <article className="front-product-card">
-          <p className="front-badge">Local sales</p>
-          <h2>SaleTrail</h2>
-          <p>Find garage sales, estate sales, rummage sales, moving sales, and build a useful weekend route.</p>
-          <div className="tag-row">
-            <span>Garage sales</span>
-            <span>Estate sales</span>
-            <span>Rummage sales</span>
-            <span>Routes</span>
-          </div>
-          <Link className="button primary" href="/saletrail">
-            Open SaleTrail
-          </Link>
-        </article>
-
-        <article className="front-product-card harvest-teaser-card">
-          <p className="front-badge">Local abundance</p>
-          <h2>Harvest</h2>
-          <p>Map fruit trees, gardens, seed sharing, gleaning opportunities, and local food abundance.</p>
-          <div className="tag-row">
-            <span>Fruit trees</span>
-            <span>Gardens</span>
-            <span>Seeds</span>
-            <span>Gleaning</span>
-            <span>Pawpaws</span>
-          </div>
-          <Link className="button" href="/harvest">
-            Explore Harvest
           </Link>
         </article>
 
