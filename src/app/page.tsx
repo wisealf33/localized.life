@@ -52,6 +52,15 @@ export default function Home() {
       </section>
 
       <section className="front-product-band front-door-band" aria-label="Localized.life public doors">
+        <div className="front-door-intro">
+          <p className="front-badge">Start here</p>
+          <h2>Five clear doors into local life.</h2>
+          <p>
+            Each area has its own purpose, but the pieces can connect later through reusable local profiles, listings,
+            events, and places.
+          </p>
+        </div>
+
         <article className="front-product-card">
           <p className="front-badge">Local goods</p>
           <h2>Local Market</h2>

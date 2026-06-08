@@ -296,9 +296,10 @@ h2 {
   display: grid;
   gap: 16px;
   align-content: start;
+  grid-template-rows: auto auto minmax(86px, auto) 1fr auto;
   border: 1px solid rgb(255 255 255 / 24%);
   border-radius: 8px;
-  padding: clamp(20px, 3vw, 26px);
+  padding: clamp(22px, 3vw, 30px);
   background: rgb(255 255 255 / 90%);
   box-shadow: 0 22px 48px rgb(7 14 24 / 20%);
   backdrop-filter: blur(18px);
@@ -315,11 +316,14 @@ h2 {
 
 .front-product-card h2 {
   margin-bottom: 0;
-  font-size: 2.15rem;
+  font-size: clamp(1.95rem, 2.5vw, 2.55rem);
+  line-height: 1.05;
 }
 
 .front-product-card p:not(.front-badge) {
-  line-height: 1.45;
+  color: var(--foreground);
+  font-size: 1.02rem;
+  line-height: 1.55;
 }
 
 .front-product-band {
@@ -333,7 +337,37 @@ h2 {
 }
 
 .front-door-band {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+  align-items: stretch;
+}
+
+.front-door-intro {
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+  max-width: 760px;
+  margin-bottom: 2px;
+  border: 1px solid rgb(216 227 240 / 82%);
+  border-radius: 8px;
+  padding: clamp(20px, 3vw, 28px);
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 22px 48px rgb(7 14 24 / 18%);
+  backdrop-filter: blur(18px);
+}
+
+.front-door-intro h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+}
+
+.front-door-intro p:not(.front-badge) {
+  max-width: 680px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.55;
 }
 
 .harvest-teaser-card {
@@ -383,6 +417,7 @@ h2 {
   flex-wrap: wrap;
   gap: 8px;
   align-content: start;
+  align-self: start;
 }
 
 .tag-row span {
@@ -2605,6 +2640,16 @@ code {
 
   .front-product-band {
     margin-top: 18px;
+  }
+
+  .front-door-intro h2 {
+    color: var(--foreground);
+    text-shadow: none;
+  }
+
+  .front-door-intro p:not(.front-badge) {
+    color: var(--muted);
+    text-shadow: none;
   }
 
   .harvest-header-wrap {
