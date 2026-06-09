@@ -8,7 +8,6 @@ type ActiveNav =
   | "harvest"
   | "services"
   | "find"
-  | "events"
   | "map"
   | "list"
   | "route";
@@ -58,9 +57,6 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
           <nav className="site-nav site-product-nav" aria-label="SaleTrail navigation">
             <Link className={navClass(active, "find", "site-subnav-link")} href="/saletrail">
               Find sales
-            </Link>
-            <Link className={navClass(active, "events", "site-subnav-link")} href="/saletrail/events">
-              Sale events
             </Link>
             <Link className={navClass(active, "map", "site-subnav-link")} href="/saletrail/map">
               Map

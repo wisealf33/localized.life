@@ -17,7 +17,7 @@ export function eventTypeLabel(type: LocalEventType) {
 }
 
 export function eventPath(event: Pick<LocalEvent, "slug" | "city" | "state">) {
-  return `/saletrail/events/${urlSegment(event.state)}/${urlSegment(event.city)}/${event.slug}`;
+  return `/local-events/${urlSegment(event.state)}/${urlSegment(event.city)}/${event.slug}`;
 }
 
 export function formatEventHours(event: Pick<LocalEvent, "starts_at" | "ends_at" | "event_schedule">) {

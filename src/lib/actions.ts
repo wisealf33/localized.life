@@ -1104,7 +1104,7 @@ export async function createLocalEvent(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/saletrail/admin");
-  revalidatePath("/saletrail/events");
+  revalidatePath("/local-events");
   redirect(eventPath({ slug, city: address.city, state: address.state }));
 }
 
@@ -1187,6 +1187,7 @@ export async function addHouseholdToCommunityWide(formData: FormData) {
   }
 
   revalidatePath(eventPath(event));
+  revalidatePath("/local-events");
   revalidatePath("/saletrail");
   revalidatePath("/saletrail/map");
   redirect(`${saleSharePath({ slug, city: address.city, state: address.state })}?manage=${manageToken}`);
@@ -1202,7 +1203,7 @@ export async function updateSaleEvent(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/saletrail/admin");
-  revalidatePath("/saletrail/events");
+  revalidatePath("/local-events");
   revalidatePath("/saletrail");
   redirect("/saletrail/admin?updated=1");
 }
