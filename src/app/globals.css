@@ -229,6 +229,61 @@ h2 {
   box-shadow: 0 8px 18px rgb(59 130 246 / 10%);
 }
 
+.site-footer {
+  width: 100%;
+  border-top: 1px solid var(--line);
+  padding: 30px 0 34px;
+  background: rgb(255 255 255 / 68%);
+}
+
+.site-footer-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.site-footer-brand {
+  display: grid;
+  gap: 8px;
+  max-width: 430px;
+}
+
+.site-footer-wordmark {
+  color: var(--foreground);
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.site-footer-brand p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px 16px;
+}
+
+.site-footer-nav a {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.site-footer-nav a:hover {
+  color: var(--primary-dark);
+}
+
 .front-hero {
   position: relative;
   display: grid;
@@ -2822,6 +2877,14 @@ code {
     justify-content: flex-start;
   }
 
+  .site-footer-inner {
+    flex-direction: column;
+  }
+
+  .site-footer-nav {
+    justify-content: flex-start;
+  }
+
   .card-top,
   .toolbar,
   .card-actions,
@@ -2914,6 +2977,7 @@ code {
 
   .flyer-only-actions,
   .site-header,
+  .site-footer,
   .share-hero,
   .share-tools,
   .flyer-panel-header,
