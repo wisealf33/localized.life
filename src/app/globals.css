@@ -76,6 +76,16 @@ h2 {
   padding: 34px 0 64px;
 }
 
+.page > section + section,
+.page > form + section,
+.page > div + section {
+  margin-top: 36px;
+}
+
+.page > .hero + section {
+  margin-top: 18px;
+}
+
 .narrow {
   width: min(760px, calc(100% - 32px));
 }
@@ -570,7 +580,7 @@ h2 {
 
 .grid {
   display: grid;
-  gap: 20px;
+  gap: 28px;
 }
 
 .two {
@@ -1080,8 +1090,8 @@ h2 {
 
 .directory-section {
   display: grid;
-  gap: 16px;
-  margin: 26px 0;
+  gap: 24px;
+  margin: 34px 0;
 }
 
 .featured-list {
@@ -1687,7 +1697,7 @@ h2 {
 .local-submit-panel {
   display: grid;
   grid-template-columns: minmax(220px, 0.85fr) minmax(320px, 1.15fr);
-  gap: 24px;
+  gap: 32px;
   align-items: start;
 }
 
