@@ -100,8 +100,8 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         <div>
           <h2>Find Events By Type</h2>
           <p className="muted">
-            Local Events is for scheduled happenings people attend. Vendor markets and craft fairs belong here, while
-            individual vendors can later connect through Local Market profiles.
+            Local Events is for scheduled happenings people attend. Vendor markets, craft fairs, workshops, festivals,
+            and plant swaps belong here.
           </p>
         </div>
         <div className="quick-filters event-filter-row" aria-label="Event type filters">

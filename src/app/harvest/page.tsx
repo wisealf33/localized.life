@@ -29,11 +29,11 @@ export default function HarvestPage() {
           sizes="100vw"
         />
         <div className="harvest-hero-copy">
-          <p className="harvest-eyebrow">Tree registry first. Harvest network next.</p>
+          <p className="harvest-eyebrow">Fruit trees, gardens, and local abundance.</p>
           <h1>Localized.life Harvest</h1>
           <p>
-            A registry for fruit trees, nut trees, berry bushes, and other perennial food plants, built so local harvest
-            teams can find, care for, and share abundance when the network is ready.
+            A place to record fruit trees, nut trees, berry bushes, gardens, seed sharing, and other local food
+            abundance so communities can find and share what is growing nearby.
           </p>
           <div className="toolbar">
             <Link className="button harvest-primary" href="#registry">
@@ -56,8 +56,8 @@ export default function HarvestPage() {
           <p className="harvest-eyebrow">The project</p>
           <h2>A local food system that starts with a map.</h2>
           <p>
-            Harvest begins as a registry. Over time, it can become the coordination layer for harvest permissions,
-            volunteer crews, food transport, preservation, tree planting, and community distribution.
+            Harvest starts by mapping what is already growing nearby, then helps people organize around harvestable
+            plants, planting projects, and local food abundance.
           </p>
         </div>
         <div className="harvest-steps">
@@ -74,7 +74,7 @@ export default function HarvestPage() {
           <article>
             <span>03</span>
             <h3>Fund planting</h3>
-            <p>Start with Paw Paw Revival, then add more sponsored tree campaigns later.</p>
+            <p>Start with Paw Paw Revival and support more local planting projects as they open.</p>
           </article>
         </div>
       </section>

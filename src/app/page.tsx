@@ -56,8 +56,8 @@ export default function Home() {
           <p className="front-badge">Start here</p>
           <h2>Five clear doors into local life.</h2>
           <p>
-            Each area has its own purpose, but the pieces can connect later through reusable local profiles, listings,
-            events, and places.
+            Choose the area that matches what you are looking for: local goods, things happening nearby, sale routes,
+            food abundance, or practical local help.
           </p>
         </div>
 

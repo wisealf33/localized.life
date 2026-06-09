@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -88,30 +87,6 @@ export default async function LocalMarketPage({ searchParams }: Props) {
             ))}
           </div>
         </article>
-      </section>
-
-      <section className="front-tool-section">
-        <div>
-          <p className="front-badge">Connected profiles</p>
-          <h2>A directory first, richer profiles later.</h2>
-        </div>
-        <div className="tool-card-grid">
-          <article className="tool-card">
-            <h3>Vendor profiles</h3>
-            <p>A candle maker can list candles here and also appear at a craft fair in Local Events.</p>
-          </article>
-          <article className="tool-card">
-            <h3>Farmstands</h3>
-            <p>A backyard egg seller can show pickup details here and later connect to Harvest if they share abundance.</p>
-          </article>
-          <article className="tool-card">
-            <h3>Build order</h3>
-            <p>This page sets the public door first. The full Local Market workflow can grow after the directory is useful.</p>
-          </article>
-        </div>
-        <Link className="button primary" href="#submit">
-          Post a local good
-        </Link>
       </section>
     </main>
   );

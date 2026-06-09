@@ -124,7 +124,7 @@ export function HarvestRegistry() {
           <h2>Start by mapping the food already growing nearby.</h2>
           <p>
             The core Localized.life Harvest idea is simple: build a living registry of harvestable trees and perennial
-            plants now, then use it to organize permissions, harvest windows, volunteers, and food movement later.
+            plants so people can see what is growing nearby and coordinate harvest details when appropriate.
           </p>
         </div>
 

@@ -553,44 +553,6 @@ h2 {
   font-weight: 700;
 }
 
-.front-tool-section {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
-  padding-top: 54px;
-  display: grid;
-  gap: 22px;
-}
-
-.front-tool-section h2 {
-  margin: 8px 0 0;
-  font-size: 2rem;
-}
-
-.tool-card-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.tool-card {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 22px;
-  background: rgb(255 255 255 / 88%);
-  box-shadow: var(--shadow-soft);
-}
-
-.tool-card h3 {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-}
-
-.tool-card p {
-  margin-bottom: 0;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
 .text-link {
   color: var(--primary);
   font-weight: 850;
@@ -2763,7 +2725,6 @@ code {
   .front-hero,
   .front-about,
   .front-product-band,
-  .tool-card-grid,
   .compact,
   .admin-meta-grid,
   .share-hero,

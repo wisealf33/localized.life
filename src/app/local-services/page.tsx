@@ -54,8 +54,8 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         <article className="card">
           <h2>Help and local work, not goods.</h2>
           <p className="muted">
-            Local Services is separate from Local Market. It starts as a simple directory for practical local help and
-            can later connect into Pactum when deeper service tools are ready.
+            Local Services is separate from Local Market. This page is for practical local help: repairs, hauling,
+            cleaning, yard work, garden help, tutoring, pet care, and similar services.
           </p>
           <div className="tag-row">
             {serviceTypes.map((type) => (
