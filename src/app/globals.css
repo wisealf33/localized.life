@@ -1700,6 +1700,58 @@ h2 {
   margin: 0;
 }
 
+.submission-details {
+  display: grid;
+  gap: 16px;
+}
+
+.submission-details > summary {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  list-style: none;
+  padding: 18px;
+}
+
+.submission-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.submission-details > summary span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.submission-details > summary strong {
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.submission-details > summary small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.submission-details[open] > summary {
+  border-color: var(--primary);
+}
+
+.submission-details[open] .summary-button {
+  background: var(--soft-blue);
+  border-color: var(--primary);
+  color: var(--primary-strong);
+}
+
+.submission-form {
+  margin-top: 4px;
+}
+
 .search {
   grid-template-columns: minmax(220px, 1fr) 130px 170px 180px auto;
   align-items: end;
@@ -2692,6 +2744,15 @@ code {
   .front-door-intro p:not(.front-badge) {
     color: var(--muted);
     text-shadow: none;
+  }
+
+  .submission-details > summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .submission-details > summary .summary-button {
+    text-align: center;
   }
 
   .harvest-header-wrap {

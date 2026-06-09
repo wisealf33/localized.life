@@ -11,7 +11,7 @@ type Props = {
 export const metadata: Metadata = pageMetadata({
   title: "Local Market | Localized.life",
   description:
-    "Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, and neighborhood makers.",
+    "Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, practical local goods, and neighborhood makers.",
   path: "/local-market",
 });
 
@@ -37,18 +37,18 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         <p className="eyebrow">Local goods</p>
         <h1>Local Market</h1>
         <p className="lede">
-          Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, and
-          neighborhood makers.
+          A directory for useful local goods and abundance: things people grow, raise, bake, make, gather, repair, or
+          offer nearby.
         </p>
       </section>
 
       <section className="grid two">
         <article className="card">
-          <h2>Things people sell locally.</h2>
+          <h2>What belongs here</h2>
           <p className="muted">
-            Local Market is the home for producers, growers, bakers, makers, small farms, backyard sellers, home
-            shops, and locally made or locally produced goods. It is separate from Harvest and separate from Local
-            Services.
+            Local Market is for local abundance and practical goods: eggs, honey, produce, plants, baked goods,
+            cottage food, handmade items, farmstand goods, garden starts, flowers, firewood, compost, farm and garden
+            tools, and larger local-use items that make sense to find nearby.
           </p>
           <div className="tag-row">
             {examples.map((example) => (
@@ -58,7 +58,12 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         </article>
 
         <article className="card">
-          <h2>Future paths</h2>
+          <h2>What does not belong here</h2>
+          <p className="muted">
+            This is not a general resale feed. Random small resale items, ordinary household clutter, and Facebook
+            Marketplace-style listings should not go here. Resale is only a fit when it connects to farming, gardening,
+            homesteading, making, repairing, tools, or bulky practical items that are hard to ship.
+          </p>
           <div className="mini-list">
             {categories.map((category) => (
               <span key={category}>{category}</span>
@@ -70,7 +75,7 @@ export default async function LocalMarketPage({ searchParams }: Props) {
       <section className="front-tool-section">
         <div>
           <p className="front-badge">Connected profiles</p>
-          <h2>Built to connect with events later.</h2>
+          <h2>A directory first, richer profiles later.</h2>
         </div>
         <div className="tool-card-grid">
           <article className="tool-card">
@@ -83,11 +88,11 @@ export default async function LocalMarketPage({ searchParams }: Props) {
           </article>
           <article className="tool-card">
             <h3>Build order</h3>
-            <p>This page sets the public door first. The full marketplace workflow can be built after SaleTrail stays stable.</p>
+            <p>This page sets the public door first. The full Local Market workflow can grow after the directory is useful.</p>
           </article>
         </div>
-        <Link className="button primary" href="/saletrail">
-          Use SaleTrail now
+        <Link className="button primary" href="#submit">
+          Post a local good
         </Link>
       </section>
 
@@ -95,7 +100,7 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         area="market"
         eyebrow="Submit a local good"
         title="Add yourself to Local Market"
-        description="Use this if you sell local goods like eggs, honey, produce, baked goods, soap, candles, crafts, plants, or farmstand items. Submissions are reviewed before anything is published."
+        description="Use this if you offer local goods, farmstand items, backyard abundance, handmade items, cottage food, plants, or practical farm and garden items. Please do not submit random resale items or small marketplace listings."
         categoryLabel="What do you sell?"
         categoryPlaceholder="Eggs, honey, produce, candles, baked goods..."
         titleLabel="Listing or profile name"
@@ -106,6 +111,7 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         submitted={Boolean(params.submitted)}
         emailStatus={params.email}
         manageToken={params.manage}
+        ctaLabel="Post a local good"
       />
     </main>
   );

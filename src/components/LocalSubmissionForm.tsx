@@ -17,6 +17,7 @@ type LocalSubmissionFormProps = {
   submitted?: boolean;
   emailStatus?: string;
   manageToken?: string;
+  ctaLabel?: string;
 };
 
 export function LocalSubmissionForm({
@@ -34,6 +35,7 @@ export function LocalSubmissionForm({
   submitted = false,
   emailStatus,
   manageToken,
+  ctaLabel = "Open submission form",
 }: LocalSubmissionFormProps) {
   const managePath = manageToken ? `/manage/${manageToken}` : "";
 
@@ -64,56 +66,65 @@ export function LocalSubmissionForm({
           </Link>
         </div>
       ) : (
-        <form action={submitLocalSubmission} className="form">
-          <input type="hidden" name="submission_area" value={area} />
-          <input type="hidden" name="return_path" value={returnPath} />
-          <label>
-            {titleLabel}
-            <input name="title" placeholder={titlePlaceholder} required />
-          </label>
-          <div className="grid two">
+        <details className="submission-details">
+          <summary>
+            <span>
+              <strong>{ctaLabel}</strong>
+              <small>No account needed. We email you a private manage link.</small>
+            </span>
+            <span className="summary-button">Open form</span>
+          </summary>
+          <form action={submitLocalSubmission} className="form submission-form">
+            <input type="hidden" name="submission_area" value={area} />
+            <input type="hidden" name="return_path" value={returnPath} />
             <label>
-              {categoryLabel}
-              <input name="category" placeholder={categoryPlaceholder} />
+              {titleLabel}
+              <input name="title" placeholder={titlePlaceholder} required />
+            </label>
+            <div className="grid two">
+              <label>
+                {categoryLabel}
+                <input name="category" placeholder={categoryPlaceholder} />
+              </label>
+              <label>
+                Website or social link
+                <input name="website_url" placeholder="Optional link" />
+              </label>
+            </div>
+            <div className="grid two">
+              <label>
+                City
+                <input name="city" placeholder="Peotone" />
+              </label>
+              <label>
+                State
+                <input name="state" placeholder="IL" maxLength={2} />
+              </label>
+            </div>
+            <div className="grid two">
+              <label>
+                Your name
+                <input name="name" placeholder="Optional" />
+              </label>
+              <label>
+                Public contact, if you want it shown later
+                <input name="contact" placeholder="Email, phone, social link, or leave blank" />
+              </label>
+            </div>
+            <label>
+              Email for private manage link
+              <input name="submitter_email" type="email" required placeholder="you@example.com" />
+              <span className="helper">We email the private edit/remove link here. No account is created.</span>
             </label>
             <label>
-              Website or social link
-              <input name="website_url" placeholder="Optional link" />
+              {descriptionLabel}
+              <textarea name="description" rows={6} placeholder={descriptionPlaceholder} required />
             </label>
-          </div>
-          <div className="grid two">
-            <label>
-              City
-              <input name="city" placeholder="Peotone" />
-            </label>
-            <label>
-              State
-              <input name="state" placeholder="IL" maxLength={2} />
-            </label>
-          </div>
-          <div className="grid two">
-            <label>
-              Your name
-              <input name="name" placeholder="Optional" />
-            </label>
-            <label>
-              Public contact, if you want it shown later
-              <input name="contact" placeholder="Email, phone, social link, or leave blank" />
-            </label>
-          </div>
-          <label>
-            Email for private manage link
-            <input name="submitter_email" type="email" required placeholder="you@example.com" />
-            <span className="helper">We email the private edit/remove link here. No account is created.</span>
-          </label>
-          <label>
-            {descriptionLabel}
-            <textarea name="description" rows={6} placeholder={descriptionPlaceholder} required />
-          </label>
-          <button className="button primary" type="submit">
-            Submit for review
-          </button>
-        </form>
+            <button className="button primary" type="submit">
+              Submit for review
+            </button>
+          </form>
+        </details>
       )}
     </section>
   );

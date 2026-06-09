@@ -73,6 +73,7 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         submitted={Boolean(params.submitted)}
         emailStatus={params.email}
         manageToken={params.manage}
+        ctaLabel="Post a local service"
       />
     </main>
   );

@@ -170,6 +170,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         submitted={Boolean(params.submitted)}
         emailStatus={params.email}
         manageToken={params.manage}
+        ctaLabel="Submit a local event"
       />
     </main>
   );
