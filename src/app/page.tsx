@@ -154,30 +154,9 @@ export default function Home() {
             to act on without relying on noisy feeds.
           </p>
           <aside className="front-field-note" aria-label="Localized.life motto">
-            <strong>Simple public doors. Flexible connected profiles.</strong>
-            <span>People, farms, makers, organizers, services, and places should be able to appear where they fit.</span>
+            <strong>Start with what is nearby.</strong>
+            <span>Find local sales, goods, events, abundance, and practical help without digging through noisy feeds.</span>
           </aside>
-        </div>
-      </section>
-
-      <section className="front-tool-section">
-        <div>
-          <p className="front-badge">How it connects</p>
-          <h2>Not one rigid folder tree.</h2>
-        </div>
-        <div className="tool-card-grid">
-          <article className="tool-card">
-            <h3>Local Profiles</h3>
-            <p>A maker, farm, church, service provider, organizer, or farmstand can become one reusable local profile.</p>
-          </article>
-          <article className="tool-card">
-            <h3>Connected listings</h3>
-            <p>A profile can connect to goods, events, sales, harvest items, or services when those pathways make sense.</p>
-          </article>
-          <article className="tool-card">
-            <h3>Build in steps</h3>
-            <p>SaleTrail works now. Local Market, Local Services, and broader Events can grow without forcing Harvest to carry everything.</p>
-          </article>
         </div>
       </section>
     </main>
