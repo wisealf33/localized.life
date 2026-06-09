@@ -12,6 +12,8 @@ import { hashSecret, randomToken, slugifyTitle } from "./tokens";
 import type {
   FeedbackRequestType,
   ListingRequestType,
+  LocalSubmissionArea,
+  LocalSubmissionStatus,
   LocalEventType,
   MonetizationLeadCategory,
   MonetizationLeadPriority,
@@ -43,6 +45,8 @@ const outreachStatuses = new Set<OutreachStatus>([
 
 const feedbackRequestTypes = new Set<FeedbackRequestType>(["feature", "bug", "general"]);
 const feedbackStatuses = new Set(["pending", "reviewed", "resolved", "rejected"]);
+const localSubmissionAreas = new Set<LocalSubmissionArea>(["market", "event", "service"]);
+const localSubmissionStatuses = new Set<LocalSubmissionStatus>(["pending", "reviewed", "approved", "rejected"]);
 const localEventTypes = new Set<LocalEventType>(eventTypeOptions.map((option) => option.value));
 const monetizationLeadCategories = new Set<MonetizationLeadCategory>([
   "local_sponsor",
@@ -121,6 +125,17 @@ function required(formData: FormData, key: string) {
   const next = value(formData, key);
   if (!next) throw new Error(`Missing ${key}`);
   return next;
+}
+
+function safePublicUrl(formData: FormData, key: string) {
+  const raw = value(formData, key);
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : "";
+  } catch {
+    return "";
+  }
 }
 
 function asIsoLocalDateTime(dateValue: string, timeValue: string) {
@@ -913,6 +928,54 @@ export async function resolveFeedbackRequest(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/saletrail/admin");
   redirect("/saletrail/admin?updated=1");
+}
+
+export async function submitLocalSubmission(formData: FormData) {
+  const supabase = getSupabaseAdmin();
+  const submissionArea = required(formData, "submission_area") as LocalSubmissionArea;
+  if (!localSubmissionAreas.has(submissionArea)) throw new Error("Invalid submission area.");
+
+  const returnPath = value(formData, "return_path") || "/local-market";
+  const safeReturnPath = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "/local-market";
+
+  const { error } = await supabase.from("local_submissions").insert({
+    submission_area: submissionArea,
+    title: required(formData, "title"),
+    category: value(formData, "category"),
+    name: value(formData, "name"),
+    contact: value(formData, "contact"),
+    city: value(formData, "city"),
+    state: value(formData, "state").toUpperCase(),
+    website_url: safePublicUrl(formData, "website_url"),
+    description: required(formData, "description"),
+    status: "pending",
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  revalidatePath(safeReturnPath);
+  redirect(`${safeReturnPath}?submitted=1#submit`);
+}
+
+export async function resolveLocalSubmission(formData: FormData) {
+  await requireAdmin();
+  const supabase = getSupabaseAdmin();
+  const submissionId = required(formData, "submission_id");
+  const status = required(formData, "status") as LocalSubmissionStatus;
+  if (!localSubmissionStatuses.has(status)) throw new Error("Invalid local submission status.");
+
+  const { error } = await supabase
+    .from("local_submissions")
+    .update({
+      status,
+      admin_notes: value(formData, "admin_notes"),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", submissionId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  redirect("/saletrail/admin?updated=1#admin-local-submissions");
 }
 
 export async function createMonetizationLead(formData: FormData) {

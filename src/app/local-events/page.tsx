@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { eventPath, eventPreviewImagePath, eventTypeLabel, eventTypeOptions, formatEventHours } from "@/lib/events";
 import { pageMetadata } from "@/lib/seo";
@@ -12,6 +13,7 @@ const eventColumns =
 type Props = {
   searchParams: Promise<{
     type?: string;
+    submitted?: string;
   }>;
 };
 
@@ -150,6 +152,21 @@ export default async function LocalEventsPage({ searchParams }: Props) {
           })
         )}
       </section>
+
+      <LocalSubmissionForm
+        area="event"
+        eyebrow="Submit an event"
+        title="Add a Local Event"
+        description="Use this for farmers markets, craft fairs, pop-ups, workshops, festivals, plant swaps, community days, classes, or other local happenings. Garage sales and estate sales should still go through SaleTrail."
+        categoryLabel="Event type"
+        categoryPlaceholder="Farmers market, craft fair, workshop, festival..."
+        titleLabel="Event name"
+        titlePlaceholder="Saturday farmers market, holiday craft fair..."
+        descriptionLabel="Tell people about the event"
+        descriptionPlaceholder="Include the date, time, location, organizer, what people can expect, and any useful link."
+        returnPath="/local-events"
+        submitted={Boolean(params.submitted)}
+      />
     </main>
   );
 }

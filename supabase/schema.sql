@@ -201,6 +201,23 @@ create table if not exists public.feedback_requests (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.local_submissions (
+  id uuid primary key default gen_random_uuid(),
+  submission_area text not null check (submission_area in ('market', 'event', 'service')),
+  title text not null,
+  category text,
+  name text,
+  contact text,
+  city text,
+  state text,
+  website_url text,
+  description text not null,
+  status text not null default 'pending' check (status in ('pending', 'reviewed', 'approved', 'rejected')),
+  admin_notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.monetization_leads (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -267,6 +284,9 @@ create index if not exists listing_requests_status_idx
 create index if not exists feedback_requests_status_idx
   on public.feedback_requests (status, created_at desc);
 
+create index if not exists local_submissions_status_idx
+  on public.local_submissions (submission_area, status, created_at desc);
+
 create index if not exists monetization_leads_status_idx
   on public.monetization_leads (status, priority, updated_at desc);
 
@@ -275,6 +295,7 @@ alter table public.local_events enable row level security;
 alter table public.claim_requests enable row level security;
 alter table public.listing_requests enable row level security;
 alter table public.feedback_requests enable row level security;
+alter table public.local_submissions enable row level security;
 alter table public.monetization_leads enable row level security;
 
 -- Launch 1 uses server-side access through SUPABASE_SERVICE_ROLE_KEY only.

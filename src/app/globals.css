@@ -1684,6 +1684,22 @@ h2 {
   gap: 14px;
 }
 
+.local-submit-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(320px, 1.15fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.submit-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.submit-copy h2 {
+  margin: 0;
+}
+
 .search {
   grid-template-columns: minmax(220px, 1fr) 130px 170px 180px auto;
   align-items: end;
@@ -2625,6 +2641,7 @@ code {
   .share-layout,
   .share-link-card,
   .share-action-grid,
+  .local-submit-panel,
   .event-add-stop-form,
   .event-stop-list,
   .route-start-card,

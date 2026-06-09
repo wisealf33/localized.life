@@ -1,7 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { pageMetadata } from "@/lib/seo";
+
+type Props = {
+  searchParams: Promise<{ submitted?: string }>;
+};
 
 export const metadata: Metadata = pageMetadata({
   title: "Local Market | Localized.life",
@@ -22,7 +27,9 @@ const categories = [
 
 const examples = ["Eggs", "Honey", "Produce", "Plants", "Flowers", "Baked goods", "Soap", "Candles", "Crafts"];
 
-export default function LocalMarketPage() {
+export default async function LocalMarketPage({ searchParams }: Props) {
+  const params = await searchParams;
+
   return (
     <main className="page">
       <SiteHeader active="market" product="Project hub" />
@@ -83,6 +90,21 @@ export default function LocalMarketPage() {
           Use SaleTrail now
         </Link>
       </section>
+
+      <LocalSubmissionForm
+        area="market"
+        eyebrow="Submit a local good"
+        title="Add yourself to Local Market"
+        description="Use this if you sell local goods like eggs, honey, produce, baked goods, soap, candles, crafts, plants, or farmstand items. Submissions are reviewed before anything is published."
+        categoryLabel="What do you sell?"
+        categoryPlaceholder="Eggs, honey, produce, candles, baked goods..."
+        titleLabel="Listing or profile name"
+        titlePlaceholder="Smith Family Eggs, Maple Street Farmstand..."
+        descriptionLabel="Tell shoppers what you offer"
+        descriptionPlaceholder="What do you sell, where are you located, when are you available, and how should people contact you?"
+        returnPath="/local-market"
+        submitted={Boolean(params.submitted)}
+      />
     </main>
   );
 }

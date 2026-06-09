@@ -14,6 +14,7 @@ import {
   createCommunitySale,
   rejectClaim,
   resolveFeedbackRequest,
+  resolveLocalSubmission,
   resolveListingRequest,
   updateOutreachChecklist,
   updateSaleEvent,
@@ -33,6 +34,9 @@ import type {
   FeedbackRequest,
   ListingRequest,
   LocalEvent,
+  LocalSubmission,
+  LocalSubmissionArea,
+  LocalSubmissionStatus,
   MonetizationLead,
   MonetizationLeadCategory,
   MonetizationLeadPriority,
@@ -129,6 +133,19 @@ const monetizationPriorityLabels: Record<MonetizationLeadPriority, string> = {
   high: "High",
 };
 
+const localSubmissionAreaLabels: Record<LocalSubmissionArea, string> = {
+  market: "Local Market",
+  event: "Local Events",
+  service: "Local Services",
+};
+
+const localSubmissionStatusLabels: Record<LocalSubmissionStatus, string> = {
+  pending: "Pending",
+  reviewed: "Reviewed",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
 function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url">) {
   if (sale.categories?.includes("City-wide sale")) return false;
   const sourceUrl = (sale.source_url || "").toLowerCase();
@@ -137,7 +154,17 @@ function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url
 
 async function getQueues(enabled: boolean) {
   if (!enabled || !isSupabaseConfigured) {
-    return { outreach: [], claims: [], requests: [], feedback: [], photoSales: [], events: [], attachSales: [], monetizationLeads: [] };
+    return {
+      outreach: [],
+      claims: [],
+      requests: [],
+      feedback: [],
+      localSubmissions: [],
+      photoSales: [],
+      events: [],
+      attachSales: [],
+      monetizationLeads: [],
+    };
   }
   const supabase = getSupabaseAdmin();
   const outreachQuery = (columns: string) =>
@@ -155,6 +182,7 @@ async function getQueues(enabled: boolean) {
     { data: claims },
     { data: requests },
     { data: feedback },
+    localSubmissionsResult,
     { data: photoSales },
     eventsResult,
     attachSalesResult,
@@ -172,6 +200,11 @@ async function getQueues(enabled: boolean) {
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
     supabase.from("feedback_requests").select("*").eq("status", "pending").order("created_at", { ascending: false }),
+    supabase
+      .from("local_submissions")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
     supabase
       .from("sales")
       .select(photoNeedSaleColumns)
@@ -211,6 +244,7 @@ async function getQueues(enabled: boolean) {
     claims: (claims || []) as ClaimRequest[],
     requests: (requests || []) as ListingRequest[],
     feedback: (feedback || []) as FeedbackRequest[],
+    localSubmissions: localSubmissionsResult.error ? [] : ((localSubmissionsResult.data || []) as LocalSubmission[]),
     photoSales: (photoSales || []) as Sale[],
     events: eventsResult.error ? [] : ((eventsResult.data || []) as LocalEvent[]),
     attachSales: attachSalesResult.error ? [] : ((attachSalesResult.data || []) as Sale[]),
@@ -455,7 +489,17 @@ function OutreachCard({ sale, completed = false }: { sale: Sale; completed?: boo
 export default async function AdminPage({ searchParams }: Props) {
   const params = await searchParams;
   const enabled = await isAdminAuthenticated();
-  const { outreach, claims, requests, feedback, photoSales, events, attachSales, monetizationLeads } = await getQueues(enabled);
+  const {
+    outreach,
+    claims,
+    requests,
+    feedback,
+    localSubmissions,
+    photoSales,
+    events,
+    attachSales,
+    monetizationLeads,
+  } = await getQueues(enabled);
   const activeOutreach = outreach.filter(
     (sale) => !isExpired(sale) && !isCompletedOutreach(sale),
   );
@@ -513,6 +557,7 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-claims">Claims ({claims.length})</a>
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
             <a href="#admin-feedback">Feedback ({feedback.length})</a>
+            <a href="#admin-local-submissions">Local submissions ({localSubmissions.length})</a>
             <a href="#admin-monetization">Monetization ({monetizationLeads.length})</a>
             <a href="#admin-events">Events ({events.length})</a>
             <a href="#admin-event-leads">Event leads ({activeEventLeads.length})</a>
@@ -644,6 +689,68 @@ export default async function AdminPage({ searchParams }: Props) {
                 </form>
               </article>
             ))}
+          </section>
+
+          <section className="panel stack" id="admin-local-submissions">
+            <div>
+              <p className="eyebrow">Needs review</p>
+              <h2>Local Market, Events, and Services submissions</h2>
+              <p className="muted">
+                Public submissions for the broader Localized.life doors. These are review-only until a real public
+                directory workflow is built for each section.
+              </p>
+            </div>
+            {localSubmissions.length === 0 ? <p className="muted">No pending Localized.life submissions.</p> : null}
+            <div className="grid two">
+              {localSubmissions.map((submission) => (
+                <article className="card compact" key={submission.id}>
+                  <div>
+                    <p className="eyebrow">
+                      {localSubmissionAreaLabels[submission.submission_area]} ·{" "}
+                      {localSubmissionStatusLabels[submission.status]}
+                    </p>
+                    <h3>{submission.title}</h3>
+                    {submission.category ? <p className="muted">{submission.category}</p> : null}
+                    {submission.city || submission.state ? (
+                      <p className="muted">
+                        {[submission.city, submission.state].filter(Boolean).join(", ")}
+                      </p>
+                    ) : null}
+                    {submission.name || submission.contact ? (
+                      <p>
+                        {[submission.name, submission.contact].filter(Boolean).join(" · ")}
+                      </p>
+                    ) : null}
+                    {submission.website_url ? (
+                      <p>
+                        <a className="text-link" href={submission.website_url} target="_blank" rel="noopener noreferrer">
+                          Open submitted link
+                        </a>
+                      </p>
+                    ) : null}
+                    <p>{submission.description}</p>
+                  </div>
+                  <form action={resolveLocalSubmission} className="form">
+                    <input type="hidden" name="submission_id" value={submission.id} />
+                    <label>
+                      Status
+                      <select name="status" defaultValue="reviewed">
+                        <option value="reviewed">Reviewed</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </label>
+                    <label>
+                      Admin notes
+                      <textarea name="admin_notes" rows={2} placeholder="Optional private note" />
+                    </label>
+                    <button className="button primary" type="submit">
+                      Update submission
+                    </button>
+                  </form>
+                </article>
+              ))}
+            </div>
           </section>
 
           <section className="panel stack" id="admin-monetization">

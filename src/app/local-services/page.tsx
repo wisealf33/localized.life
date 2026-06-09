@@ -1,7 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { pageMetadata } from "@/lib/seo";
+
+type Props = {
+  searchParams: Promise<{ submitted?: string }>;
+};
 
 export const metadata: Metadata = pageMetadata({
   title: "Local Services | Localized.life",
@@ -12,7 +17,9 @@ export const metadata: Metadata = pageMetadata({
 
 const serviceTypes = ["Cleaning", "Handyman", "Yard help", "Garden help", "Hauling", "Repairs", "Pet care", "Tutoring", "Farm help"];
 
-export default function LocalServicesPage() {
+export default async function LocalServicesPage({ searchParams }: Props) {
+  const params = await searchParams;
+
   return (
     <main className="page">
       <SiteHeader active="services" product="Project hub" />
@@ -50,6 +57,21 @@ export default function LocalServicesPage() {
           </Link>
         </article>
       </section>
+
+      <LocalSubmissionForm
+        area="service"
+        eyebrow="Submit practical help"
+        title="Add yourself to Local Services"
+        description="Use this if you offer useful local help like cleaning, yard help, repairs, hauling, garden help, pet care, tutoring, organizing, or farm help. Submissions are reviewed before anything is published."
+        categoryLabel="Service type"
+        categoryPlaceholder="Cleaning, handyman, yard help, hauling..."
+        titleLabel="Service listing name"
+        titlePlaceholder="Weekend yard help, local hauling, house cleaning..."
+        descriptionLabel="Tell people what help you offer"
+        descriptionPlaceholder="What do you do, what area do you serve, when are you available, and how should people contact you?"
+        returnPath="/local-services"
+        submitted={Boolean(params.submitted)}
+      />
     </main>
   );
 }

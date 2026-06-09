@@ -4,6 +4,8 @@ export type SaleStatus = "active" | "cancelled" | "ended";
 export type VisibilityStatus = "public" | "hidden" | "removed";
 export type ListingRequestType = "correction" | "removal";
 export type FeedbackRequestType = "feature" | "bug" | "general";
+export type LocalSubmissionArea = "market" | "event" | "service";
+export type LocalSubmissionStatus = "pending" | "reviewed" | "approved" | "rejected";
 export type EventLeadStatus = "needs_source" | "verified" | "added" | "ignored";
 export type BacklogLeadType = "local_goods" | "services" | "tools" | "gardens" | "food" | "local_exchange" | "other";
 export type MonetizationLeadCategory =
@@ -142,6 +144,23 @@ export type FeedbackRequest = {
   message: string;
   status: "pending" | "reviewed" | "resolved" | "rejected";
   created_at: string;
+};
+
+export type LocalSubmission = {
+  id: string;
+  submission_area: LocalSubmissionArea;
+  title: string;
+  category: string | null;
+  name: string | null;
+  contact: string | null;
+  city: string | null;
+  state: string | null;
+  website_url: string | null;
+  description: string;
+  status: LocalSubmissionStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type EventLead = {
