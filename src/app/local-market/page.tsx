@@ -42,6 +42,24 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         </p>
       </section>
 
+      <LocalSubmissionForm
+        area="market"
+        eyebrow="Submit a local good"
+        title="Add yourself to Local Market"
+        description="Use this if you offer local goods, farmstand items, backyard abundance, handmade items, cottage food, plants, or practical farm and garden items. Please do not submit random resale items or small marketplace listings."
+        categoryLabel="What do you sell?"
+        categoryPlaceholder="Eggs, honey, produce, candles, baked goods..."
+        titleLabel="Listing or profile name"
+        titlePlaceholder="Smith Family Eggs, Maple Street Farmstand..."
+        descriptionLabel="Tell shoppers what you offer"
+        descriptionPlaceholder="What do you sell, where are you located, when are you available, and how should people contact you?"
+        returnPath="/local-market"
+        submitted={Boolean(params.submitted)}
+        emailStatus={params.email}
+        manageToken={params.manage}
+        ctaLabel="Post a local good"
+      />
+
       <section className="grid two">
         <article className="card">
           <h2>What belongs here</h2>
@@ -95,24 +113,6 @@ export default async function LocalMarketPage({ searchParams }: Props) {
           Post a local good
         </Link>
       </section>
-
-      <LocalSubmissionForm
-        area="market"
-        eyebrow="Submit a local good"
-        title="Add yourself to Local Market"
-        description="Use this if you offer local goods, farmstand items, backyard abundance, handmade items, cottage food, plants, or practical farm and garden items. Please do not submit random resale items or small marketplace listings."
-        categoryLabel="What do you sell?"
-        categoryPlaceholder="Eggs, honey, produce, candles, baked goods..."
-        titleLabel="Listing or profile name"
-        titlePlaceholder="Smith Family Eggs, Maple Street Farmstand..."
-        descriptionLabel="Tell shoppers what you offer"
-        descriptionPlaceholder="What do you sell, where are you located, when are you available, and how should people contact you?"
-        returnPath="/local-market"
-        submitted={Boolean(params.submitted)}
-        emailStatus={params.email}
-        manageToken={params.manage}
-        ctaLabel="Post a local good"
-      />
     </main>
   );
 }

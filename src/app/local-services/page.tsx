@@ -32,32 +32,6 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         </p>
       </section>
 
-      <section className="grid two">
-        <article className="card">
-          <h2>Help and local work, not goods.</h2>
-          <p className="muted">
-            Local Services is separate from Local Market. It starts as a simple directory for practical local help and
-            can later connect into Pactum when deeper service tools are ready.
-          </p>
-          <div className="tag-row">
-            {serviceTypes.map((type) => (
-              <span key={type}>{type}</span>
-            ))}
-          </div>
-        </article>
-
-        <article className="card">
-          <h2>Pactum later, simple directory now.</h2>
-          <p className="muted">
-            This does not promise contracts, payments, ratings, tokens, or dispute systems yet. It leaves the structure
-            open for those tools when they are intentionally built.
-          </p>
-          <Link className="button primary" href="/saletrail">
-            Use SaleTrail now
-          </Link>
-        </article>
-      </section>
-
       <LocalSubmissionForm
         area="service"
         eyebrow="Submit practical help"
@@ -75,6 +49,32 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         manageToken={params.manage}
         ctaLabel="Post a local service"
       />
+
+      <section className="grid two">
+        <article className="card">
+          <h2>Help and local work, not goods.</h2>
+          <p className="muted">
+            Local Services is separate from Local Market. It starts as a simple directory for practical local help and
+            can later connect into Pactum when deeper service tools are ready.
+          </p>
+          <div className="tag-row">
+            {serviceTypes.map((type) => (
+              <span key={type}>{type}</span>
+            ))}
+          </div>
+        </article>
+
+        <article className="card">
+          <h2>Where SaleTrail fits</h2>
+          <p className="muted">
+            SaleTrail is the local sales tool: garage sales, estate sales, rummage sales, moving sales, church sales,
+            community-wide sales, and other one-time sale stops people can save to a route.
+          </p>
+          <Link className="button primary" href="/saletrail">
+            Open SaleTrail
+          </Link>
+        </article>
+      </section>
     </main>
   );
 }

@@ -78,6 +78,24 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         </p>
       </section>
 
+      <LocalSubmissionForm
+        area="event"
+        eyebrow="Submit an event"
+        title="Add a Local Event"
+        description="Use this for farmers markets, craft fairs, pop-ups, workshops, festivals, plant swaps, community days, classes, or other local happenings. Garage sales and estate sales should still go through SaleTrail."
+        categoryLabel="Event type"
+        categoryPlaceholder="Farmers market, craft fair, workshop, festival..."
+        titleLabel="Event name"
+        titlePlaceholder="Saturday farmers market, holiday craft fair..."
+        descriptionLabel="Tell people about the event"
+        descriptionPlaceholder="Include the date, time, location, organizer, what people can expect, and any useful link."
+        returnPath="/local-events"
+        submitted={Boolean(params.submitted)}
+        emailStatus={params.email}
+        manageToken={params.manage}
+        ctaLabel="Submit a local event"
+      />
+
       <section className="panel event-filter-panel">
         <div>
           <h2>Find Events By Type</h2>
@@ -154,24 +172,6 @@ export default async function LocalEventsPage({ searchParams }: Props) {
           })
         )}
       </section>
-
-      <LocalSubmissionForm
-        area="event"
-        eyebrow="Submit an event"
-        title="Add a Local Event"
-        description="Use this for farmers markets, craft fairs, pop-ups, workshops, festivals, plant swaps, community days, classes, or other local happenings. Garage sales and estate sales should still go through SaleTrail."
-        categoryLabel="Event type"
-        categoryPlaceholder="Farmers market, craft fair, workshop, festival..."
-        titleLabel="Event name"
-        titlePlaceholder="Saturday farmers market, holiday craft fair..."
-        descriptionLabel="Tell people about the event"
-        descriptionPlaceholder="Include the date, time, location, organizer, what people can expect, and any useful link."
-        returnPath="/local-events"
-        submitted={Boolean(params.submitted)}
-        emailStatus={params.email}
-        manageToken={params.manage}
-        ctaLabel="Submit a local event"
-      />
     </main>
   );
 }
