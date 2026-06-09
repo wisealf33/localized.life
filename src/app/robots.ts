@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/harvest", "/saletrail", "/saletrail/map", "/saletrail/new"],
-        disallow: ["/saletrail/admin", "/saletrail/manage", "/saletrail/claim"],
+        disallow: ["/saletrail/admin", "/saletrail/manage", "/saletrail/claim", "/manage"],
       },
     ],
     sitemap: `${siteUrl()}/sitemap.xml`,

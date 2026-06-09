@@ -196,6 +196,10 @@ export default async function EventDetailPage({ params }: Props) {
                 <input name="zip" defaultValue={event.zip || ""} placeholder="ZIP code" required />
               </label>
               <label className="wide-field">
+                Email for private manage link
+                <input name="creator_email" type="email" placeholder="Optional, but recommended" />
+              </label>
+              <label className="wide-field">
                 What are you selling?
                 <textarea
                   name="description"

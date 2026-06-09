@@ -14,6 +14,8 @@ type Props = {
   searchParams: Promise<{
     type?: string;
     submitted?: string;
+    email?: string;
+    manage?: string;
   }>;
 };
 
@@ -166,6 +168,8 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         descriptionPlaceholder="Include the date, time, location, organizer, what people can expect, and any useful link."
         returnPath="/local-events"
         submitted={Boolean(params.submitted)}
+        emailStatus={params.email}
+        manageToken={params.manage}
       />
     </main>
   );

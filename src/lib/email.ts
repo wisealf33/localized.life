@@ -22,6 +22,15 @@ type ClaimApprovedEmail = {
   manageToken: string;
 };
 
+type ManageLinkEmail = {
+  to: string;
+  name?: string | null;
+  title: string;
+  manageToken: string;
+  kind: "SaleTrail listing" | "Local Market submission" | "Local Event submission" | "Local Services submission";
+  publicUrl?: string | null;
+};
+
 function emailClient() {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.SALETRAIL_EMAIL_FROM;
@@ -45,6 +54,11 @@ function escapeHtml(value: string) {
 function manageUrl(token: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life";
   return `${baseUrl.replace(/\/$/, "")}/saletrail/manage/${token}`;
+}
+
+function localizedManageUrl(token: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life";
+  return `${baseUrl.replace(/\/$/, "")}/manage/${token}`;
 }
 
 export async function sendClaimInstructionsEmail({
@@ -167,6 +181,55 @@ export async function sendClaimApprovedEmail({
 
   if (error) {
     console.error("Claim approval email failed", error);
+    return { sent: false, reason: error.message };
+  }
+
+  return { sent: true };
+}
+
+export async function sendManageLinkEmail({ to, name, title, manageToken, kind, publicUrl }: ManageLinkEmail) {
+  const client = emailClient();
+  if (!client) return { sent: false, reason: "Email is not configured." };
+
+  const privateManageUrl =
+    kind === "SaleTrail listing" ? manageUrl(manageToken) : localizedManageUrl(manageToken);
+  const safeName = escapeHtml(name || "there");
+  const safeTitle = escapeHtml(title);
+  const safeKind = escapeHtml(kind);
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #20201d; line-height: 1.5;">
+      <h1 style="font-size: 24px;">Your private Localized.life manage link</h1>
+      <p>Hi ${safeName},</p>
+      <p>Your <strong>${safeKind}</strong> for <strong>${safeTitle}</strong> was saved.</p>
+      ${publicUrl ? `<p><a href="${publicUrl}">Open the public page</a></p>` : ""}
+      <p><strong>Private manage link:</strong></p>
+      <p><a href="${privateManageUrl}">${privateManageUrl}</a></p>
+      <p>Keep this link private. Anyone with this link can edit or remove this post/submission. There is no account login yet, so save this email.</p>
+    </div>
+  `;
+  const text = [
+    `Hi ${name || "there"},`,
+    "",
+    `Your ${kind} for ${title} was saved.`,
+    publicUrl ? `Public page: ${publicUrl}` : "",
+    "",
+    `Private manage link: ${privateManageUrl}`,
+    "",
+    "Keep this link private. Anyone with this link can edit or remove this post/submission. There is no account login yet, so save this email.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const { error } = await client.resend.emails.send({
+    from: client.from,
+    to,
+    subject: `Your private manage link for ${title}`,
+    html,
+    text,
+  });
+
+  if (error) {
+    console.error("Manage link email failed", error);
     return { sent: false, reason: error.message };
   }
 

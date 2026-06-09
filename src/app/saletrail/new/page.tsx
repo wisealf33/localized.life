@@ -21,7 +21,8 @@ export default function NewSalePage() {
       <p className="eyebrow">SaleTrail by Localized.life</p>
       <h1>Create a garage sale listing</h1>
       <p className="lede">
-        Launch 1 uses a private manage link instead of accounts. Keep the share page link after creating your listing.
+        SaleTrail uses a private manage link instead of accounts. We email that link to you so you can edit, cancel, or
+        remove the listing later.
       </p>
       <SaleForm action={createSellerSale} />
     </main>

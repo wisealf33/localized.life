@@ -15,6 +15,8 @@ type LocalSubmissionFormProps = {
   descriptionPlaceholder: string;
   returnPath: string;
   submitted?: boolean;
+  emailStatus?: string;
+  manageToken?: string;
 };
 
 export function LocalSubmissionForm({
@@ -30,7 +32,11 @@ export function LocalSubmissionForm({
   descriptionPlaceholder,
   returnPath,
   submitted = false,
+  emailStatus,
+  manageToken,
 }: LocalSubmissionFormProps) {
+  const managePath = manageToken ? `/manage/${manageToken}` : "";
+
   return (
     <section className="panel local-submit-panel" id="submit">
       <div className="submit-copy">
@@ -43,6 +49,16 @@ export function LocalSubmissionForm({
         <div className="notice good stack">
           <h3>Submitted for review</h3>
           <p>Thanks. This is saved in the admin queue so it can be reviewed before anything is published.</p>
+          {emailStatus === "sent" ? (
+            <p>We emailed your private manage link. Save that email so you can edit or remove the submission later.</p>
+          ) : managePath ? (
+            <p>
+              Email is not configured yet, so save this private manage link for now:{" "}
+              <Link className="text-link" href={managePath}>
+                open manage link
+              </Link>
+            </p>
+          ) : null}
           <Link className="button compact-button" href={returnPath}>
             Back to page
           </Link>
@@ -81,10 +97,15 @@ export function LocalSubmissionForm({
               <input name="name" placeholder="Optional" />
             </label>
             <label>
-              Contact
-              <input name="contact" placeholder="Email or phone, optional" />
+              Public contact, if you want it shown later
+              <input name="contact" placeholder="Email, phone, social link, or leave blank" />
             </label>
           </div>
+          <label>
+            Email for private manage link
+            <input name="submitter_email" type="email" required placeholder="you@example.com" />
+            <span className="helper">We email the private edit/remove link here. No account is created.</span>
+          </label>
           <label>
             {descriptionLabel}
             <textarea name="description" rows={6} placeholder={descriptionPlaceholder} required />

@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
-import { sendClaimApprovedEmail, sendClaimInstructionsEmail } from "./email";
+import { sendClaimApprovedEmail, sendClaimInstructionsEmail, sendManageLinkEmail } from "./email";
 import { eventPath, eventTypeOptions } from "./events";
-import { categoryOptions, salePath, saleSharePath } from "./format";
+import { categoryOptions, salePath, saleSharePath, saleUrl } from "./format";
 import { geocodeAddress } from "./geocode";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
@@ -125,6 +125,18 @@ function required(formData: FormData, key: string) {
   const next = value(formData, key);
   if (!next) throw new Error(`Missing ${key}`);
   return next;
+}
+
+function requiredEmail(formData: FormData, key: string) {
+  const email = required(formData, key).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Add a valid email address.");
+  return email;
+}
+
+function optionalEmail(formData: FormData, key: string) {
+  const email = value(formData, key).toLowerCase();
+  if (!email) return "";
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
 }
 
 function safePublicUrl(formData: FormData, key: string) {
@@ -489,6 +501,7 @@ function mergedBatchUpdate(
 export async function createSellerSale(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const title = required(formData, "title");
+  const creatorEmail = requiredEmail(formData, "creator_email");
   const slug = slugifyTitle(title);
   const manageToken = randomToken();
   const schedule = buildSchedule(formData);
@@ -526,6 +539,13 @@ export async function createSellerSale(formData: FormData) {
   }
 
   revalidatePath("/saletrail");
+  await sendManageLinkEmail({
+    to: creatorEmail,
+    title,
+    manageToken,
+    kind: "SaleTrail listing",
+    publicUrl: saleUrl({ slug, city: String(insertPayload.city), state: String(insertPayload.state) }),
+  });
   redirect(`${saleSharePath({ slug, city: String(insertPayload.city), state: String(insertPayload.state) })}?manage=${manageToken}`);
 }
 
@@ -934,16 +954,21 @@ export async function submitLocalSubmission(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const submissionArea = required(formData, "submission_area") as LocalSubmissionArea;
   if (!localSubmissionAreas.has(submissionArea)) throw new Error("Invalid submission area.");
+  const submitterEmail = requiredEmail(formData, "submitter_email");
+  const manageToken = randomToken();
+  const title = required(formData, "title");
 
   const returnPath = value(formData, "return_path") || "/local-market";
   const safeReturnPath = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "/local-market";
 
   const { error } = await supabase.from("local_submissions").insert({
     submission_area: submissionArea,
-    title: required(formData, "title"),
+    title,
     category: value(formData, "category"),
     name: value(formData, "name"),
     contact: value(formData, "contact"),
+    submitter_email: submitterEmail,
+    manage_token_hash: hashSecret(manageToken),
     city: value(formData, "city"),
     state: value(formData, "state").toUpperCase(),
     website_url: safePublicUrl(formData, "website_url"),
@@ -952,9 +977,77 @@ export async function submitLocalSubmission(formData: FormData) {
   });
 
   if (error) throw new Error(error.message);
+  const emailResult = await sendManageLinkEmail({
+    to: submitterEmail,
+    name: value(formData, "name"),
+    title,
+    manageToken,
+    kind:
+      submissionArea === "market"
+        ? "Local Market submission"
+        : submissionArea === "event"
+          ? "Local Event submission"
+          : "Local Services submission",
+  });
+  if (emailResult.sent) {
+    await supabase
+      .from("local_submissions")
+      .update({ manage_email_sent_at: new Date().toISOString() })
+      .eq("manage_token_hash", hashSecret(manageToken));
+  }
   revalidatePath("/saletrail/admin");
   revalidatePath(safeReturnPath);
-  redirect(`${safeReturnPath}?submitted=1#submit`);
+  const manageParam = emailResult.sent ? "" : `&manage=${manageToken}`;
+  redirect(`${safeReturnPath}?submitted=1&email=${emailResult.sent ? "sent" : "setup"}${manageParam}#submit`);
+}
+
+export async function updateManagedLocalSubmission(formData: FormData) {
+  const supabase = getSupabaseAdmin();
+  const token = required(formData, "manage_token");
+  const tokenHash = hashSecret(token);
+  const submissionArea = required(formData, "submission_area") as LocalSubmissionArea;
+  if (!localSubmissionAreas.has(submissionArea)) throw new Error("Invalid submission area.");
+
+  const updatePayload = {
+    title: required(formData, "title"),
+    category: value(formData, "category"),
+    name: value(formData, "name"),
+    contact: value(formData, "contact"),
+    submitter_email: requiredEmail(formData, "submitter_email"),
+    city: value(formData, "city"),
+    state: value(formData, "state").toUpperCase(),
+    website_url: safePublicUrl(formData, "website_url"),
+    description: required(formData, "description"),
+    status: "pending",
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("local_submissions")
+    .update(updatePayload)
+    .eq("manage_token_hash", tokenHash);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  redirect(`/manage/${token}?updated=1`);
+}
+
+export async function removeManagedLocalSubmission(formData: FormData) {
+  const supabase = getSupabaseAdmin();
+  const token = required(formData, "manage_token");
+  const tokenHash = hashSecret(token);
+  const { error } = await supabase
+    .from("local_submissions")
+    .update({
+      status: "rejected",
+      admin_notes: "Removed by submitter through private manage link.",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("manage_token_hash", tokenHash);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saletrail/admin");
+  redirect(`/manage/${token}?removed=1`);
 }
 
 export async function resolveLocalSubmission(formData: FormData) {
@@ -1174,6 +1267,7 @@ export async function createLocalEvent(formData: FormData) {
 export async function addHouseholdToCommunityWide(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const eventId = required(formData, "event_id");
+  const creatorEmail = optionalEmail(formData, "creator_email");
 
   const { data: event, error: eventError } = await supabase
     .from("local_events")
@@ -1253,6 +1347,15 @@ export async function addHouseholdToCommunityWide(formData: FormData) {
   revalidatePath("/local-events");
   revalidatePath("/saletrail");
   revalidatePath("/saletrail/map");
+  if (creatorEmail) {
+    await sendManageLinkEmail({
+      to: creatorEmail,
+      title,
+      manageToken,
+      kind: "SaleTrail listing",
+      publicUrl: saleUrl({ slug, city: address.city, state: address.state }),
+    });
+  }
   redirect(`${saleSharePath({ slug, city: address.city, state: address.state })}?manage=${manageToken}`);
 }
 

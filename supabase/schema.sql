@@ -208,15 +208,23 @@ create table if not exists public.local_submissions (
   category text,
   name text,
   contact text,
+  submitter_email text,
   city text,
   state text,
   website_url text,
   description text not null,
   status text not null default 'pending' check (status in ('pending', 'reviewed', 'approved', 'rejected')),
   admin_notes text,
+  manage_token_hash text,
+  manage_email_sent_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.local_submissions
+  add column if not exists submitter_email text,
+  add column if not exists manage_token_hash text,
+  add column if not exists manage_email_sent_at timestamptz;
 
 create table if not exists public.monetization_leads (
   id uuid primary key default gen_random_uuid(),
@@ -286,6 +294,10 @@ create index if not exists feedback_requests_status_idx
 
 create index if not exists local_submissions_status_idx
   on public.local_submissions (submission_area, status, created_at desc);
+
+create unique index if not exists local_submissions_manage_token_hash_idx
+  on public.local_submissions (manage_token_hash)
+  where manage_token_hash is not null;
 
 create index if not exists monetization_leads_status_idx
   on public.monetization_leads (status, priority, updated_at desc);

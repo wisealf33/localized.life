@@ -721,6 +721,9 @@ export default async function AdminPage({ searchParams }: Props) {
                         {[submission.name, submission.contact].filter(Boolean).join(" · ")}
                       </p>
                     ) : null}
+                    {submission.submitter_email ? (
+                      <p className="muted">Manage email: {submission.submitter_email}</p>
+                    ) : null}
                     {submission.website_url ? (
                       <p>
                         <a className="text-link" href={submission.website_url} target="_blank" rel="noopener noreferrer">

@@ -153,12 +153,15 @@ export type LocalSubmission = {
   category: string | null;
   name: string | null;
   contact: string | null;
+  submitter_email: string | null;
   city: string | null;
   state: string | null;
   website_url: string | null;
   description: string;
   status: LocalSubmissionStatus;
   admin_notes: string | null;
+  manage_token_hash: string | null;
+  manage_email_sent_at: string | null;
   created_at: string;
   updated_at: string;
 };

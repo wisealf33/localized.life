@@ -21,6 +21,14 @@ export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) 
         <input name="title" required defaultValue={sale?.title} placeholder="Saturday garage sale" />
       </label>
 
+      {!sale && !admin ? (
+        <label>
+          Email for private manage link
+          <input name="creator_email" type="email" required placeholder="you@example.com" />
+          <span className="helper">We email the private edit/remove link here. No account is created.</span>
+        </label>
+      ) : null}
+
       <label>
         Street address
         <input name="address_line" required defaultValue={sale?.address_line} placeholder="123 Main St" />

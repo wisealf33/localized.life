@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { pageMetadata } from "@/lib/seo";
 
 type Props = {
-  searchParams: Promise<{ submitted?: string }>;
+  searchParams: Promise<{ submitted?: string; email?: string; manage?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -71,6 +71,8 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         descriptionPlaceholder="What do you do, what area do you serve, when are you available, and how should people contact you?"
         returnPath="/local-services"
         submitted={Boolean(params.submitted)}
+        emailStatus={params.email}
+        manageToken={params.manage}
       />
     </main>
   );

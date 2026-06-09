@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { pageMetadata } from "@/lib/seo";
 
 type Props = {
-  searchParams: Promise<{ submitted?: string }>;
+  searchParams: Promise<{ submitted?: string; email?: string; manage?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -104,6 +104,8 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         descriptionPlaceholder="What do you sell, where are you located, when are you available, and how should people contact you?"
         returnPath="/local-market"
         submitted={Boolean(params.submitted)}
+        emailStatus={params.email}
+        manageToken={params.manage}
       />
     </main>
   );

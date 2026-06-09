@@ -2415,6 +2415,18 @@ textarea {
   align-items: start;
 }
 
+.danger-button {
+  border-color: #fecaca;
+  background: #fff7f7;
+  color: #b42318;
+}
+
+.danger-button:hover {
+  border-color: #fca5a5;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .share-hero {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
