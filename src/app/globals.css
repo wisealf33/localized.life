@@ -839,6 +839,49 @@ h2 {
   gap: 10px;
 }
 
+.event-route-tools {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: 0 14px 35px rgba(37, 99, 235, 0.08);
+}
+
+.event-route-tools h3 {
+  margin: 0 0 4px;
+}
+
+.event-route-tool-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.event-route-tool-grid label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.event-route-tool-grid select {
+  min-height: 46px;
+}
+
+.route-suggestion-note {
+  margin: 0;
+  color: var(--primary-strong);
+  font-weight: 750;
+}
+
+.small-note {
+  font-size: 0.9rem;
+}
+
 .event-stop-check {
   display: grid;
   width: 100%;
@@ -2733,6 +2776,7 @@ code {
   .share-action-grid,
   .local-submit-panel,
   .event-add-stop-form,
+  .event-route-tool-grid,
   .event-stop-list,
   .route-start-card,
   .sales-type-strip {
