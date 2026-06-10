@@ -281,14 +281,14 @@ export function HarvestRegistry() {
                     </Link>
                   </article>
                   <article className="harvest-plant-card harvest-action-card">
-                    <span className="harvest-type">Possible site</span>
-                    <h3>Report a tree you noticed.</h3>
+                    <span className="harvest-type">Spotted tree</span>
+                    <h3>Share a harvest lead.</h3>
                     <p>
-                      Use the possible-site path when a plant looks harvestable but the owner still needs to be
-                      contacted.
+                      Know of a fruit tree, nut tree, berry bush, or perennial food plant? Share the lead so the local
+                      team can learn more and connect with the owner.
                     </p>
                     <Link className="button harvest-primary" href="#involved">
-                      Get involved
+                      Share a lead
                     </Link>
                   </article>
                   <article className="harvest-plant-card harvest-action-card">
