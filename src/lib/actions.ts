@@ -1325,7 +1325,7 @@ export async function addHouseholdToCommunityWide(formData: FormData) {
     starts_at: event.starts_at,
     ends_at: event.ends_at,
     sale_schedule: saleSchedule,
-    categories: ["Garage sale", "City-wide sale", "Community sale"],
+    categories: ["Garage sale"],
     status: "active",
     source_type: "seller_created",
     claim_status: "claimed",

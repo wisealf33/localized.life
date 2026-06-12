@@ -21,13 +21,13 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { Sale } from "@/lib/types";
 
 const publicSaleColumns =
-  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, photo_urls, categories, status, source_type, claim_status, visibility_status, source_url, event_id, claimed_at, created_at, updated_at";
 const publicSaleColumnsWithoutPhotos =
-  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, location_precision, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, event_id, claimed_at, created_at, updated_at";
 const publicSaleColumnsWithoutPrecision =
-  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, latitude, longitude, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, event_id, claimed_at, created_at, updated_at";
 const publicSaleColumnsWithoutCoordinates =
-  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, claimed_at, created_at, updated_at";
+  "id, slug, title, description, address_line, city, state, zip, starts_at, ends_at, sale_schedule, categories, status, source_type, claim_status, visibility_status, source_url, event_id, claimed_at, created_at, updated_at";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -81,7 +81,8 @@ async function getSale(slug: string) {
   return data as Sale;
 }
 
-function isEventHubSale(sale: Pick<Sale, "title" | "address_line" | "categories">) {
+function isEventHubSale(sale: Pick<Sale, "title" | "address_line" | "categories" | "event_id">) {
+  if (sale.event_id) return false;
   return isSaleEventHub(sale);
 }
 
