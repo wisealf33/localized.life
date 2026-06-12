@@ -44,11 +44,7 @@ function selectedFromSavedSales(sales: SavedSale[]) {
 }
 
 function defaultSelectedSales(sales: SavedSale[]) {
-  const savedSelected = selectedFromSavedSales(sales);
-  if (savedSelected.size > 0) return savedSelected;
-
-  const ignoredCodes = readNotInterestedCodes();
-  return new Set(sales.filter((sale) => !ignoredCodes.has(listingCode(sale.slug))).map((sale) => sale.slug));
+  return new Set(sales.map((sale) => sale.slug));
 }
 
 function hasCoordinates(sale: SavedSale) {
