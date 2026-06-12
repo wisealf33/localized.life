@@ -22,10 +22,16 @@ export type MonetizationLeadPriority = "low" | "medium" | "high";
 export type LocalEventType =
   | "city_wide_garage_sale"
   | "community_sale"
+  | "festival"
+  | "vendor_market"
+  | "craft_fair"
   | "flea_market"
   | "swap_meet"
   | "farmers_market"
-  | "local_market";
+  | "local_market"
+  | "workshop_class"
+  | "plant_swap"
+  | "community_day";
 export type ClaimVerificationMethod = "original_post_comment" | "localized_group_post";
 export type OutreachStatus =
   | "not_contacted"

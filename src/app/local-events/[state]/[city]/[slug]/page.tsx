@@ -5,8 +5,8 @@ import { EventRouteSelector } from "@/components/EventRouteSelector";
 import { SaleMap } from "@/components/SaleMap";
 import { SiteHeader } from "@/components/SiteHeader";
 import { addHouseholdToCommunityWide } from "@/lib/actions";
-import { eventPath, eventTypeLabel, formatEventHours } from "@/lib/events";
-import { fullAddress, saleDisplayTitle, salePath, splitSaleSchedule } from "@/lib/format";
+import { eventPath, eventSupportsSaleStops, eventTypeLabel, eventUsesSaleTrailFeatures, formatEventHours } from "@/lib/events";
+import { fullAddress, saleDisplayTitle, salePath } from "@/lib/format";
 import { absoluteUrl, cleanDescription, pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocalEvent, Sale } from "@/lib/types";
@@ -60,7 +60,9 @@ export default async function EventDetailPage({ params }: Props) {
   const { slug } = await params;
   const event = await getEvent(slug);
   if (!event) notFound();
-  const sales = await getEventSales(event.id);
+  const usesSaleTrailFeatures = eventUsesSaleTrailFeatures(event.event_type);
+  const supportsSaleStops = eventSupportsSaleStops(event.event_type);
+  const sales = supportsSaleStops ? await getEventSales(event.id) : [];
   const mappedSales = sales.map((sale) => ({
     slug: sale.slug,
     title: saleDisplayTitle(sale),
@@ -99,7 +101,10 @@ export default async function EventDetailPage({ params }: Props) {
 
   return (
     <main className="page">
-      <SiteHeader active="local-events" product="Project hub" />
+      <SiteHeader
+        active={usesSaleTrailFeatures ? "find" : "local-events"}
+        product={usesSaleTrailFeatures ? "SaleTrail" : "Project hub"}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <section className="hero event-hero">
         <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
@@ -122,54 +127,27 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       </section>
 
-      {sales.length ? (
+      {supportsSaleStops && sales.length ? (
         <section className="panel stack">
           <div>
             <p className="eyebrow">SaleTrail stops</p>
-            <h2>Sales connected to this event</h2>
+            <h2>Household sale stops</h2>
             <p className="muted">
-              These are the sale stops currently connected to this event. Shoppers can choose which ones they want in
-              their own route.
+              These are the household sale stops connected to this community-wide sale. Shoppers can choose which ones
+              they want in their own route.
             </p>
           </div>
+          <EventRouteSelector sales={mappedSales} />
           <SaleMap sales={mappedSales} />
-          {event.event_type === "city_wide_garage_sale" ? (
-            <EventRouteSelector sales={mappedSales} />
-          ) : (
-            <div className="list compact-list">
-              {sales.map((sale) => {
-                const schedule = splitSaleSchedule(sale);
-                const displayTitle = saleDisplayTitle(sale);
-                return (
-                  <article className="card sale-card mini-sale-card" key={sale.id}>
-                    <h3>
-                      <Link href={salePath(sale)}>{displayTitle}</Link>
-                    </h3>
-                    <p>
-                      <Link className="text-link sale-card-address" href={salePath(sale)}>
-                        {fullAddress(sale)}
-                      </Link>
-                    </p>
-                    <div className="sale-card-schedule">
-                      {schedule.dates.map((line) => (
-                        <span key={line}>{line}</span>
-                      ))}
-                      {schedule.note ? <small>{schedule.note}</small> : null}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
         </section>
-      ) : (
+      ) : supportsSaleStops ? (
         <section className="empty">
-          <h2>No connected sale stops yet</h2>
-          <p>Admin can attach household listings to this event from the admin page.</p>
+          <h2>No household stops listed yet</h2>
+          <p>Participating household sale stops can be added here when they are available.</p>
         </section>
-      )}
+      ) : null}
 
-      {event.event_type === "city_wide_garage_sale" ? (
+      {supportsSaleStops ? (
         <section className="panel event-add-stop-panel">
           <details className="event-add-stop-details">
             <summary>

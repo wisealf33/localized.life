@@ -63,10 +63,16 @@ create table if not exists public.local_events (
     event_type in (
       'city_wide_garage_sale',
       'community_sale',
+      'festival',
+      'vendor_market',
+      'craft_fair',
       'flea_market',
       'swap_meet',
       'farmers_market',
-      'local_market'
+      'local_market',
+      'workshop_class',
+      'plant_swap',
+      'community_day'
     )
   ),
   description text,

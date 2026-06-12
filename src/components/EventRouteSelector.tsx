@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { SavedSale } from "./SaveSaleButton";
 
 const key = "saletrail.savedSales";
@@ -74,12 +75,15 @@ function distanceInMiles(from: RouteStartLocation, to: SavedSale) {
 }
 
 export function EventRouteSelector({ sales }: { sales: SavedSale[] }) {
+  const router = useRouter();
   const [selected, setSelected] = useState(() => defaultSelectedSales(sales));
   const [orderedSlugs, setOrderedSlugs] = useState(() => sales.map((sale) => sale.slug));
   const [startSlug, setStartSlug] = useState(() => sales.find(hasCoordinates)?.slug || sales[0]?.slug || "");
   const [startLocation, setStartLocation] = useState<RouteStartLocation | null>(null);
   const [routeNote, setRouteNote] = useState("");
   const selectedCount = selected.size;
+  const allSelected = selectedCount === sales.length;
+  const noneSelected = selectedCount === 0;
   const salesBySlug = useMemo(() => new Map(sales.map((sale) => [sale.slug, sale])), [sales]);
   const orderedSales = useMemo(() => {
     const seen = new Set<string>();
@@ -137,10 +141,61 @@ export function EventRouteSelector({ sales }: { sales: SavedSale[] }) {
 
   function toggle(slug: string) {
     const next = new Set(selected);
-    if (next.has(slug)) next.delete(slug);
+    const wasSelected = next.has(slug);
+    if (wasSelected) next.delete(slug);
     else next.add(slug);
     setSelected(next);
+    if (!wasSelected) {
+      applySelectedOrder([...selectedSales.map((sale) => sale.slug), slug]);
+    }
     setRouteNote("");
+  }
+
+  function selectAll() {
+    const currentSelectedSlugs = selectedSales.map((sale) => sale.slug);
+    const missingSelectedSlugs = orderedSales.filter((sale) => !selected.has(sale.slug)).map((sale) => sale.slug);
+    const nextSelectedSlugs = [...currentSelectedSlugs, ...missingSelectedSlugs];
+
+    setSelected(new Set(orderedSales.map((sale) => sale.slug)));
+    applySelectedOrder(nextSelectedSlugs);
+    setRouteNote("");
+  }
+
+  function deselectAll() {
+    setSelected(new Set());
+    setRouteNote("");
+  }
+
+  function applySelectedOrder(nextSelectedSlugs: string[]) {
+    const selectedSlugSet = new Set(nextSelectedSlugs);
+    const selectedQueue = [...nextSelectedSlugs];
+    const nextOrderedSlugs = orderedSales.map((sale) => {
+      if (!selectedSlugSet.has(sale.slug)) return sale.slug;
+      return selectedQueue.shift() || sale.slug;
+    });
+
+    setOrderedSlugs(nextOrderedSlugs);
+  }
+
+  function moveSelectedStopTo(slug: string, nextPosition: number) {
+    const currentSelectedSlugs = selectedSales.map((sale) => sale.slug);
+    const currentIndex = currentSelectedSlugs.indexOf(slug);
+    if (currentIndex === -1) return;
+
+    const nextIndex = Math.max(0, Math.min(currentSelectedSlugs.length - 1, nextPosition - 1));
+    if (nextIndex === currentIndex) return;
+
+    const nextSelectedSlugs = [...currentSelectedSlugs];
+    const [movedSlug] = nextSelectedSlugs.splice(currentIndex, 1);
+    nextSelectedSlugs.splice(nextIndex, 0, movedSlug);
+    applySelectedOrder(nextSelectedSlugs);
+    setRouteNote("");
+  }
+
+  function moveSelectedStop(slug: string, direction: -1 | 1) {
+    const currentIndex = selectedSales.findIndex((sale) => sale.slug === slug);
+    if (currentIndex === -1) return;
+    moveSelectedStopTo(slug, currentIndex + 1 + direction);
   }
 
   function addSelected() {
@@ -148,6 +203,7 @@ export function EventRouteSelector({ sales }: { sales: SavedSale[] }) {
     const selectedCodes = new Set(selectedSales.map((sale) => listingCode(sale.slug)));
     const next = [...current.filter((sale) => !selectedCodes.has(listingCode(sale.slug))), ...selectedSales];
     writeSaved(next);
+    router.push("/saletrail/route");
   }
 
   function useMyLocation() {
@@ -258,6 +314,19 @@ export function EventRouteSelector({ sales }: { sales: SavedSale[] }) {
           Add {selectedCount} selected stop{selectedCount === 1 ? "" : "s"} to route
         </button>
       </div>
+      <div className="event-route-selection-bar">
+        <p>
+          <strong>{selectedCount}</strong> of {sales.length} stops selected
+        </p>
+        <div className="event-route-selection-actions">
+          <button className="button compact-button" type="button" onClick={selectAll} disabled={allSelected}>
+            Select all
+          </button>
+          <button className="button compact-button" type="button" onClick={deselectAll} disabled={noneSelected}>
+            Deselect all
+          </button>
+        </div>
+      </div>
       <div className="event-route-tools">
         <div>
           <h3>Suggest a route order</h3>
@@ -295,27 +364,58 @@ export function EventRouteSelector({ sales }: { sales: SavedSale[] }) {
         <p className="muted small-note">This is a simple suggested order, not live traffic or full road optimization.</p>
       </div>
       <div className="event-stop-list">
-        {orderedSales.map((sale) => (
-          <div className="event-stop-check" key={sale.slug}>
-            <input
-              aria-label={`Include ${sale.title} in my route`}
-              checked={selected.has(sale.slug)}
-              type="checkbox"
-              onChange={() => toggle(sale.slug)}
-            />
-            <span>
-              <a href={sale.href}>
-                <strong>
-                  {selected.has(sale.slug) ? `${selectedSales.findIndex((item) => item.slug === sale.slug) + 1}. ` : ""}
-                  {sale.title}
-                </strong>
-              </a>
-              <a href={sale.href}>
-                <small>{sale.address}</small>
-              </a>
-            </span>
-          </div>
-        ))}
+        {orderedSales.map((sale) => {
+          const isSelected = selected.has(sale.slug);
+          const routePosition = selectedSales.findIndex((item) => item.slug === sale.slug) + 1;
+          return (
+            <div className={`event-stop-check${isSelected ? " selected" : ""}`} key={sale.slug}>
+              <input
+                aria-label={`Include ${sale.title} in my route`}
+                checked={isSelected}
+                type="checkbox"
+                onChange={() => toggle(sale.slug)}
+              />
+              {isSelected ? (
+                <div className="event-stop-order" aria-label={`Route position for ${sale.title}`}>
+                  <input
+                    aria-label={`Stop number for ${sale.title}`}
+                    max={selectedCount}
+                    min={1}
+                    type="number"
+                    value={routePosition}
+                    onChange={(event) => moveSelectedStopTo(sale.slug, Number(event.target.value))}
+                  />
+                  <div className="event-stop-order-buttons">
+                    <button
+                      aria-label={`Move ${sale.title} earlier in route`}
+                      disabled={routePosition <= 1}
+                      type="button"
+                      onClick={() => moveSelectedStop(sale.slug, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      aria-label={`Move ${sale.title} later in route`}
+                      disabled={routePosition >= selectedCount}
+                      type="button"
+                      onClick={() => moveSelectedStop(sale.slug, 1)}
+                    >
+                      ↓
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+              <span className="event-stop-copy">
+                <a href={sale.href}>
+                  <strong>{sale.title}</strong>
+                </a>
+                <a href={sale.href}>
+                  <small>{sale.address}</small>
+                </a>
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

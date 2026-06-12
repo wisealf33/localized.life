@@ -5,15 +5,31 @@ import { urlSegment } from "./format";
 
 export const eventTypeOptions: { value: LocalEventType; label: string }[] = [
   { value: "city_wide_garage_sale", label: "City-wide garage sale" },
-  { value: "community_sale", label: "Community event" },
+  { value: "festival", label: "Festival" },
+  { value: "vendor_market", label: "Vendor market" },
+  { value: "craft_fair", label: "Craft fair" },
   { value: "flea_market", label: "Flea market" },
   { value: "swap_meet", label: "Swap meet" },
   { value: "farmers_market", label: "Farmers market" },
   { value: "local_market", label: "Local market" },
+  { value: "workshop_class", label: "Workshop or class" },
+  { value: "plant_swap", label: "Plant swap" },
+  { value: "community_day", label: "Community day" },
+  { value: "community_sale", label: "Community sale" },
 ];
 
 export function eventTypeLabel(type: LocalEventType) {
   return eventTypeOptions.find((option) => option.value === type)?.label || "Local event";
+}
+
+const saleTrailEventTypes = new Set<LocalEventType>(["city_wide_garage_sale", "community_sale"]);
+
+export function eventSupportsSaleStops(type: LocalEventType) {
+  return saleTrailEventTypes.has(type);
+}
+
+export function eventUsesSaleTrailFeatures(type: LocalEventType) {
+  return saleTrailEventTypes.has(type);
 }
 
 export function eventPath(event: Pick<LocalEvent, "slug" | "city" | "state">) {
