@@ -9,7 +9,8 @@ type AccessStatus =
   | "Owner registered - contact before harvest"
   | "Owner registered - interested in sharing surplus"
   | "Owner registered - needs harvest help"
-  | "Owner registered - registry only for now";
+  | "Owner registered - registry only for now"
+  | "Owner connection needed";
 
 type HarvestPlant = {
   plantName: string;
@@ -83,10 +84,19 @@ function generalArea(location: string) {
   return `${parts[0] || "General"} area`;
 }
 
+function publicStatus(plant: HarvestPlant) {
+  if (plant.registryPath === "Possible harvest site") {
+    return "Owner connection needed";
+  }
+
+  return "Owner registered";
+}
+
 export function HarvestRegistry() {
   const [plants, setPlants] = useState<HarvestPlant[]>([...starterPlants]);
   const [activeFilter, setActiveFilter] = useState<PlantType | "All">("All");
   const [confirmation, setConfirmation] = useState("");
+  const [leadConfirmation, setLeadConfirmation] = useState("");
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setPlants(readPlants()), 0);
@@ -152,7 +162,7 @@ export function HarvestRegistry() {
           <h2>Start by mapping the food already growing nearby.</h2>
           <p>
             The core Localized.life Harvest idea is simple: owners can register their own trees, and neighbors can
-            separately report possible harvest sites that still need owner permission.
+            separately share harvest leads that still need owner permission.
           </p>
         </div>
 
@@ -262,7 +272,7 @@ export function HarvestRegistry() {
                     </div>
                     <div>
                       <dt>Public status</dt>
-                      <dd>Owner registered</dd>
+                      <dd>{publicStatus(plant)}</dd>
                     </div>
                   </dl>
                 </article>
@@ -287,7 +297,7 @@ export function HarvestRegistry() {
                       Know of a fruit tree, nut tree, berry bush, or perennial food plant? Share the lead so the local
                       team can learn more and connect with the owner.
                     </p>
-                    <Link className="button harvest-primary" href="#involved">
+                    <Link className="button harvest-primary" href="#harvest-lead">
                       Share a lead
                     </Link>
                   </article>
@@ -306,6 +316,80 @@ export function HarvestRegistry() {
             <div className="harvest-empty">No plants in this part of the registry yet.</div>
           )}
         </div>
+      </section>
+
+      <section className="harvest-split harvest-lead-section" id="harvest-lead">
+        <div className="harvest-section-intro">
+          <p className="harvest-eyebrow">Spotted tree</p>
+          <h2>Share a possible harvest lead.</h2>
+          <p>
+            This is for a plant you noticed but do not own. Add enough detail for the local team to learn more, then
+            owner permission can happen before any harvest planning.
+          </p>
+        </div>
+
+        <form
+          className="harvest-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const data = new FormData(form);
+            const nextLead: HarvestPlant = {
+              plantName: String(data.get("leadPlantName") || ""),
+              plantType: String(data.get("leadPlantType") || "Fruit tree") as PlantType,
+              location: String(data.get("leadLocation") || ""),
+              harvestWindow: String(data.get("leadHarvestWindow") || ""),
+              access: "Owner connection needed",
+              notes: String(data.get("leadNotes") || ""),
+              registryPath: "Possible harvest site",
+            };
+
+            savePlants([nextLead, ...cleanCustomPlants(plants)]);
+            setLeadConfirmation(
+              `Thank you. This ${nextLead.plantName} lead has been saved as a possible harvest site. The next step is learning more and connecting with the owner.`,
+            );
+            form.reset();
+          }}
+        >
+          <h3>Share a lead</h3>
+          <label>
+            Plant or tree noticed
+            <input name="leadPlantName" type="text" placeholder="Apple tree, mulberry, grape vines..." required />
+          </label>
+          <label>
+            Plant type
+            <select name="leadPlantType" required defaultValue="Fruit tree">
+              <option value="Fruit tree">Fruit tree</option>
+              <option value="Nut tree">Nut tree</option>
+              <option value="Berry bush">Berry bush</option>
+              <option value="Other plant">Other plant</option>
+            </select>
+          </label>
+          <label>
+            Where is it?
+            <input name="leadLocation" type="text" placeholder="Nearest cross streets, neighborhood, or landmark" required />
+          </label>
+          <label>
+            Your phone
+            <input name="leadReporterPhone" type="tel" placeholder="Phone number" required />
+          </label>
+          <label>
+            Your email
+            <input name="leadReporterEmail" type="email" placeholder="Optional email" />
+          </label>
+          <label>
+            Possible harvest window
+            <input name="leadHarvestWindow" type="text" placeholder="Summer, September, unknown..." />
+          </label>
+          <label>
+            What should we know?
+            <textarea name="leadNotes" placeholder="What you noticed, whether the owner is known, access context, or anything helpful..." />
+          </label>
+          <button className="button harvest-primary" type="submit">
+            Save harvest lead
+          </button>
+          {leadConfirmation ? <div className="harvest-form-success">{leadConfirmation}</div> : null}
+        </form>
       </section>
     </>
   );
