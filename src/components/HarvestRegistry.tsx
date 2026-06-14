@@ -403,8 +403,13 @@ export function HarvestRegistry() {
                 </select>
               </label>
               <label>
-                Where is it?
-                <input name="leadLocation" type="text" placeholder="Nearest cross streets, neighborhood, or landmark" required />
+                Tree address or location
+                <input
+                  name="leadLocation"
+                  type="text"
+                  placeholder="Specific address if known, or cross streets, neighborhood, or landmark"
+                  required
+                />
               </label>
               <label>
                 Your phone for follow-up
