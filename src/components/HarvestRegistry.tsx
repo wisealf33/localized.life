@@ -20,10 +20,16 @@ type HarvestPlant = {
   access: AccessStatus;
   notes: string;
   productionStage?: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  ownerEmail?: string;
+  reporterPhone?: string;
+  reporterEmail?: string;
   registryPath: RegistryPath;
 };
 
 const plantKey = "localizedHarvestPlants";
+const leadKey = "localizedHarvestLeads";
 
 const starterPlants: HarvestPlant[] = [
   {
@@ -46,7 +52,9 @@ function isStarterPlant(plant: HarvestPlant) {
 }
 
 function cleanCustomPlants(plants: HarvestPlant[]) {
-  return plants.filter((plant) => !placeholderNames.has(plant.plantName) && !isStarterPlant(plant));
+  return plants.filter(
+    (plant) => plant.registryPath === "Owner registered" && !placeholderNames.has(plant.plantName) && !isStarterPlant(plant),
+  );
 }
 
 function readPlants() {
@@ -58,13 +66,31 @@ function readPlants() {
   }
 
   try {
-    const customPlants = cleanCustomPlants(JSON.parse(saved) as HarvestPlant[]);
+    const savedPlants = JSON.parse(saved) as HarvestPlant[];
+    const possibleSiteLeads = savedPlants.filter((plant) => plant.registryPath === "Possible harvest site");
+    if (possibleSiteLeads.length) {
+      const savedLeads = window.localStorage.getItem(leadKey);
+      const existingLeads = savedLeads ? (JSON.parse(savedLeads) as HarvestPlant[]) : [];
+      window.localStorage.setItem(leadKey, JSON.stringify([...possibleSiteLeads, ...existingLeads]));
+    }
+
+    const customPlants = cleanCustomPlants(savedPlants);
     window.localStorage.setItem(plantKey, JSON.stringify(customPlants));
     return [...starterPlants, ...customPlants];
   } catch {
     window.localStorage.removeItem(plantKey);
     return [...starterPlants];
   }
+}
+
+function looksLikeStreetAddress(value: string) {
+  return /^\d+\s+/.test(value) || /\b(avenue|ave|boulevard|blvd|court|ct|drive|dr|highway|hwy|lane|ln|place|pl|road|rd|street|st|way)\b/i.test(value);
+}
+
+function formatArea(value: string) {
+  const withoutZip = value.replace(/\b\d{5}(?:-\d{4})?\b/g, "").trim();
+  const normalizedState = withoutZip.replace(/\.\s*([A-Z]{2})\b/g, ", $1");
+  return normalizedState.replace(/\s+/g, " ").replace(/\s+,/g, ",").replace(/,+/g, ",").replace(/^,|,$/g, "").trim();
 }
 
 function generalArea(location: string) {
@@ -74,21 +100,30 @@ function generalArea(location: string) {
     .filter(Boolean);
 
   if (parts.length >= 3) {
-    return `${parts[parts.length - 3]}, ${parts[parts.length - 2]} area`;
+    if (looksLikeStreetAddress(parts[0])) {
+      return `${formatArea(`${parts[1]}, ${parts[2]}`)} area`;
+    }
+
+    return `${formatArea(`${parts[parts.length - 3]}, ${parts[parts.length - 2]}`)} area`;
   }
 
   if (parts.length >= 2) {
-    return `${parts[parts.length - 2]}, ${parts[parts.length - 1]} area`;
+    if (looksLikeStreetAddress(parts[0])) {
+      return `${formatArea(parts[1])} area`;
+    }
+
+    return `${formatArea(`${parts[parts.length - 2]}, ${parts[parts.length - 1]}`)} area`;
   }
 
-  return `${parts[0] || "General"} area`;
+  const singleLocation = formatArea(parts[0] || "");
+  if (looksLikeStreetAddress(singleLocation)) {
+    return "General area";
+  }
+
+  return `${singleLocation || "General"} area`;
 }
 
-function publicStatus(plant: HarvestPlant) {
-  if (plant.registryPath === "Possible harvest site") {
-    return "Owner connection needed";
-  }
-
+function publicStatus() {
   return "Owner registered";
 }
 
@@ -110,13 +145,18 @@ export function HarvestRegistry() {
     return plants.filter((plant) => plant.plantType === activeFilter);
   }, [activeFilter, plants]);
 
-  const possibleHarvestSites = plants.filter((plant) => plant.registryPath === "Possible harvest site").length;
   const registryTypes = new Set(plants.map((plant) => plant.plantType)).size;
 
   function savePlants(customPlants: HarvestPlant[]) {
     const cleaned = cleanCustomPlants(customPlants);
     setPlants([...starterPlants, ...cleaned]);
     window.localStorage.setItem(plantKey, JSON.stringify(cleaned));
+  }
+
+  function saveLead(lead: HarvestPlant) {
+    const saved = window.localStorage.getItem(leadKey);
+    const savedLeads = saved ? (JSON.parse(saved) as HarvestPlant[]) : [];
+    window.localStorage.setItem(leadKey, JSON.stringify([lead, ...savedLeads]));
   }
 
   function handleOwnerSubmit(event: FormEvent<HTMLFormElement>) {
@@ -131,6 +171,9 @@ export function HarvestRegistry() {
       access: String(data.get("access") || "Owner registered - contact before harvest") as AccessStatus,
       notes: String(data.get("notes") || ""),
       productionStage: String(data.get("productionStage") || "Not sure yet"),
+      ownerName: String(data.get("ownerName") || ""),
+      ownerPhone: String(data.get("ownerPhone") || ""),
+      ownerEmail: String(data.get("ownerEmail") || ""),
       registryPath: "Owner registered",
     };
 
@@ -152,12 +195,14 @@ export function HarvestRegistry() {
       harvestWindow: String(data.get("leadHarvestWindow") || ""),
       access: "Owner connection needed",
       notes: String(data.get("leadNotes") || ""),
+      reporterPhone: String(data.get("leadReporterPhone") || ""),
+      reporterEmail: String(data.get("leadReporterEmail") || ""),
       registryPath: "Possible harvest site",
     };
 
-    savePlants([nextLead, ...cleanCustomPlants(plants)]);
+    saveLead(nextLead);
     setLeadConfirmation(
-      `Thank you. This ${nextLead.plantName} lead has been saved as a possible harvest site. The next step is learning more and connecting with the owner.`,
+      `Thank you. This ${nextLead.plantName} lead has been saved privately for follow-up. It will not appear in the public registry unless it is reviewed, owner permission is handled, and the public listing is cleaned to a general area.`,
     );
     form.reset();
   }
@@ -167,11 +212,11 @@ export function HarvestRegistry() {
       <section className="harvest-stats" aria-label="Registry totals">
         <div>
           <strong>{plants.length}</strong>
-          <span>registered plants</span>
+          <span>owner registered plants</span>
         </div>
         <div>
-          <strong>{possibleHarvestSites}</strong>
-          <span>possible harvest sites</span>
+          <strong>Private</strong>
+          <span>harvest lead follow-up</span>
         </div>
         <div>
           <strong>{registryTypes}</strong>
@@ -243,7 +288,7 @@ export function HarvestRegistry() {
                     </div>
                     <div>
                       <dt>Public status</dt>
-                      <dd>{publicStatus(plant)}</dd>
+                      <dd>{publicStatus()}</dd>
                     </div>
                   </dl>
                 </article>
