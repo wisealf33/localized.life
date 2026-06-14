@@ -351,7 +351,7 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
                 <span className="harvest-type">Paw Paw Revival</span>
                 <h3>Donate to plant pawpaws.</h3>
                 <p>Sponsor pawpaw seeds or small trees that can become registered future harvest trees.</p>
-                <Link className="button harvest-primary" href="/harvest#pawpaw">
+                <Link className="button harvest-primary" href="/harvest/pawpaw-revival">
                   Open fundraiser
                 </Link>
               </article>

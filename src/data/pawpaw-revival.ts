@@ -1,0 +1,113 @@
+export const pawpawBridgeBucksUrl = "https://www.bridgebucksbank.com/participate?a_aid=Freedom_Unchained";
+
+export const pawpawWallets = [
+  {
+    chainId: 8453,
+    chainName: "Base",
+    symbol: "ETH",
+    address: "0xe1C183b49a271299b589D96235253bb9ec3915f7",
+    explorer: "https://basescan.org",
+  },
+  {
+    chainId: 56,
+    chainName: "BNB Smart Chain",
+    symbol: "BNB",
+    address: "0xef281a8F6b0e6565E4B69223312FC320aBF3d0a9",
+    explorer: "https://bscscan.com",
+  },
+  {
+    chainId: 1,
+    chainName: "Ethereum Mainnet",
+    symbol: "ETH",
+    address: "0x365c44bda4F17E0A715D8D4C232FC309Ad6b5EB4",
+    explorer: "https://etherscan.io",
+  },
+  {
+    chainId: 10001,
+    chainName: "Bitcoin Mainnet",
+    symbol: "BTC",
+    address: "1EBJ3CDpgUnbRVM5gis5f8Lm7ybZygiDCC",
+    explorer: "https://mempool.space",
+  },
+  {
+    chainId: 10002,
+    chainName: "Litecoin Mainnet",
+    symbol: "LTC",
+    address: "LXbnQkVXCo8AvcqnomRu9toAuVFqhB3p8V",
+    explorer: "https://blockchair.com/litecoin",
+  },
+  {
+    chainId: 10003,
+    chainName: "Bitcoin Cash Mainnet",
+    symbol: "BCH",
+    address: "bitcoincash:qqfcd9ssgq9keta8wcl7qm50kqfyh5l07ctq0vt4s8",
+    explorer: "https://blockchair.com/bitcoin-cash",
+  },
+  {
+    chainId: 10004,
+    chainName: "Dogecoin Mainnet",
+    symbol: "DOGE",
+    address: "DLWpm4NdJYdbRY1TNNHBXXcrVf3cdT7Lo4",
+    explorer: "https://dogechain.info",
+  },
+  {
+    chainId: 10005,
+    chainName: "Dash Mainnet",
+    symbol: "DASH",
+    address: "XfSmh59WRnjhUF736LZXTCSMXiUCTKBKa7",
+    explorer: "https://explorer.dash.org",
+  },
+  {
+    chainId: 10006,
+    chainName: "TRON Mainnet",
+    symbol: "TRX",
+    address: "TBdE9WunpeeqF4ULmAZZ8pXCUEZqNALErq",
+    explorer: "https://tronscan.org",
+  },
+  {
+    chainId: 10007,
+    chainName: "XRP Ledger Mainnet",
+    symbol: "XRP",
+    address: "r9qAYX3VykoCnCZWmhC1ET2auCHp7zHmyC",
+    explorer: "https://livenet.xrpl.org",
+  },
+  {
+    chainId: 137,
+    chainName: "Polygon",
+    symbol: "POL",
+    address: "0x2a5227Cb243fC86d35cEdc7DE0F2Dd3EC23B232A",
+    explorer: "https://polygonscan.com",
+  },
+  {
+    chainId: 42161,
+    chainName: "Arbitrum One",
+    symbol: "ETH",
+    address: "0xf26890DCa0c27BFA36c2aEBdba657B5e835F1bbA",
+    explorer: "https://arbiscan.io",
+  },
+  {
+    chainId: 10,
+    chainName: "Optimism",
+    symbol: "ETH",
+    address: "0x1c8c8fCCB108317C5BC1ac8BaB67160c295c7c92",
+    explorer: "https://optimistic.etherscan.io",
+  },
+];
+
+export const pawpawUpdates = [
+  {
+    title: "Campaign launch",
+    date: "June 2026",
+    body: "Paw Paw Revival is the first sponsored-tree campaign inside Localized.life Harvest, starting with seeds, small trees, and future registered harvest sites.",
+  },
+  {
+    title: "Planting model",
+    date: "Planning now",
+    body: "$5 sponsors a pawpaw seed start and $25 sponsors a small pawpaw tree. Sponsored trees can later become registered future harvest trees.",
+  },
+  {
+    title: "Network buildout",
+    date: "Next phase",
+    body: "The campaign will grow alongside the Harvest registry, local coordinators, planting partners, and future harvest volunteers.",
+  },
+];

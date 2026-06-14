@@ -2760,6 +2760,148 @@ textarea {
   font-size: 0.92rem;
 }
 
+.pawpaw-hero {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  display: grid;
+  align-items: end;
+  padding: clamp(92px, 14vw, 170px) max(18px, calc((100vw - 1180px) / 2)) clamp(46px, 8vw, 82px);
+  color: #fffdf4;
+}
+
+.pawpaw-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgb(18 31 21 / 88%), rgb(18 31 21 / 62%), rgb(18 31 21 / 26%));
+}
+
+.pawpaw-hero img {
+  object-fit: cover;
+}
+
+.pawpaw-hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+}
+
+.pawpaw-hero-copy h1 {
+  margin: 0 0 20px;
+  font-size: clamp(3rem, 8vw, 7.4rem);
+  line-height: 0.92;
+}
+
+.pawpaw-hero-copy p:not(.harvest-eyebrow) {
+  max-width: 640px;
+  color: #e5ebdd;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.5;
+}
+
+.pawpaw-intro,
+.pawpaw-levels,
+.pawpaw-updates,
+.pawpaw-videos,
+.pawpaw-crypto {
+  padding: clamp(48px, 8vw, 96px) max(18px, calc((100vw - 1180px) / 2));
+}
+
+.pawpaw-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: clamp(26px, 5vw, 72px);
+  background: #fffdf7;
+}
+
+.pawpaw-intro h2,
+.pawpaw-levels h2,
+.pawpaw-updates h2,
+.pawpaw-videos h2,
+.pawpaw-crypto h2 {
+  margin: 0 0 18px;
+  font-size: clamp(2.1rem, 4vw, 4.2rem);
+  line-height: 1;
+}
+
+.pawpaw-intro p,
+.pawpaw-levels p,
+.pawpaw-updates p,
+.pawpaw-videos p,
+.pawpaw-crypto p {
+  color: #5f695f;
+  font-size: 1.06rem;
+  line-height: 1.55;
+}
+
+.pawpaw-levels,
+.pawpaw-videos {
+  background: #f2ecd9;
+}
+
+.pawpaw-level-grid,
+.pawpaw-update-grid,
+.pawpaw-video-grid,
+.pawpaw-wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.pawpaw-updates,
+.pawpaw-crypto {
+  background: #fffdf7;
+}
+
+.pawpaw-video-card {
+  min-height: 210px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ded7c6;
+  border-radius: 8px;
+  background: #183826;
+  color: #fffdf4;
+  font-weight: 950;
+  text-align: center;
+}
+
+.pawpaw-crypto {
+  display: grid;
+  gap: 28px;
+}
+
+.pawpaw-wallet-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #ded7c6;
+  border-radius: 8px;
+  padding: 20px;
+  background: #fffdf7;
+}
+
+.pawpaw-wallet-card h3 {
+  margin: 8px 0 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
+.pawpaw-wallet-card code {
+  overflow-wrap: anywhere;
+  border: 1px solid #ebe4d2;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8f2e4;
+  color: #17231c;
+  font-size: 0.86rem;
+}
+
+.pawpaw-wallet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .harvest-involved {
   display: grid;
   grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1fr);
@@ -3098,7 +3240,8 @@ code {
   .harvest-steps,
   .harvest-campaign,
   .harvest-involved,
-  .harvest-involvement-options {
+  .harvest-involvement-options,
+  .pawpaw-intro {
     grid-template-columns: 1fr;
   }
 

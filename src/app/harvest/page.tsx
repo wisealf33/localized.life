@@ -101,14 +101,9 @@ export default function HarvestPage() {
               <span>long-term tree goal</span>
             </div>
           </div>
-          <a
-            className="button harvest-primary"
-            href="https://www.bridgebucksbank.com/participate?a_aid=Freedom_Unchained"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Sponsor pawpaws
-          </a>
+          <Link className="button harvest-primary" href="/harvest/pawpaw-revival">
+            Open Paw Paw Revival
+          </Link>
         </div>
         <figure className="harvest-campaign-image">
           <Image
