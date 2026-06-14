@@ -97,6 +97,8 @@ export function HarvestRegistry() {
   const [activeFilter, setActiveFilter] = useState<PlantType | "All">("All");
   const [confirmation, setConfirmation] = useState("");
   const [leadConfirmation, setLeadConfirmation] = useState("");
+  const [ownerFormOpen, setOwnerFormOpen] = useState(false);
+  const [leadFormOpen, setLeadFormOpen] = useState(false);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setPlants(readPlants()), 0);
@@ -117,7 +119,7 @@ export function HarvestRegistry() {
     window.localStorage.setItem(plantKey, JSON.stringify(cleaned));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleOwnerSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
@@ -135,6 +137,27 @@ export function HarvestRegistry() {
     savePlants([nextPlant, ...cleanCustomPlants(plants)]);
     setConfirmation(
       `Thank you. Your ${nextPlant.plantName} has been registered. Someone from localized.life harvest can follow up for permission planning, harvest timing, and next steps.`,
+    );
+    form.reset();
+  }
+
+  function handleLeadSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const nextLead: HarvestPlant = {
+      plantName: String(data.get("leadPlantName") || ""),
+      plantType: String(data.get("leadPlantType") || "Fruit tree") as PlantType,
+      location: String(data.get("leadLocation") || ""),
+      harvestWindow: String(data.get("leadHarvestWindow") || ""),
+      access: "Owner connection needed",
+      notes: String(data.get("leadNotes") || ""),
+      registryPath: "Possible harvest site",
+    };
+
+    savePlants([nextLead, ...cleanCustomPlants(plants)]);
+    setLeadConfirmation(
+      `Thank you. This ${nextLead.plantName} lead has been saved as a possible harvest site. The next step is learning more and connecting with the owner.`,
     );
     form.reset();
   }
@@ -166,68 +189,16 @@ export function HarvestRegistry() {
           </p>
         </div>
 
-        <form className="harvest-form" onSubmit={handleSubmit}>
-          <h3>Register my tree or plant</h3>
-          <label>
-            Plant name
-            <input name="plantName" type="text" placeholder="Pear, black walnut, pawpaw..." required />
-          </label>
-          <label>
-            Plant type
-            <select name="plantType" required defaultValue="Fruit tree">
-              <option value="Fruit tree">Fruit tree</option>
-              <option value="Nut tree">Nut tree</option>
-              <option value="Berry bush">Berry bush</option>
-              <option value="Other plant">Other plant</option>
-            </select>
-          </label>
-          <label>
-            Plant location
-            <input name="location" type="text" placeholder="Address, neighborhood, city, or landmark" required />
-          </label>
-          <label>
-            Owner name
-            <input name="ownerName" type="text" placeholder="Your name" required />
-          </label>
-          <label>
-            Owner phone
-            <input name="ownerPhone" type="tel" placeholder="Phone number" required />
-          </label>
-          <label>
-            Owner email
-            <input name="ownerEmail" type="email" placeholder="Optional email" />
-          </label>
-          <label>
-            Production stage
-            <select name="productionStage" defaultValue="Not sure yet">
-              <option value="Not producing yet">Not producing yet</option>
-              <option value="Producing now">Producing now</option>
-              <option value="Sometimes produces">Sometimes produces</option>
-              <option value="Not sure yet">Not sure yet</option>
-            </select>
-          </label>
-          <label>
-            Harvest window
-            <input name="harvestWindow" type="text" placeholder="Late August, October, TBA..." />
-          </label>
-          <label>
-            Owner permission
-            <select name="access" defaultValue="Owner registered - contact before harvest">
-              <option value="Owner registered - contact before harvest">Contact me before any harvest</option>
-              <option value="Owner registered - interested in sharing surplus">Interested in sharing surplus</option>
-              <option value="Owner registered - needs harvest help">I may need harvest help</option>
-              <option value="Owner registered - registry only for now">Registry only for now</option>
-            </select>
-          </label>
-          <label>
-            Notes
-            <textarea name="notes" placeholder="Tree health, estimated yield, access instructions, concerns, or goals..." />
-          </label>
-          <button className="button harvest-primary" type="submit">
+        <div className="harvest-modal-prompt">
+          <p className="harvest-eyebrow">Owner path</p>
+          <h3>Own a tree or perennial food plant?</h3>
+          <p>
+            Open a short form to add your plant to the registry. You can close it any time and come back later.
+          </p>
+          <button className="button harvest-primary" type="button" onClick={() => setOwnerFormOpen(true)}>
             Register my plant
           </button>
-          {confirmation ? <div className="harvest-form-success">{confirmation}</div> : null}
-        </form>
+        </div>
       </section>
 
       <section className="harvest-list-section" aria-labelledby="registryListTitle">
@@ -286,9 +257,9 @@ export function HarvestRegistry() {
                       Owners can register fruit trees, nut trees, berry bushes, or other perennial food plants for
                       future harvest planning.
                     </p>
-                    <Link className="button harvest-primary" href="#registry">
+                    <button className="button harvest-primary" type="button" onClick={() => setOwnerFormOpen(true)}>
                       Register a plant
-                    </Link>
+                    </button>
                   </article>
                   <article className="harvest-plant-card harvest-action-card">
                     <span className="harvest-type">Spotted tree</span>
@@ -297,9 +268,9 @@ export function HarvestRegistry() {
                       Know of a fruit tree, nut tree, berry bush, or perennial food plant? Share the lead so the local
                       team can learn more and connect with the owner.
                     </p>
-                    <Link className="button harvest-primary" href="#harvest-lead">
+                    <button className="button harvest-primary" type="button" onClick={() => setLeadFormOpen(true)}>
                       Share a lead
-                    </Link>
+                    </button>
                   </article>
                   <article className="harvest-plant-card harvest-action-card">
                     <span className="harvest-type">Paw Paw Revival</span>
@@ -318,79 +289,146 @@ export function HarvestRegistry() {
         </div>
       </section>
 
-      <section className="harvest-split harvest-lead-section" id="harvest-lead">
-        <div className="harvest-section-intro">
-          <p className="harvest-eyebrow">Spotted tree</p>
-          <h2>Share a possible harvest lead.</h2>
-          <p>
-            This is for a plant you noticed but do not own. Add enough detail for the local team to learn more, then
-            owner permission can happen before any harvest planning.
-          </p>
+      {ownerFormOpen ? (
+        <div className="harvest-modal-backdrop" role="presentation" onMouseDown={() => setOwnerFormOpen(false)}>
+          <div
+            aria-labelledby="ownerFormTitle"
+            aria-modal="true"
+            className="harvest-modal"
+            role="dialog"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="harvest-modal-header">
+              <h3 id="ownerFormTitle">Register my tree or plant</h3>
+              <button className="harvest-close-button" type="button" aria-label="Close form" onClick={() => setOwnerFormOpen(false)}>
+                X
+              </button>
+            </div>
+            <form className="harvest-form harvest-modal-form" onSubmit={handleOwnerSubmit}>
+              <label>
+                Plant name
+                <input name="plantName" type="text" placeholder="Pear, black walnut, pawpaw..." required />
+              </label>
+              <label>
+                Plant type
+                <select name="plantType" required defaultValue="Fruit tree">
+                  <option value="Fruit tree">Fruit tree</option>
+                  <option value="Nut tree">Nut tree</option>
+                  <option value="Berry bush">Berry bush</option>
+                  <option value="Other plant">Other plant</option>
+                </select>
+              </label>
+              <label>
+                Plant location
+                <input name="location" type="text" placeholder="Address, neighborhood, city, or landmark" required />
+              </label>
+              <label>
+                Owner name
+                <input name="ownerName" type="text" placeholder="Your name" required />
+              </label>
+              <label>
+                Owner phone
+                <input name="ownerPhone" type="tel" placeholder="Phone number" required />
+              </label>
+              <label>
+                Owner email
+                <input name="ownerEmail" type="email" placeholder="Optional email" />
+              </label>
+              <label>
+                Production stage
+                <select name="productionStage" defaultValue="Not sure yet">
+                  <option value="Not producing yet">Not producing yet</option>
+                  <option value="Producing now">Producing now</option>
+                  <option value="Sometimes produces">Sometimes produces</option>
+                  <option value="Not sure yet">Not sure yet</option>
+                </select>
+              </label>
+              <label>
+                Harvest window
+                <input name="harvestWindow" type="text" placeholder="Late August, October, TBA..." />
+              </label>
+              <label>
+                Owner permission
+                <select name="access" defaultValue="Owner registered - contact before harvest">
+                  <option value="Owner registered - contact before harvest">Contact me before any harvest</option>
+                  <option value="Owner registered - interested in sharing surplus">Interested in sharing surplus</option>
+                  <option value="Owner registered - needs harvest help">I may need harvest help</option>
+                  <option value="Owner registered - registry only for now">Registry only for now</option>
+                </select>
+              </label>
+              <label>
+                Notes
+                <textarea name="notes" placeholder="Tree health, estimated yield, access instructions, concerns, or goals..." />
+              </label>
+              <button className="button harvest-primary" type="submit">
+                Register my plant
+              </button>
+              {confirmation ? <div className="harvest-form-success">{confirmation}</div> : null}
+            </form>
+          </div>
         </div>
+      ) : null}
 
-        <form
-          className="harvest-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const data = new FormData(form);
-            const nextLead: HarvestPlant = {
-              plantName: String(data.get("leadPlantName") || ""),
-              plantType: String(data.get("leadPlantType") || "Fruit tree") as PlantType,
-              location: String(data.get("leadLocation") || ""),
-              harvestWindow: String(data.get("leadHarvestWindow") || ""),
-              access: "Owner connection needed",
-              notes: String(data.get("leadNotes") || ""),
-              registryPath: "Possible harvest site",
-            };
-
-            savePlants([nextLead, ...cleanCustomPlants(plants)]);
-            setLeadConfirmation(
-              `Thank you. This ${nextLead.plantName} lead has been saved as a possible harvest site. The next step is learning more and connecting with the owner.`,
-            );
-            form.reset();
-          }}
-        >
-          <h3>Share a lead</h3>
-          <label>
-            Plant or tree noticed
-            <input name="leadPlantName" type="text" placeholder="Apple tree, mulberry, grape vines..." required />
-          </label>
-          <label>
-            Plant type
-            <select name="leadPlantType" required defaultValue="Fruit tree">
-              <option value="Fruit tree">Fruit tree</option>
-              <option value="Nut tree">Nut tree</option>
-              <option value="Berry bush">Berry bush</option>
-              <option value="Other plant">Other plant</option>
-            </select>
-          </label>
-          <label>
-            Where is it?
-            <input name="leadLocation" type="text" placeholder="Nearest cross streets, neighborhood, or landmark" required />
-          </label>
-          <label>
-            Your phone
-            <input name="leadReporterPhone" type="tel" placeholder="Phone number" required />
-          </label>
-          <label>
-            Your email
-            <input name="leadReporterEmail" type="email" placeholder="Optional email" />
-          </label>
-          <label>
-            Possible harvest window
-            <input name="leadHarvestWindow" type="text" placeholder="Summer, September, unknown..." />
-          </label>
-          <label>
-            What should we know?
-            <textarea name="leadNotes" placeholder="What you noticed, whether the owner is known, access context, or anything helpful..." />
-          </label>
-          <button className="button harvest-primary" type="submit">
-            Save harvest lead
-          </button>
-          {leadConfirmation ? <div className="harvest-form-success">{leadConfirmation}</div> : null}
-        </form>
-      </section>
+      {leadFormOpen ? (
+        <div className="harvest-modal-backdrop" role="presentation" onMouseDown={() => setLeadFormOpen(false)}>
+          <div
+            aria-labelledby="leadFormTitle"
+            aria-modal="true"
+            className="harvest-modal"
+            role="dialog"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="harvest-modal-header">
+              <h3 id="leadFormTitle">Share a possible harvest lead</h3>
+              <button className="harvest-close-button" type="button" aria-label="Close form" onClick={() => setLeadFormOpen(false)}>
+                X
+              </button>
+            </div>
+            <p className="harvest-modal-note">
+              This is for a plant you noticed but do not own. Owner permission can happen before any harvest planning.
+            </p>
+            <form className="harvest-form harvest-modal-form" onSubmit={handleLeadSubmit}>
+              <label>
+                Plant or tree noticed
+                <input name="leadPlantName" type="text" placeholder="Apple tree, mulberry, grape vines..." required />
+              </label>
+              <label>
+                Plant type
+                <select name="leadPlantType" required defaultValue="Fruit tree">
+                  <option value="Fruit tree">Fruit tree</option>
+                  <option value="Nut tree">Nut tree</option>
+                  <option value="Berry bush">Berry bush</option>
+                  <option value="Other plant">Other plant</option>
+                </select>
+              </label>
+              <label>
+                Where is it?
+                <input name="leadLocation" type="text" placeholder="Nearest cross streets, neighborhood, or landmark" required />
+              </label>
+              <label>
+                Your phone
+                <input name="leadReporterPhone" type="tel" placeholder="Phone number" required />
+              </label>
+              <label>
+                Your email
+                <input name="leadReporterEmail" type="email" placeholder="Optional email" />
+              </label>
+              <label>
+                Possible harvest window
+                <input name="leadHarvestWindow" type="text" placeholder="Summer, September, unknown..." />
+              </label>
+              <label>
+                What should we know?
+                <textarea name="leadNotes" placeholder="What you noticed, whether the owner is known, access context, or anything helpful..." />
+              </label>
+              <button className="button harvest-primary" type="submit">
+                Save harvest lead
+              </button>
+              {leadConfirmation ? <div className="harvest-form-success">{leadConfirmation}</div> : null}
+            </form>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
