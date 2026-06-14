@@ -1,9 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { PawpawCryptoWallets } from "@/components/PawpawCryptoWallets";
 import { SiteHeader } from "@/components/SiteHeader";
-import { pawpawBridgeBucksUrl, pawpawUpdates } from "@/data/pawpaw-revival";
+import { pawpawUpdates } from "@/data/pawpaw-revival";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -52,12 +51,9 @@ export default function PawpawRevivalPage() {
             inside the Localized.life Harvest network.
           </p>
           <div className="toolbar">
-            <a className="button harvest-primary" href="#fund">
-              Fund pawpaw planting
-            </a>
-            <a className="button harvest-secondary" href="#crypto-fundraiser">
-              Crypto fundraiser
-            </a>
+            <Link className="button harvest-primary" href="/harvest/pawpaw-revival/donate">
+              Donate to plant pawpaws
+            </Link>
             <Link className="button harvest-secondary" href="/harvest">
               Back to Harvest
             </Link>
@@ -82,9 +78,9 @@ export default function PawpawRevivalPage() {
             <p className="harvest-eyebrow">Sponsor examples</p>
             <h2>Pick any amount. These levels show the impact.</h2>
           </div>
-          <a className="button harvest-primary" href={pawpawBridgeBucksUrl} rel="noopener noreferrer" target="_blank">
-            Sponsor through BridgeBucks
-          </a>
+          <Link className="button harvest-primary" href="/harvest/pawpaw-revival/donate">
+            Donate to plant pawpaws
+          </Link>
         </div>
         <div className="pawpaw-level-list" aria-label="Paw Paw Revival sponsor examples">
           {givingLevels.map((level) => (
@@ -127,16 +123,14 @@ export default function PawpawRevivalPage() {
         </div>
       </section>
 
-      <section className="pawpaw-crypto" id="crypto-fundraiser">
-        <div className="harvest-section-intro">
-          <p className="harvest-eyebrow">Crypto fundraiser</p>
-          <h2>Use the Pawpaw Revival receive wallets from AI Wallet Manager.</h2>
-          <p>
-            These are public receiving addresses generated for the Pawpaw Revival project. Send only on the matching
-            chain shown on each card.
-          </p>
+      <section className="pawpaw-donate-strip">
+        <div>
+          <p className="harvest-eyebrow">Ready to help?</p>
+          <h2>Plant a seed, a tree, a pair, or a small pawpaw patch.</h2>
         </div>
-        <PawpawCryptoWallets />
+        <Link className="button harvest-primary" href="/harvest/pawpaw-revival/donate">
+          Donate to the fundraiser
+        </Link>
       </section>
     </main>
   );
