@@ -22,12 +22,6 @@ const givingLevels = [
   { name: "Revival Acre", amount: "$1,000", detail: "plants forty small pawpaw trees" },
 ];
 
-const videoPlaceholders = [
-  "Why pawpaws matter",
-  "How sponsored trees become future harvest sites",
-  "Planting updates from the field",
-];
-
 export default function PawpawRevivalPage() {
   return (
     <main className="harvest-page pawpaw-page">
@@ -104,20 +98,6 @@ export default function PawpawRevivalPage() {
               <span className="harvest-type">{update.date}</span>
               <h3>{update.title}</h3>
               <p>{update.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="pawpaw-videos">
-        <div>
-          <p className="harvest-eyebrow">Videos</p>
-          <h2>Room for campaign videos as the revival grows.</h2>
-        </div>
-        <div className="pawpaw-video-grid">
-          {videoPlaceholders.map((title) => (
-            <article className="pawpaw-video-card" key={title}>
-              <span>{title}</span>
             </article>
           ))}
         </div>
