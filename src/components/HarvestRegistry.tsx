@@ -127,7 +127,11 @@ function publicStatus() {
   return "Owner registered";
 }
 
-export function HarvestRegistry() {
+type HarvestRegistryProps = {
+  mode?: "preview" | "directory";
+};
+
+export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
   const [plants, setPlants] = useState<HarvestPlant[]>([...starterPlants]);
   const [activeFilter, setActiveFilter] = useState<PlantType | "All">("All");
   const [confirmation, setConfirmation] = useState("");
@@ -145,6 +149,7 @@ export function HarvestRegistry() {
     return plants.filter((plant) => plant.plantType === activeFilter);
   }, [activeFilter, plants]);
 
+  const previewPlants = plants.slice(0, 4);
   const registryTypes = new Set(plants.map((plant) => plant.plantType)).size;
 
   function savePlants(customPlants: HarvestPlant[]) {
@@ -249,25 +254,88 @@ export function HarvestRegistry() {
       <section className="harvest-list-section" aria-labelledby="registryListTitle">
         <div className="harvest-list-header">
           <div>
-            <p className="harvest-eyebrow">Living list</p>
-            <h2 id="registryListTitle">Registered harvest sites</h2>
+            <p className="harvest-eyebrow">{mode === "preview" ? "Registry preview" : "Living list"}</p>
+            <h2 id="registryListTitle">{mode === "preview" ? "A quick look at what is registered." : "Registered harvest sites"}</h2>
           </div>
-          <div className="harvest-filters" aria-label="Registry filters">
-            {filters.map((filter) => (
-              <button
-                className={activeFilter === filter ? "harvest-filter is-active" : "harvest-filter"}
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-              >
-                {filter === "Fruit tree" ? "Fruit" : filter === "Nut tree" ? "Nuts" : filter === "Berry bush" ? "Berries" : filter === "Other plant" ? "Other" : "All"}
-              </button>
-            ))}
-          </div>
+          {mode === "directory" ? (
+            <div className="harvest-filters" aria-label="Registry filters">
+              {filters.map((filter) => (
+                <button
+                  className={activeFilter === filter ? "harvest-filter is-active" : "harvest-filter"}
+                  key={filter}
+                  type="button"
+                  onClick={() => setActiveFilter(filter)}
+                >
+                  {filter === "Fruit tree"
+                    ? "Fruit"
+                    : filter === "Nut tree"
+                      ? "Nuts"
+                      : filter === "Berry bush"
+                        ? "Berries"
+                        : filter === "Other plant"
+                          ? "Other"
+                          : "All"}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="harvest-plant-grid" aria-live="polite">
-          {visiblePlants.length ? (
+          {mode === "preview" ? (
+            <>
+              <article className="harvest-plant-card harvest-directory-card">
+                <span className="harvest-type">Public directory</span>
+                <h3>Registered plants</h3>
+                <p className="harvest-directory-count">
+                  {plants.length} {plants.length === 1 ? "plant" : "plants"} listed by general area
+                </p>
+                <div className="harvest-preview-list">
+                  {previewPlants.map((plant, index) => (
+                    <div className="harvest-preview-row" key={`${plant.plantName}-${plant.location}-${index}`}>
+                      <strong>{plant.plantName}</strong>
+                      <span>
+                        {plant.plantType} · {generalArea(plant.location)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link className="button harvest-primary" href="/harvest/registry">
+                  Open full registry
+                </Link>
+              </article>
+              <article className="harvest-plant-card harvest-action-card harvest-featured-action">
+                <span className="harvest-type">Register a tree</span>
+                <h3>Add your harvest site.</h3>
+                <p>
+                  Owners can register fruit trees, nut trees, berry bushes, or other perennial food plants for future
+                  harvest planning.
+                </p>
+                <button className="button harvest-primary" type="button" onClick={() => setOwnerFormOpen(true)}>
+                  Register a plant
+                </button>
+              </article>
+              <article className="harvest-plant-card harvest-action-card">
+                <span className="harvest-type">Spotted tree</span>
+                <h3>Share a harvest lead.</h3>
+                <p>
+                  Know of a fruit tree, nut tree, berry bush, or perennial food plant? Share the lead so the local team
+                  can learn more and connect with the owner.
+                </p>
+                <button className="button harvest-primary" type="button" onClick={() => setLeadFormOpen(true)}>
+                  Share a lead
+                </button>
+              </article>
+              <article className="harvest-plant-card harvest-action-card">
+                <span className="harvest-type">Paw Paw Revival</span>
+                <h3>Donate to plant pawpaws.</h3>
+                <p>Sponsor pawpaw seeds or small trees that can become registered future harvest trees.</p>
+                <Link className="button harvest-primary" href="/harvest#pawpaw">
+                  Open fundraiser
+                </Link>
+              </article>
+            </>
+          ) : visiblePlants.length ? (
             <>
               {visiblePlants.map((plant, index) => (
                 <article className="harvest-plant-card" key={`${plant.plantName}-${plant.location}-${index}`}>
@@ -293,40 +361,6 @@ export function HarvestRegistry() {
                   </dl>
                 </article>
               ))}
-              {activeFilter === "All" ? (
-                <>
-                  <article className="harvest-plant-card harvest-action-card harvest-featured-action">
-                    <span className="harvest-type">Register a tree</span>
-                    <h3>Add your harvest site.</h3>
-                    <p>
-                      Owners can register fruit trees, nut trees, berry bushes, or other perennial food plants for
-                      future harvest planning.
-                    </p>
-                    <button className="button harvest-primary" type="button" onClick={() => setOwnerFormOpen(true)}>
-                      Register a plant
-                    </button>
-                  </article>
-                  <article className="harvest-plant-card harvest-action-card">
-                    <span className="harvest-type">Spotted tree</span>
-                    <h3>Share a harvest lead.</h3>
-                    <p>
-                      Know of a fruit tree, nut tree, berry bush, or perennial food plant? Share the lead so the local
-                      team can learn more and connect with the owner.
-                    </p>
-                    <button className="button harvest-primary" type="button" onClick={() => setLeadFormOpen(true)}>
-                      Share a lead
-                    </button>
-                  </article>
-                  <article className="harvest-plant-card harvest-action-card">
-                    <span className="harvest-type">Paw Paw Revival</span>
-                    <h3>Donate to plant pawpaws.</h3>
-                    <p>Sponsor pawpaw seeds or small trees that can become registered future harvest trees.</p>
-                    <Link className="button harvest-primary" href="#pawpaw">
-                      Open fundraiser
-                    </Link>
-                  </article>
-                </>
-              ) : null}
             </>
           ) : (
             <div className="harvest-empty">No plants in this part of the registry yet.</div>
