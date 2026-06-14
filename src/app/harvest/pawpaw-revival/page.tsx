@@ -86,13 +86,13 @@ export default function PawpawRevivalPage() {
             Sponsor through BridgeBucks
           </a>
         </div>
-        <div className="pawpaw-level-grid">
+        <div className="pawpaw-level-list" aria-label="Paw Paw Revival sponsor examples">
           {givingLevels.map((level) => (
-            <article className="harvest-plant-card" key={level.name}>
-              <span className="harvest-type">{level.name}</span>
-              <h3>{level.amount}</h3>
+            <div className="pawpaw-level-row" key={level.name}>
+              <span>{level.name}</span>
+              <strong>{level.amount}</strong>
               <p>{level.detail}</p>
-            </article>
+            </div>
           ))}
         </div>
       </section>

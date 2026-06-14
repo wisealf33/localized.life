@@ -2840,13 +2840,52 @@ textarea {
   background: #f2ecd9;
 }
 
-.pawpaw-level-grid,
 .pawpaw-update-grid,
 .pawpaw-video-grid,
 .pawpaw-wallet-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 16px;
+}
+
+.pawpaw-level-list {
+  display: grid;
+  border: 1px solid #ded7c6;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fffdf7;
+}
+
+.pawpaw-level-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.7fr) minmax(90px, 0.35fr) minmax(220px, 1fr);
+  gap: 16px;
+  align-items: center;
+  border-bottom: 1px solid #ebe4d2;
+  padding: 14px 18px;
+}
+
+.pawpaw-level-row:last-child {
+  border-bottom: 0;
+}
+
+.pawpaw-level-row span {
+  color: #a95533;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.pawpaw-level-row strong {
+  color: #17231c;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.pawpaw-level-row p {
+  margin: 0;
 }
 
 .pawpaw-updates,
@@ -3243,6 +3282,11 @@ code {
   .harvest-involvement-options,
   .pawpaw-intro {
     grid-template-columns: 1fr;
+  }
+
+  .pawpaw-level-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .harvest-teaser-card {
