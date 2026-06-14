@@ -83,6 +83,21 @@ function readPlants() {
   }
 }
 
+function readLeadCount() {
+  if (typeof window === "undefined") return 0;
+
+  const saved = window.localStorage.getItem(leadKey);
+  if (!saved) return 0;
+
+  try {
+    const leads = JSON.parse(saved) as HarvestPlant[];
+    return Array.isArray(leads) ? leads.length : 0;
+  } catch {
+    window.localStorage.removeItem(leadKey);
+    return 0;
+  }
+}
+
 function looksLikeStreetAddress(value: string) {
   return /^\d+\s+/.test(value) || /\b(avenue|ave|boulevard|blvd|court|ct|drive|dr|highway|hwy|lane|ln|place|pl|road|rd|street|st|way)\b/i.test(value);
 }
@@ -133,6 +148,7 @@ type HarvestRegistryProps = {
 
 export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
   const [plants, setPlants] = useState<HarvestPlant[]>([...starterPlants]);
+  const [leadCount, setLeadCount] = useState(0);
   const [activeFilter, setActiveFilter] = useState<PlantType | "All">("All");
   const [confirmation, setConfirmation] = useState("");
   const [leadConfirmation, setLeadConfirmation] = useState("");
@@ -140,7 +156,10 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
   const [leadFormOpen, setLeadFormOpen] = useState(false);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => setPlants(readPlants()), 0);
+    const timeout = window.setTimeout(() => {
+      setPlants(readPlants());
+      setLeadCount(readLeadCount());
+    }, 0);
     return () => window.clearTimeout(timeout);
   }, []);
 
@@ -161,7 +180,9 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
   function saveLead(lead: HarvestPlant) {
     const saved = window.localStorage.getItem(leadKey);
     const savedLeads = saved ? (JSON.parse(saved) as HarvestPlant[]) : [];
-    window.localStorage.setItem(leadKey, JSON.stringify([lead, ...savedLeads]));
+    const nextLeads = [lead, ...savedLeads];
+    window.localStorage.setItem(leadKey, JSON.stringify(nextLeads));
+    setLeadCount(nextLeads.length);
   }
 
   function handleOwnerSubmit(event: FormEvent<HTMLFormElement>) {
@@ -220,8 +241,8 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
           <span>owner registered plants</span>
         </div>
         <div>
-          <strong>Private</strong>
-          <span>harvest lead follow-up</span>
+          <strong>{leadCount}</strong>
+          <span>private harvest leads</span>
         </div>
         <div>
           <strong>{registryTypes}</strong>
