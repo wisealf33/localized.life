@@ -385,7 +385,8 @@ export function HarvestRegistry() {
               </button>
             </div>
             <p className="harvest-modal-note">
-              This is for a plant you noticed but do not own. Owner permission can happen before any harvest planning.
+              This is for a plant you noticed but do not own. Your phone number is only for follow-up questions about
+              this lead. Owner permission can happen before any harvest planning.
             </p>
             <form className="harvest-form harvest-modal-form" onSubmit={handleLeadSubmit}>
               <label>
@@ -406,8 +407,8 @@ export function HarvestRegistry() {
                 <input name="leadLocation" type="text" placeholder="Nearest cross streets, neighborhood, or landmark" required />
               </label>
               <label>
-                Your phone
-                <input name="leadReporterPhone" type="tel" placeholder="Phone number" required />
+                Your phone for follow-up
+                <input name="leadReporterPhone" type="tel" placeholder="Best number for questions about this lead" required />
               </label>
               <label>
                 Your email
