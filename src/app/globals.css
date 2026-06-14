@@ -2735,6 +2735,10 @@ textarea {
   color: #dbe2d5;
 }
 
+.harvest-campaign-copy .button {
+  margin-top: 22px;
+}
+
 .harvest-campaign-image {
   overflow: hidden;
   margin: 0;
