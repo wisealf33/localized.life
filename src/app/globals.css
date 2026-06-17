@@ -723,15 +723,15 @@ h2 {
 .event-card {
   display: flex;
   flex-direction: column;
-  min-height: 430px;
-  height: 430px;
-  max-height: 430px;
+  min-height: 540px;
+  height: 540px;
+  max-height: 540px;
   overflow: hidden;
 }
 
 .event-card .sale-card-image {
-  aspect-ratio: 16 / 7;
-  max-height: 170px;
+  aspect-ratio: 16 / 8.5;
+  max-height: 230px;
 }
 
 .event-card h2 {
@@ -751,7 +751,7 @@ h2 {
   display: grid;
   gap: 8px;
   min-height: 0;
-  max-height: 94px;
+  max-height: 150px;
   overflow: hidden;
 }
 
@@ -763,7 +763,7 @@ h2 {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 5;
   color: var(--text);
   font-weight: 750;
   line-height: 1.35;
@@ -773,7 +773,7 @@ h2 {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   color: var(--muted);
   line-height: 1.45;
 }
