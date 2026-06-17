@@ -93,21 +93,3 @@ export const pawpawWallets = [
     explorer: "https://optimistic.etherscan.io",
   },
 ];
-
-export const pawpawUpdates = [
-  {
-    title: "Campaign launch",
-    date: "June 2026",
-    body: "Paw Paw Revival is the first sponsored-tree campaign inside Localized.life Harvest, starting with seeds, small trees, and future registered harvest sites.",
-  },
-  {
-    title: "Planting model",
-    date: "Planning now",
-    body: "$5 sponsors a pawpaw seed start and $25 sponsors a small pawpaw tree. Sponsored trees can later become registered future harvest trees.",
-  },
-  {
-    title: "Network buildout",
-    date: "Next phase",
-    body: "The campaign will grow alongside the Harvest registry, local coordinators, planting partners, and future harvest volunteers.",
-  },
-];

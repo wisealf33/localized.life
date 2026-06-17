@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
-import { pawpawUpdates } from "@/data/pawpaw-revival";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -83,22 +82,6 @@ export default function PawpawRevivalPage() {
               <strong>{level.amount}</strong>
               <p>{level.detail}</p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="pawpaw-updates">
-        <div className="harvest-section-intro">
-          <p className="harvest-eyebrow">Updates</p>
-          <h2>Campaign notes, field updates, and planting progress.</h2>
-        </div>
-        <div className="pawpaw-update-grid">
-          {pawpawUpdates.map((update) => (
-            <article className="harvest-plant-card" key={update.title}>
-              <span className="harvest-type">{update.date}</span>
-              <h3>{update.title}</h3>
-              <p>{update.body}</p>
-            </article>
           ))}
         </div>
       </section>
