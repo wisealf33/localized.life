@@ -42,6 +42,36 @@ const generalFallbackImages = [
 
 const festivalFallbackImages = [
   {
+    label: "General Local Event",
+    filename: "local-event.jpg",
+    publicPath: "/og/local-event.jpg",
+    description: "Neutral local event image for workshops, community days, classes, and events that do not have a more specific theme yet.",
+  },
+  {
+    label: "Local Market Event",
+    filename: "local-market-event.jpg",
+    publicPath: "/og/local-market-event.jpg",
+    description: "General local market event image for vendor markets, pop-ups, local markets, and community market days.",
+  },
+  {
+    label: "Farmers Market",
+    filename: "farmers-market.jpg",
+    publicPath: "/og/farmers-market.jpg",
+    description: "Farmers market booths, produce, tents, flowers, and local food tables.",
+  },
+  {
+    label: "Flea Market",
+    filename: "flea-market.jpg",
+    publicPath: "/og/flea-market.jpg",
+    description: "Flea market and swap meet tables with antiques, tools, vintage goods, tents, and browsing shoppers.",
+  },
+  {
+    label: "Oktoberfest",
+    filename: "oktoberfest.jpg",
+    publicPath: "/og/oktoberfest.jpg",
+    description: "Fall Oktoberfest event feel with autumn color, community tents, food, music, and festive small-town atmosphere.",
+  },
+  {
     label: "Music Festival",
     filename: "music-festival.jpg",
     publicPath: "/og/music-festival.jpg",

@@ -52,35 +52,85 @@ function publicFileExists(publicPath: string) {
   return existsSync(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")));
 }
 
-function isMusicEvent(event: Pick<LocalEvent, "title" | "description" | "event_type">) {
-  if (event.event_type !== "festival" && event.event_type !== "community_day") return false;
-
-  const text = `${event.title} ${event.description || ""}`.toLowerCase();
-  return [
-    "music festival",
-    "live music",
-    "rockin' on the square",
-    "rockin on the square",
-    "concert",
-    "performing",
-  ].some((term) => text.includes(term));
+function firstExistingPublicPath(paths: Array<string | null | undefined>) {
+  return paths.find((publicPath) => publicPath && publicFileExists(publicPath)) || null;
 }
 
-export function eventPreviewImagePath(event: Pick<LocalEvent, "city" | "state" | "title" | "description" | "event_type">) {
-  const musicFestivalPath = "/og/music-festival.jpg";
-  if (isMusicEvent(event) && publicFileExists(musicFestivalPath)) return musicFestivalPath;
+type EventPreviewImageEvent = Pick<
+  LocalEvent,
+  "city" | "state" | "title" | "description" | "event_type" | "event_schedule"
+>;
 
+const eventTypeImagePaths: Partial<Record<LocalEventType, string>> = {
+  city_wide_garage_sale: "/og/city-wide-sale.jpg",
+  community_sale: "/og/city-wide-sale.jpg",
+  festival: "/og/community-festival.jpg",
+  vendor_market: "/og/local-market-event.jpg",
+  craft_fair: "/og/craft-festival.jpg",
+  flea_market: "/og/flea-market.jpg",
+  swap_meet: "/og/flea-market.jpg",
+  farmers_market: "/og/farmers-market.jpg",
+  local_market: "/og/local-market-event.jpg",
+  workshop_class: "/og/local-event.jpg",
+  plant_swap: "/og/garden-festival.jpg",
+  community_day: "/og/community-festival.jpg",
+};
+
+const eventImageKeywordRules: Array<{ publicPath: string; keywords: string[] }> = [
+  { publicPath: "/og/oktoberfest.jpg", keywords: ["oktoberfest"] },
+  {
+    publicPath: "/og/music-festival.jpg",
+    keywords: [
+      "music festival",
+      "live music",
+      "rockin' on the square",
+      "rockin on the square",
+      "concert",
+      "performing",
+      "band",
+      "bluegrass",
+      "folk",
+    ],
+  },
+  {
+    publicPath: "/og/carnival-festival.jpg",
+    keywords: ["carnival", "midway", "ride special", "county fair", "fairgrounds", "fair "],
+  },
+  {
+    publicPath: "/og/food-festival.jpg",
+    keywords: ["food festival", "blueberry", "sweetcorn", "sweet corn", "rib", "bbq", "pancake", "taste of", "food truck", "food vendors"],
+  },
+  { publicPath: "/og/flea-market.jpg", keywords: ["flea market", "swap meet", "animal swap", "treasures"] },
+  {
+    publicPath: "/og/farmers-market.jpg",
+    keywords: ["farmers market", "farmer's market", "market @ the square", "market at the square"],
+  },
+  { publicPath: "/og/craft-festival.jpg", keywords: ["craft", "vendor market", "vendors", "art fair", "maker"] },
+  { publicPath: "/og/kids-festival.jpg", keywords: ["kids carnival", "children", "family fun", "back to school"] },
+  { publicPath: "/og/garden-festival.jpg", keywords: ["garden", "plant swap", "plants", "flowers"] },
+  { publicPath: "/og/heritage-festival.jpg", keywords: ["heritage", "history", "historic", "250th", "usa fest"] },
+  { publicPath: "/og/car-show-festival.jpg", keywords: ["car show", "hot rods", "cruise night", "cruise nights"] },
+  { publicPath: "/og/community-festival.jpg", keywords: ["community day", "festival", "celebration", "walk to end"] },
+];
+
+function eventSearchText(event: EventPreviewImageEvent) {
+  return `${event.title} ${event.description || ""} ${event.event_schedule || ""} ${event.event_type}`.toLowerCase();
+}
+
+function themedEventImagePath(event: EventPreviewImageEvent) {
+  const searchText = eventSearchText(event);
+  const matchingRule = eventImageKeywordRules.find((rule) => rule.keywords.some((keyword) => searchText.includes(keyword)));
+
+  return firstExistingPublicPath([matchingRule?.publicPath, eventTypeImagePaths[event.event_type], "/og/local-event.jpg"]);
+}
+
+export function eventPreviewImagePath(event: EventPreviewImageEvent) {
   const cityStatePath = `/og/${urlSegment(event.city)}-${urlSegment(event.state)}.jpg`;
-  if (publicFileExists(cityStatePath)) return cityStatePath;
-
   const legacyCityPath = `/og/${urlSegment(event.city)}.jpg`;
-  if (publicFileExists(legacyCityPath)) return legacyCityPath;
 
-  const cityWidePath = "/og/city-wide-sale.jpg";
-  if (publicFileExists(cityWidePath)) return cityWidePath;
+  if (eventUsesSaleTrailFeatures(event.event_type)) {
+    return firstExistingPublicPath([cityStatePath, legacyCityPath, eventTypeImagePaths[event.event_type], "/og/city-wide-sale.jpg", "/og/default-saletrail.jpg"]);
+  }
 
-  const defaultPath = "/og/default-saletrail.jpg";
-  if (publicFileExists(defaultPath)) return defaultPath;
-
-  return null;
+  return firstExistingPublicPath([themedEventImagePath(event), "/og/default-saletrail.jpg"]);
 }
