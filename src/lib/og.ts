@@ -2,6 +2,7 @@ import { existsSync } from "fs";
 import path from "path";
 import type { Sale } from "./types";
 import { saleUrl } from "./format";
+import { optimizedImageUrl } from "./images";
 import { saleFallbackImagePath } from "./share";
 
 type OgSale = Pick<Sale, "slug" | "title" | "city" | "state" | "photo_urls" | "categories">;
@@ -25,7 +26,7 @@ function firstUploadedPhoto(sale: OgSale) {
 
 export function saleOgImageUrl(sale: OgSale) {
   const uploadedPhoto = firstUploadedPhoto(sale);
-  if (uploadedPhoto) return uploadedPhoto;
+  if (uploadedPhoto) return optimizedImageUrl(uploadedPhoto, { width: 1200, height: 630, crop: "fill" });
 
   const fallback = saleFallbackImagePath(sale);
   if (fallback && publicFileExists(fallback)) return absolutePublicUrl(fallback);

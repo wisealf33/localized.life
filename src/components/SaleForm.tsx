@@ -1,4 +1,5 @@
 import { categoryOptions } from "@/lib/format";
+import { optimizedImageUrl } from "@/lib/images";
 import type { Sale } from "@/lib/types";
 import { ScheduleFields } from "./ScheduleFields";
 
@@ -82,7 +83,7 @@ export function SaleForm({ action, sale, token, admin = false }: SaleFormProps) 
             <div className="photo-grid">
               {sale.photo_urls.slice(0, 2).map((url) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={url} alt={`${sale.title} photo`} key={url} />
+                <img src={optimizedImageUrl(url, { width: 480, crop: "limit" })} alt={`${sale.title} photo`} key={url} />
               ))}
             </div>
           ) : null}

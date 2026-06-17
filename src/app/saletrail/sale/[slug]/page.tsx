@@ -15,6 +15,7 @@ import {
   salePath,
   saleSharePath,
 } from "@/lib/format";
+import { optimizedImageUrl } from "@/lib/images";
 import { saleMetadata, saleStructuredData } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -216,13 +217,17 @@ export default async function SalePage({ params, searchParams }: Props) {
         )}
         {previewImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="listing-preview-image" src={previewImage.src} alt={`${displayTitle} preview`} />
+          <img
+            className="listing-preview-image"
+            src={optimizedImageUrl(previewImage.src, { width: 1200, crop: "limit" })}
+            alt={`${displayTitle} preview`}
+          />
         ) : null}
         {sale.photo_urls && sale.photo_urls.length > 1 ? (
           <div className="photo-grid compact-photo-grid">
             {sale.photo_urls.slice(1, 2).map((url) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={url} alt={`${displayTitle} photo`} key={url} />
+              <img src={optimizedImageUrl(url, { width: 900, crop: "limit" })} alt={`${displayTitle} photo`} key={url} />
             ))}
           </div>
         ) : null}

@@ -10,6 +10,7 @@ import { rangeDates, rangeOptions, rangeParam } from "@/lib/dateFilters";
 import { eventPath, eventPreviewImagePath, formatEventHours } from "@/lib/events";
 import { categoryOptions, fullAddress, mapSearchUrl, saleDisplayTitle, salePath, splitSaleSchedule } from "@/lib/format";
 import { geocodeSearch } from "@/lib/geocode";
+import { optimizedImageUrl } from "@/lib/images";
 import { pageMetadata } from "@/lib/seo";
 import { salePreviewImage } from "@/lib/share";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -280,16 +281,28 @@ function canClaim(sale: Pick<Sale, "source_type" | "claim_status">) {
   return sale.source_type === "community_added" && sale.claim_status !== "claimed";
 }
 
+function previewText(value: string | null | undefined, maxLength = 150) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}...` : text;
+}
+
 function SaleCard({ sale }: { sale: Sale }) {
   const image = salePreviewImage(sale);
   const schedule = splitSaleSchedule(sale);
   const displayTitle = saleDisplayTitle(sale);
+  const previewDates = schedule.dates.slice(0, 3);
+  const hasMoreDates = schedule.dates.length > previewDates.length;
 
   return (
     <article className="card sale-card">
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="sale-card-image" src={image.src} alt={`${displayTitle} preview`} />
+        <img
+          className="sale-card-image"
+          src={optimizedImageUrl(image.src, { width: 900, crop: "limit" })}
+          alt={`${displayTitle} preview`}
+        />
       ) : null}
       <div className="card-top">
         <StatusBadge sale={sale} />
@@ -306,9 +319,10 @@ function SaleCard({ sale }: { sale: Sale }) {
         </a>
       </p>
       <div className="sale-card-schedule">
-        {schedule.dates.map((line) => (
+        {previewDates.map((line) => (
           <span key={line}>{line}</span>
         ))}
+        {hasMoreDates ? <small>More dates on listing page.</small> : null}
         {schedule.note ? <small>{schedule.note}</small> : null}
       </div>
       <div className="sale-card-footer">
@@ -345,12 +359,23 @@ function SaleCard({ sale }: { sale: Sale }) {
 
 function CommunityWideCard({ event }: { event: LocalEvent }) {
   const image = eventPreviewImagePath(event);
+  const scheduleLines = formatEventHours(event)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const previewScheduleLines = scheduleLines.slice(0, 3);
+  const hasMoreSchedule = scheduleLines.length > previewScheduleLines.length;
+  const descriptionPreview = previewText(event.description);
 
   return (
     <article className="card sale-card community-wide-card">
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="sale-card-image" src={image} alt={`${event.title} preview`} />
+        <img
+          className="sale-card-image"
+          src={optimizedImageUrl(image, { width: 900, crop: "limit" })}
+          alt={`${event.title} preview`}
+        />
       ) : null}
       <div className="card-top">
         <span className="badge watch">Community-wide</span>
@@ -362,16 +387,12 @@ function CommunityWideCard({ event }: { event: LocalEvent }) {
         <Link href={eventPath(event)}>{event.title}</Link>
       </h2>
       <div className="sale-card-schedule">
-        {formatEventHours(event)
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean)
-          .slice(0, 4)
-          .map((line) => (
-            <span key={line}>{line}</span>
-          ))}
+        {previewScheduleLines.map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+        {hasMoreSchedule ? <small>Full schedule on event page.</small> : null}
       </div>
-      {event.description ? <p>{event.description}</p> : null}
+      {descriptionPreview ? <p className="sale-card-description">{descriptionPreview}</p> : null}
       <div className="sale-card-footer">
         <p className="tags">Community-wide sale · City-wide sale · Route builder</p>
         <div className="card-actions">

@@ -720,6 +720,73 @@ h2 {
   align-content: start;
 }
 
+.event-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 430px;
+  height: 430px;
+  max-height: 430px;
+  overflow: hidden;
+}
+
+.event-card .sale-card-image {
+  aspect-ratio: 16 / 7;
+  max-height: 170px;
+}
+
+.event-card h2 {
+  margin-bottom: 4px;
+  font-size: clamp(1.2rem, 1.45vw, 1.45rem);
+  line-height: 1.15;
+}
+
+.event-card h2 a {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.event-card-preview {
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+  max-height: 94px;
+  overflow: hidden;
+}
+
+.event-card-preview p {
+  margin: 0;
+}
+
+.event-card-date {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  color: var(--text);
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.event-card-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.event-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
 .events-hero h1 {
   max-width: 640px;
 }
@@ -1239,6 +1306,15 @@ h2 {
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
+.community-wide-card > p:not(.tags) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .filter-chip {
   display: inline-flex;
   min-height: 36px;
@@ -1313,7 +1389,9 @@ h2 {
   align-content: start;
   overflow: hidden;
   padding: 22px;
-  height: 100%;
+  min-height: 520px;
+  height: 520px;
+  max-height: 520px;
 }
 
 .sale-card > :not(.sale-card-image) {
@@ -1332,8 +1410,19 @@ h2 {
   line-height: 1.14;
 }
 
+.sale-card h2 a,
+.sale-card h3 a {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .sale-card-address {
-  display: inline-block;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 1.1rem;
   font-weight: 850;
   line-height: 1.35;
@@ -1342,6 +1431,8 @@ h2 {
 .sale-card-schedule {
   display: grid;
   gap: 3px;
+  max-height: 6.2rem;
+  overflow: hidden;
   color: var(--text);
   line-height: 1.45;
 }
@@ -1355,6 +1446,15 @@ h2 {
   margin-top: 2px;
   color: var(--muted);
   font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.sale-card-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--muted);
   line-height: 1.45;
 }
 
@@ -3073,6 +3173,10 @@ textarea {
 }
 
 .tags {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: var(--primary-dark);
   font-weight: 750;
 }

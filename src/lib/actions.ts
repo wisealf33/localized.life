@@ -7,6 +7,7 @@ import { sendClaimApprovedEmail, sendClaimInstructionsEmail, sendManageLinkEmail
 import { eventPath, eventTypeOptions } from "./events";
 import { categoryOptions, salePath, saleSharePath, saleUrl } from "./format";
 import { geocodeAddress } from "./geocode";
+import { uploadImageToCloudinary } from "./cloudinary";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret, randomToken, slugifyTitle } from "./tokens";
 import type {
@@ -22,14 +23,9 @@ import type {
   SaleStatus,
 } from "./types";
 
-const photoBucket = "saletrail-photos";
 const maxPhotos = 2;
 const maxPhotoBytes = 5 * 1024 * 1024;
-const allowedPhotoTypes = new Map([
-  ["image/jpeg", "jpg"],
-  ["image/png", "png"],
-  ["image/webp", "webp"],
-]);
+const allowedPhotoTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const outreachStatuses = new Set<OutreachStatus>([
   "not_contacted",
@@ -358,7 +354,6 @@ function photoFiles(formData: FormData) {
 }
 
 async function uploadPhotos(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
   slug: string,
   formData: FormData,
   existingUrls: string[] = [],
@@ -372,8 +367,7 @@ async function uploadPhotos(
   const uploadedUrls: string[] = [];
 
   for (const file of files) {
-    const extension = allowedPhotoTypes.get(file.type);
-    if (!extension) {
+    if (!allowedPhotoTypes.has(file.type)) {
       throw new Error("Photos must be JPG, PNG, or WebP files.");
     }
 
@@ -381,16 +375,13 @@ async function uploadPhotos(
       throw new Error("Each photo must be 5 MB or smaller.");
     }
 
-    const path = `${slug}/${randomToken(8)}.${extension}`;
-    const { error } = await supabase.storage.from(photoBucket).upload(path, await file.arrayBuffer(), {
-      contentType: file.type,
-      upsert: false,
+    const uploaded = await uploadImageToCloudinary(file, {
+      folder: `${process.env.CLOUDINARY_UPLOAD_FOLDER || "localized-life"}/saletrail`,
+      prefix: slug,
+      tags: ["saletrail", "sale-photo"],
     });
 
-    if (error) throw new Error(error.message);
-
-    const { data } = supabase.storage.from(photoBucket).getPublicUrl(path);
-    uploadedUrls.push(data.publicUrl);
+    uploadedUrls.push(uploaded.publicId);
   }
 
   return [...existingUrls, ...uploadedUrls].slice(0, maxPhotos);
@@ -505,7 +496,7 @@ export async function createSellerSale(formData: FormData) {
   const slug = slugifyTitle(title);
   const manageToken = randomToken();
   const schedule = buildSchedule(formData);
-  const photoUrls = await uploadPhotos(supabase, slug, formData);
+  const photoUrls = await uploadPhotos(slug, formData);
   const address = addressFromForm(formData);
   const coordinates = await geocodeAddress(address);
 
@@ -716,7 +707,7 @@ export async function updateManagedSale(formData: FormData) {
   }
 
   if (findError || !sale) throw new Error("Manage link was not found.");
-  const photoUrls = await uploadPhotos(supabase, sale.slug, formData, sale.photo_urls || []);
+  const photoUrls = await uploadPhotos(sale.slug, formData, sale.photo_urls || []);
   const address = addressFromForm(formData);
   const addressChanged =
     address.address_line !== sale.address_line ||

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatSaleHours, fullAddress, saleDisplayTitle } from "@/lib/format";
+import { optimizedImageUrl } from "@/lib/images";
 import { saleFlyerImage } from "@/lib/share";
 import type { Sale } from "@/lib/types";
 
@@ -19,7 +20,11 @@ export function FlyerPreview({ qr, sale, url }: FlyerPreviewProps) {
       <h2>{displayTitle}</h2>
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="flyer-photo" src={image.src} alt={`${displayTitle} preview`} />
+        <img
+          className="flyer-photo"
+          src={optimizedImageUrl(image.src, { width: 900, crop: "limit" })}
+          alt={`${displayTitle} preview`}
+        />
       ) : (
         <div className="flyer-photo-placeholder">
           <strong>Add a sale photo</strong>

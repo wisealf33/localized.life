@@ -52,7 +52,24 @@ function publicFileExists(publicPath: string) {
   return existsSync(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")));
 }
 
-export function eventPreviewImagePath(event: Pick<LocalEvent, "city" | "state">) {
+function isMusicEvent(event: Pick<LocalEvent, "title" | "description" | "event_type">) {
+  if (event.event_type !== "festival" && event.event_type !== "community_day") return false;
+
+  const text = `${event.title} ${event.description || ""}`.toLowerCase();
+  return [
+    "music festival",
+    "live music",
+    "rockin' on the square",
+    "rockin on the square",
+    "concert",
+    "performing",
+  ].some((term) => text.includes(term));
+}
+
+export function eventPreviewImagePath(event: Pick<LocalEvent, "city" | "state" | "title" | "description" | "event_type">) {
+  const musicFestivalPath = "/og/music-festival.jpg";
+  if (isMusicEvent(event) && publicFileExists(musicFestivalPath)) return musicFestivalPath;
+
   const cityStatePath = `/og/${urlSegment(event.city)}-${urlSegment(event.state)}.jpg`;
   if (publicFileExists(cityStatePath)) return cityStatePath;
 

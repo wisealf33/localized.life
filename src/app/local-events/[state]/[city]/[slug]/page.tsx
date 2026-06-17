@@ -5,7 +5,14 @@ import { EventRouteSelector } from "@/components/EventRouteSelector";
 import { SaleMap } from "@/components/SaleMap";
 import { SiteHeader } from "@/components/SiteHeader";
 import { addHouseholdToCommunityWide } from "@/lib/actions";
-import { eventPath, eventSupportsSaleStops, eventTypeLabel, eventUsesSaleTrailFeatures, formatEventHours } from "@/lib/events";
+import {
+  eventPath,
+  eventPreviewImagePath,
+  eventSupportsSaleStops,
+  eventTypeLabel,
+  eventUsesSaleTrailFeatures,
+  formatEventHours,
+} from "@/lib/events";
 import { fullAddress, saleDisplayTitle, salePath } from "@/lib/format";
 import { absoluteUrl, cleanDescription, pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
@@ -52,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${event.title} | Local Events`,
     description: cleanDescription(`${event.title} in ${event.city}, ${event.state}. ${formatEventHours(event).replace(/\n/g, " ")}`),
     path: eventPath(event),
-    image: event.event_type === "city_wide_garage_sale" ? "/og/city-wide-sale.jpg" : "/og/default-saletrail.jpg",
+    image: eventPreviewImagePath(event) || "/og/default-saletrail.jpg",
   });
 }
 

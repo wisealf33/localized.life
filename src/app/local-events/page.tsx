@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
-import { eventPath, eventPreviewImagePath, eventTypeLabel, eventTypeOptions, formatEventHours } from "@/lib/events";
+import { eventPath, eventPreviewImagePath, eventTypeLabel, eventTypeOptions } from "@/lib/events";
+import { optimizedImageUrl } from "@/lib/images";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocalEvent, LocalEventType } from "@/lib/types";
@@ -59,6 +60,33 @@ function compareByStartDate(a: Pick<LocalEvent, "starts_at" | "ends_at">, b: Pic
   const startCompare = new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
   if (startCompare !== 0) return startCompare;
   return new Date(a.ends_at).getTime() - new Date(b.ends_at).getTime();
+}
+
+function formatEventCardDate(event: Pick<LocalEvent, "starts_at" | "ends_at">) {
+  const startsAt = new Date(event.starts_at);
+  const endsAt = new Date(event.ends_at);
+  const dateFormatter = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timeFormatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  if (startsAt.toDateString() === endsAt.toDateString()) {
+    return `${dateFormatter.format(startsAt)} · ${timeFormatter.format(startsAt)}-${timeFormatter.format(endsAt)}`;
+  }
+
+  return `${dateFormatter.format(startsAt)}-${dateFormatter.format(endsAt)}`;
+}
+
+function previewText(value: string | null | undefined, maxLength = 180) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}...` : text;
 }
 
 export default async function LocalEventsPage({ searchParams }: Props) {
@@ -146,11 +174,16 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         ) : (
           events.map((event) => {
             const image = eventPreviewImagePath(event);
+            const descriptionPreview = previewText(event.description);
             return (
               <article className="card event-card" key={event.id}>
                 {image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img className="sale-card-image" src={image} alt={`${event.title} preview`} />
+                  <img
+                    className="sale-card-image"
+                    src={optimizedImageUrl(image, { width: 900, crop: "limit" })}
+                    alt={`${event.title} preview`}
+                  />
                 ) : null}
                 <div>
                   <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
@@ -162,11 +195,18 @@ export default async function LocalEventsPage({ searchParams }: Props) {
                     {event.county ? ` · ${event.county}` : ""}
                   </p>
                 </div>
-                <p className="whitespace">{formatEventHours(event)}</p>
-                {event.description ? <p>{event.description}</p> : null}
-                <Link className="button primary" href={eventPath(event)}>
-                  View event
-                </Link>
+                <div className="event-card-preview">
+                  <p className="event-card-date">{formatEventCardDate(event)}</p>
+                  {descriptionPreview ? <p className="event-card-description">{descriptionPreview}</p> : null}
+                </div>
+                <div className="event-card-footer">
+                  <Link className="text-link" href={eventPath(event)}>
+                    See more
+                  </Link>
+                  <Link className="button primary" href={eventPath(event)}>
+                    View full event
+                  </Link>
+                </div>
               </article>
             );
           })
