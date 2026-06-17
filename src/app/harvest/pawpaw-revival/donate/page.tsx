@@ -46,7 +46,7 @@ export default function PawpawDonationPage() {
           <span className="harvest-type">Crypto checkout</span>
           <h2>Use a Paw Paw Revival wallet</h2>
           <p>
-            Pick the matching chain below and copy the project receive address generated through AI Wallet Manager.
+            Choose a network below and copy the matching Paw Paw Revival receiving address.
           </p>
           <a className="button harvest-primary" href="#crypto-wallets">
             View crypto wallets
@@ -59,8 +59,8 @@ export default function PawpawDonationPage() {
           <p className="harvest-eyebrow">Crypto wallet options</p>
           <h2>Send only on the matching chain.</h2>
           <p>
-            These are public receiving addresses for the Pawpaw Revival project. Private keys stay in the local AI
-            Wallet Manager.
+            These are public receiving addresses for Paw Paw Revival. Use the address for the same network you are
+            sending from.
           </p>
         </div>
         <PawpawCryptoWallets />

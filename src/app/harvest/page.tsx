@@ -74,7 +74,7 @@ export default function HarvestPage() {
           <article>
             <span>03</span>
             <h3>Fund planting</h3>
-            <p>Start with Paw Paw Revival and support more local planting projects as they open.</p>
+            <p>Start with Paw Paw Revival and support new local planting projects as they open.</p>
           </article>
         </div>
       </section>
@@ -85,7 +85,7 @@ export default function HarvestPage() {
           <h2>Paw Paw Revival</h2>
           <p>
             The first sponsored-tree campaign inside Harvest starts with pawpaws: native fruit trees with deep local
-            roots and a big future in neighborhood food forests, creek corridors, farms, and community spaces.
+            roots in neighborhood food forests, creek corridors, farms, and community spaces.
           </p>
           <div className="harvest-campaign-metrics" aria-label="Campaign targets">
             <div>

@@ -40,8 +40,8 @@ export default function PawpawRevivalPage() {
           <p className="harvest-eyebrow">First Harvest fundraiser</p>
           <h1>Paw Paw Revival</h1>
           <p>
-            Help revive the pawpaw across America by sponsoring seeds, small trees, and future registered harvest trees
-            inside the Localized.life Harvest network.
+            Help revive the pawpaw across America by sponsoring seeds, small trees, and new harvest trees inside the
+            Localized.life Harvest network.
           </p>
           <div className="toolbar">
             <Link className="button harvest-primary" href="/harvest/pawpaw-revival/donate">
@@ -61,7 +61,7 @@ export default function PawpawRevivalPage() {
         </div>
         <p>
           Pawpaws are native fruit trees with deep roots in American landscapes. This campaign starts simple: sponsor
-          seeds and small trees now, then connect planted trees into the Harvest registry as the network grows.
+          seeds and small trees now, then connect planted trees into the Harvest registry as local partners join in.
         </p>
       </section>
 

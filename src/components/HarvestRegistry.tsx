@@ -205,7 +205,7 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
 
     savePlants([nextPlant, ...cleanCustomPlants(plants)]);
     setConfirmation(
-      `Thank you. Your ${nextPlant.plantName} has been registered. Someone from localized.life harvest can follow up for permission planning, harvest timing, and next steps.`,
+      `Thank you. Your ${nextPlant.plantName} has been registered. Someone from Localized.life Harvest can follow up about permission, harvest timing, and next steps.`,
     );
     form.reset();
   }
@@ -330,7 +330,7 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
                 <h3>Add your harvest site.</h3>
                 <p>
                   Owners can register fruit trees, nut trees, berry bushes, or other perennial food plants for future
-                  harvest planning.
+                  harvest coordination.
                 </p>
                 <button className="button harvest-primary" type="button" onClick={() => setOwnerFormOpen(true)}>
                   Register a plant
@@ -350,7 +350,7 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
               <article className="harvest-plant-card harvest-action-card">
                 <span className="harvest-type">Paw Paw Revival</span>
                 <h3>Donate to plant pawpaws.</h3>
-                <p>Sponsor pawpaw seeds or small trees that can become registered future harvest trees.</p>
+                <p>Sponsor pawpaw seeds or small trees that can become registered harvest trees.</p>
                 <Link className="button harvest-primary" href="/harvest/pawpaw-revival">
                   Open fundraiser
                 </Link>
@@ -486,7 +486,7 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
             </div>
             <p className="harvest-modal-note">
               This is for a plant you noticed but do not own. Your phone number is only for follow-up questions about
-              this lead. Owner permission can happen before any harvest planning.
+              this lead. Owner permission is needed before any harvest is arranged.
             </p>
             <form className="harvest-form harvest-modal-form" onSubmit={handleLeadSubmit}>
               <label>
