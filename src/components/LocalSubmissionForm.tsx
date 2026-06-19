@@ -72,7 +72,10 @@ export function LocalSubmissionForm({
               <strong>{ctaLabel}</strong>
               <small>No account needed. We email you a private manage link.</small>
             </span>
-            <span className="summary-button">Open form</span>
+            <span className="summary-button">
+              <span className="summary-button-closed">Open form</span>
+              <span className="summary-button-open">Close form</span>
+            </span>
           </summary>
           <form action={submitLocalSubmission} className="form submission-form">
             <input type="hidden" name="submission_area" value={area} />

@@ -162,7 +162,10 @@ export default async function EventDetailPage({ params }: Props) {
                 <span className="eyebrow">Add a household</span>
                 <strong>Add your address to this community-wide sale</strong>
               </span>
-              <span className="summary-button">Open form</span>
+              <span className="summary-button">
+                <span className="summary-button-closed">Open form</span>
+                <span className="summary-button-open">Close form</span>
+              </span>
             </summary>
             <div className="event-add-stop-intro">
               <p className="muted">

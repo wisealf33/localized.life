@@ -867,6 +867,20 @@ h2 {
   box-shadow: var(--shadow-soft);
 }
 
+.summary-button-open {
+  display: none;
+}
+
+.event-add-stop-details[open] .summary-button-closed,
+.submission-details[open] .summary-button-closed {
+  display: none;
+}
+
+.event-add-stop-details[open] .summary-button-open,
+.submission-details[open] .summary-button-open {
+  display: inline;
+}
+
 .event-add-stop-intro {
   margin-top: 18px;
 }
