@@ -75,11 +75,11 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         </article>
 
         <article className="card">
-          <h2>What does not belong here</h2>
+          <h2>Local Market categories</h2>
           <p className="muted">
-            This is not a general resale feed. Random small resale items, ordinary household clutter, and Facebook
-            Marketplace-style listings should not go here. Resale is only a fit when it connects to farming, gardening,
-            homesteading, making, repairing, tools, or bulky practical items that are hard to ship.
+            These are the main kinds of local goods we want here. Local Market is not a general resale feed, so random
+            small household items should stay in SaleTrail or another resale space unless they connect to growing,
+            making, repairing, farmstands, or practical local use.
           </p>
           <div className="mini-list">
             {categories.map((category) => (
