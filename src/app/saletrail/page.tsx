@@ -250,7 +250,7 @@ async function getSales(
 }
 
 async function getCommunityWideEvents(category?: string) {
-  if (!isSupabaseConfigured || (category && category !== "City-wide sale" && category !== "Community sale")) return [];
+  if (!isSupabaseConfigured || (category !== "City-wide sale" && category !== "Community sale")) return [];
 
   const { data, error } = await getSupabaseAdmin()
     .from("local_events")
