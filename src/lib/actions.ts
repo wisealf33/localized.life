@@ -951,19 +951,43 @@ export async function submitLocalSubmission(formData: FormData) {
 
   const returnPath = value(formData, "return_path") || "/local-market";
   const safeReturnPath = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "/local-market";
+  const baseDescription = required(formData, "description");
+  const serviceContactDetails =
+    submissionArea === "service"
+      ? [
+          ["Phone", value(formData, "public_phone")],
+          ["Email", value(formData, "public_email")],
+          ["Preferred contact", value(formData, "preferred_contact")],
+        ].filter(([, entry]) => entry)
+      : [];
+  const serviceAreaDetails =
+    submissionArea === "service"
+      ? [
+          ["Service area", value(formData, "service_area")],
+          ["Travel distance", value(formData, "travel_distance")],
+        ].filter(([, entry]) => entry)
+      : [];
+  const contact =
+    submissionArea === "service"
+      ? serviceContactDetails.map(([label, entry]) => `${label}: ${entry}`).join("\n")
+      : value(formData, "contact");
+  const description =
+    submissionArea === "service" && serviceAreaDetails.length
+      ? `${baseDescription}\n\n${serviceAreaDetails.map(([label, entry]) => `${label}: ${entry}`).join("\n")}`
+      : baseDescription;
 
   const { error } = await supabase.from("local_submissions").insert({
     submission_area: submissionArea,
     title,
     category: value(formData, "category"),
     name: value(formData, "name"),
-    contact: value(formData, "contact"),
+    contact,
     submitter_email: submitterEmail,
     manage_token_hash: hashSecret(manageToken),
     city: value(formData, "city"),
     state: value(formData, "state").toUpperCase(),
     website_url: safePublicUrl(formData, "website_url"),
-    description: required(formData, "description"),
+    description,
     status: "pending",
   });
 

@@ -18,6 +18,13 @@ type LocalSubmissionFormProps = {
   emailStatus?: string;
   manageToken?: string;
   ctaLabel?: string;
+  summaryNote?: string;
+  categoryOptions?: string[];
+  categoryHelper?: string;
+  contactLabel?: string;
+  contactPlaceholder?: string;
+  contactHelper?: string;
+  manageEmailHelper?: string;
 };
 
 export function LocalSubmissionForm({
@@ -36,8 +43,16 @@ export function LocalSubmissionForm({
   emailStatus,
   manageToken,
   ctaLabel = "Open submission form",
+  summaryNote = "No account needed. We email you a private manage link.",
+  categoryOptions,
+  categoryHelper,
+  contactLabel = "Public contact method (optional)",
+  contactPlaceholder = "Email, phone, social link, or leave blank",
+  contactHelper,
+  manageEmailHelper = "This stays private and is used only to email your edit/remove link.",
 }: LocalSubmissionFormProps) {
   const managePath = manageToken ? `/manage/${manageToken}` : "";
+  const isServiceSubmission = area === "service";
 
   return (
     <section className="panel local-submit-panel" id="submit">
@@ -70,7 +85,7 @@ export function LocalSubmissionForm({
           <summary>
             <span>
               <strong>{ctaLabel}</strong>
-              <small>No account needed. We email you a private manage link.</small>
+              <small>{summaryNote}</small>
             </span>
             <span className="summary-button">
               <span className="summary-button-closed">Open form</span>
@@ -87,37 +102,89 @@ export function LocalSubmissionForm({
             <div className="grid two">
               <label>
                 {categoryLabel}
-                <input name="category" placeholder={categoryPlaceholder} />
+                {categoryOptions?.length ? (
+                  <select name="category" defaultValue="">
+                    <option value="">{categoryPlaceholder}</option>
+                    {categoryOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input name="category" placeholder={categoryPlaceholder} />
+                )}
+                {categoryHelper ? <span className="helper">{categoryHelper}</span> : null}
               </label>
               <label>
                 Website or social link
-                <input name="website_url" placeholder="Optional link" />
+                <input name="website_url" placeholder="Website, Facebook page, or profile link" />
               </label>
             </div>
             <div className="grid two">
               <label>
                 City
-                <input name="city" placeholder="Peotone" />
+                <input name="city" placeholder="Example: Chicago, Joliet, or nearby town" />
               </label>
               <label>
                 State
-                <input name="state" placeholder="IL" maxLength={2} />
+                <input name="state" placeholder="Example: IL" maxLength={2} />
               </label>
             </div>
-            <div className="grid two">
-              <label>
-                Your name
-                <input name="name" placeholder="Optional" />
-              </label>
-              <label>
-                Public contact, if you want it shown later
-                <input name="contact" placeholder="Email, phone, social link, or leave blank" />
-              </label>
-            </div>
+            {isServiceSubmission ? (
+              <>
+                <div className="grid two">
+                  <label>
+                    Service area
+                    <input
+                      name="service_area"
+                      placeholder="Example: South suburbs, Will County, nearby towns"
+                    />
+                  </label>
+                  <label>
+                    Distance willing to travel
+                    <input name="travel_distance" placeholder="Example: 10 miles, 30 minutes, countywide" />
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    Your name or business name
+                    <input name="name" placeholder="Name, business name, or local project" />
+                  </label>
+                  <label>
+                    Public phone number
+                    <input name="public_phone" placeholder="Phone number customers can call or text" />
+                  </label>
+                </div>
+                <div className="grid two">
+                  <label>
+                    Public email address
+                    <input name="public_email" type="email" placeholder="Email customers can use" />
+                  </label>
+                  <label>
+                    Preferred contact method
+                    <input name="preferred_contact" placeholder="Text first, call after 5 PM, email is best..." />
+                    {contactHelper ? <span className="helper">{contactHelper}</span> : null}
+                  </label>
+                </div>
+              </>
+            ) : (
+              <div className="grid two">
+                <label>
+                  Your name
+                  <input name="name" placeholder="Optional" />
+                </label>
+                <label>
+                  {contactLabel}
+                  <input name="contact" placeholder={contactPlaceholder} />
+                  {contactHelper ? <span className="helper">{contactHelper}</span> : null}
+                </label>
+              </div>
+            )}
             <label>
               Email for private manage link
               <input name="submitter_email" type="email" required placeholder="you@example.com" />
-              <span className="helper">We email the private edit/remove link here. No account is created.</span>
+              <span className="helper">{manageEmailHelper}</span>
             </label>
             <label>
               {descriptionLabel}

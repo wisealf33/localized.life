@@ -15,7 +15,20 @@ export const metadata: Metadata = pageMetadata({
   path: "/local-services",
 });
 
-const serviceTypes = ["Cleaning", "Handyman", "Yard help", "Garden help", "Hauling", "Repairs", "Pet care", "Tutoring", "Farm help"];
+const serviceTypes = [
+  "Cleaning",
+  "Handyman",
+  "Dog walking",
+  "Babysitting",
+  "Pet care",
+  "Yard help",
+  "Garden help",
+  "Hauling",
+  "Repairs",
+  "Tutoring",
+  "Farm help",
+  "Organizing",
+];
 
 export default async function LocalServicesPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -36,13 +49,19 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         area="service"
         eyebrow="Submit practical help"
         title="Add yourself to Local Services"
-        description="Use this if you offer useful local help like cleaning, yard help, repairs, hauling, garden help, pet care, tutoring, organizing, or farm help. Submissions are reviewed before anything is published."
+        description="Use this public directory form if you offer practical local help. This is not a member account yet. Submit the basic listing, then we email you a private link to edit or remove it later."
         categoryLabel="Service type"
-        categoryPlaceholder="Cleaning, handyman, yard help, hauling..."
-        titleLabel="Service listing name"
-        titlePlaceholder="Weekend yard help, local hauling, house cleaning..."
+        categoryPlaceholder="Choose a service type"
+        categoryOptions={serviceTypes}
+        categoryHelper="Pick the closest fit for now. If your service is not listed, describe it in the details box."
+        titleLabel="Service listing title"
+        titlePlaceholder="House cleaning, dog walking, weekend yard help, local hauling..."
         descriptionLabel="Tell people what help you offer"
-        descriptionPlaceholder="What do you do, what area do you serve, when are you available, and how should people contact you?"
+        descriptionPlaceholder="Describe the service, where you work, when you are usually available, the kinds of jobs you take, and anything people should know before contacting you."
+        contactLabel="Public contact method (optional)"
+        contactPlaceholder="Phone, email, website, or social link people may use"
+        contactHelper="These public contact details may be shown on an approved listing. The manage-link email below stays private."
+        manageEmailHelper="This email stays private and is used only to send your edit/remove link."
         returnPath="/local-services"
         submitted={Boolean(params.submitted)}
         emailStatus={params.email}
@@ -65,13 +84,13 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         </article>
 
         <article className="card">
-          <h2>Where SaleTrail fits</h2>
+          <h2>Directory now, member tools later.</h2>
           <p className="muted">
-            SaleTrail is the local sales tool: garage sales, estate sales, rummage sales, moving sales, church sales,
-            community-wide sales, and other one-time sale stops people can save to a route.
+            Local Services starts as a simple public directory. Private membership, PMA tools, stronger profiles, and
+            deeper service features can come later when that system is ready.
           </p>
-          <Link className="button primary" href="/saletrail">
-            Open SaleTrail
+          <Link className="button primary" href="#submit">
+            Post a local service
           </Link>
         </article>
       </section>
