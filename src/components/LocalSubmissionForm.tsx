@@ -17,6 +17,7 @@ type LocalSubmissionFormProps = {
   submitted?: boolean;
   emailStatus?: string;
   manageToken?: string;
+  errorMessage?: string;
   ctaLabel?: string;
   summaryNote?: string;
   categoryOptions?: string[];
@@ -42,6 +43,7 @@ export function LocalSubmissionForm({
   submitted = false,
   emailStatus,
   manageToken,
+  errorMessage,
   ctaLabel = "Open submission form",
   summaryNote = "No account needed. We email you a private manage link.",
   categoryOptions,
@@ -53,6 +55,7 @@ export function LocalSubmissionForm({
 }: LocalSubmissionFormProps) {
   const managePath = manageToken ? `/manage/${manageToken}` : "";
   const isServiceSubmission = area === "service";
+  const hasError = Boolean(errorMessage);
 
   return (
     <section className="panel local-submit-panel" id="submit">
@@ -81,7 +84,7 @@ export function LocalSubmissionForm({
           </Link>
         </div>
       ) : (
-        <details className="submission-details">
+        <details className="submission-details" open={hasError}>
           <summary>
             <span>
               <strong>{ctaLabel}</strong>
@@ -92,6 +95,12 @@ export function LocalSubmissionForm({
               <span className="summary-button-open">Close form</span>
             </span>
           </summary>
+          {errorMessage ? (
+            <div className="notice bad stack" role="alert">
+              <h3>Submission was not saved</h3>
+              <p>{errorMessage}</p>
+            </div>
+          ) : null}
           <form action={submitLocalSubmission} className="form submission-form">
             <input type="hidden" name="submission_area" value={area} />
             <input type="hidden" name="return_path" value={returnPath} />

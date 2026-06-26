@@ -1913,6 +1913,13 @@ h2 {
   color: var(--good-text);
 }
 
+.notice.bad {
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
 .badge {
   display: inline-flex;
   width: fit-content;

@@ -942,78 +942,107 @@ export async function resolveFeedbackRequest(formData: FormData) {
 }
 
 export async function submitLocalSubmission(formData: FormData) {
-  const supabase = getSupabaseAdmin();
-  const submissionArea = required(formData, "submission_area") as LocalSubmissionArea;
-  if (!localSubmissionAreas.has(submissionArea)) throw new Error("Invalid submission area.");
-  const submitterEmail = requiredEmail(formData, "submitter_email");
-  const manageToken = randomToken();
-  const title = required(formData, "title");
-
   const returnPath = value(formData, "return_path") || "/local-market";
   const safeReturnPath = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "/local-market";
-  const baseDescription = required(formData, "description");
-  const serviceContactDetails =
-    submissionArea === "service"
-      ? [
-          ["Phone", value(formData, "public_phone")],
-          ["Email", value(formData, "public_email")],
-          ["Preferred contact", value(formData, "preferred_contact")],
-        ].filter(([, entry]) => entry)
-      : [];
-  const serviceAreaDetails =
-    submissionArea === "service"
-      ? [
-          ["Service area", value(formData, "service_area")],
-          ["Travel distance", value(formData, "travel_distance")],
-        ].filter(([, entry]) => entry)
-      : [];
-  const contact =
-    submissionArea === "service"
-      ? serviceContactDetails.map(([label, entry]) => `${label}: ${entry}`).join("\n")
-      : value(formData, "contact");
-  const description =
-    submissionArea === "service" && serviceAreaDetails.length
-      ? `${baseDescription}\n\n${serviceAreaDetails.map(([label, entry]) => `${label}: ${entry}`).join("\n")}`
-      : baseDescription;
+  let nextPath = safeReturnPath;
 
-  const { error } = await supabase.from("local_submissions").insert({
-    submission_area: submissionArea,
-    title,
-    category: value(formData, "category"),
-    name: value(formData, "name"),
-    contact,
-    submitter_email: submitterEmail,
-    manage_token_hash: hashSecret(manageToken),
-    city: value(formData, "city"),
-    state: value(formData, "state").toUpperCase(),
-    website_url: safePublicUrl(formData, "website_url"),
-    description,
-    status: "pending",
-  });
+  try {
+    const supabase = getSupabaseAdmin();
+    const submissionArea = required(formData, "submission_area") as LocalSubmissionArea;
+    if (!localSubmissionAreas.has(submissionArea)) throw new Error("Invalid submission area.");
+    const submitterEmail = requiredEmail(formData, "submitter_email");
+    const manageToken = randomToken();
+    const title = required(formData, "title");
+    const baseDescription = required(formData, "description");
+    const serviceContactDetails =
+      submissionArea === "service"
+        ? [
+            ["Phone", value(formData, "public_phone")],
+            ["Email", value(formData, "public_email")],
+            ["Preferred contact", value(formData, "preferred_contact")],
+          ].filter(([, entry]) => entry)
+        : [];
+    const serviceAreaDetails =
+      submissionArea === "service"
+        ? [
+            ["Service area", value(formData, "service_area")],
+            ["Travel distance", value(formData, "travel_distance")],
+          ].filter(([, entry]) => entry)
+        : [];
+    const contact =
+      submissionArea === "service"
+        ? serviceContactDetails.map(([label, entry]) => `${label}: ${entry}`).join("\n")
+        : value(formData, "contact");
+    const description =
+      submissionArea === "service" && serviceAreaDetails.length
+        ? `${baseDescription}\n\n${serviceAreaDetails.map(([label, entry]) => `${label}: ${entry}`).join("\n")}`
+        : baseDescription;
 
-  if (error) throw new Error(error.message);
-  const emailResult = await sendManageLinkEmail({
-    to: submitterEmail,
-    name: value(formData, "name"),
-    title,
-    manageToken,
-    kind:
-      submissionArea === "market"
-        ? "Local Market submission"
-        : submissionArea === "event"
-          ? "Local Event submission"
-          : "Local Services submission",
-  });
-  if (emailResult.sent) {
-    await supabase
-      .from("local_submissions")
-      .update({ manage_email_sent_at: new Date().toISOString() })
-      .eq("manage_token_hash", hashSecret(manageToken));
+    const { error } = await supabase.from("local_submissions").insert({
+      submission_area: submissionArea,
+      title,
+      category: value(formData, "category"),
+      name: value(formData, "name"),
+      contact,
+      submitter_email: submitterEmail,
+      manage_token_hash: hashSecret(manageToken),
+      city: value(formData, "city"),
+      state: value(formData, "state").toUpperCase(),
+      website_url: safePublicUrl(formData, "website_url"),
+      description,
+      status: "pending",
+    });
+
+    if (error) throw new Error(error.message);
+
+    let emailResult = { sent: false };
+    try {
+      emailResult = await sendManageLinkEmail({
+        to: submitterEmail,
+        name: value(formData, "name"),
+        title,
+        manageToken,
+        kind:
+          submissionArea === "market"
+            ? "Local Market submission"
+            : submissionArea === "event"
+              ? "Local Event submission"
+              : "Local Services submission",
+      });
+    } catch (emailError) {
+      console.error("Local submission manage-link email failed", emailError);
+    }
+
+    if (emailResult.sent) {
+      const { error: updateError } = await supabase
+        .from("local_submissions")
+        .update({ manage_email_sent_at: new Date().toISOString() })
+        .eq("manage_token_hash", hashSecret(manageToken));
+      if (updateError) console.error("Local submission email timestamp update failed", updateError);
+    }
+
+    try {
+      revalidatePath("/saletrail/admin");
+      revalidatePath(safeReturnPath);
+    } catch (revalidateError) {
+      console.error("Local submission revalidation failed", revalidateError);
+    }
+
+    const manageParam = emailResult.sent ? "" : `&manage=${manageToken}`;
+    nextPath = `${safeReturnPath}?submitted=1&email=${emailResult.sent ? "sent" : "setup"}${manageParam}#submit`;
+  } catch (error) {
+    console.error("Local submission failed", error);
+    const message =
+      error instanceof Error &&
+      (error.message === "Add a valid email address." ||
+        error.message.startsWith("Missing ") ||
+        error.message === "Invalid submission area.")
+        ? "Please check the required fields and try again."
+        : "We could not save the submission yet. Please try again in a moment.";
+    nextPath = `${safeReturnPath}?error=${encodeURIComponent(message)}#submit`;
   }
-  revalidatePath("/saletrail/admin");
-  revalidatePath(safeReturnPath);
-  const manageParam = emailResult.sent ? "" : `&manage=${manageToken}`;
-  redirect(`${safeReturnPath}?submitted=1&email=${emailResult.sent ? "sent" : "setup"}${manageParam}#submit`);
+
+  redirect(nextPath);
 }
 
 export async function updateManagedLocalSubmission(formData: FormData) {

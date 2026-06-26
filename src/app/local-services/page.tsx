@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { pageMetadata } from "@/lib/seo";
 
 type Props = {
-  searchParams: Promise<{ submitted?: string; email?: string; manage?: string }>;
+  searchParams: Promise<{ submitted?: string; email?: string; manage?: string; error?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -66,6 +66,7 @@ export default async function LocalServicesPage({ searchParams }: Props) {
         submitted={Boolean(params.submitted)}
         emailStatus={params.email}
         manageToken={params.manage}
+        errorMessage={params.error}
         ctaLabel="Post a local service"
       />
 

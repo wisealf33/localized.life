@@ -17,6 +17,7 @@ type Props = {
     submitted?: string;
     email?: string;
     manage?: string;
+    error?: string;
   }>;
 };
 
@@ -121,6 +122,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         submitted={Boolean(params.submitted)}
         emailStatus={params.email}
         manageToken={params.manage}
+        errorMessage={params.error}
         ctaLabel="Submit a local event"
       />
 
