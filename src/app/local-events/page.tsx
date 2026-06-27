@@ -196,9 +196,9 @@ export default async function LocalEventsPage({ searchParams }: Props) {
                 ) : null}
                 <div>
                   <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
-                  <h2>
+                  <h3>
                     <Link href={eventPath(event)}>{event.title}</Link>
-                  </h2>
+                  </h3>
                   <p className="muted">
                     {event.city}, {event.state}
                     {event.county ? ` · ${event.county}` : ""}
