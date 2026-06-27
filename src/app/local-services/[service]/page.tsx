@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const service = serviceBySlug(slug);
   if (!service) return {};
   return pageMetadata({
-    title: `${service.title} | Local Services | Localized.life`,
+    title: `${service.title} | Local Services`,
     description: service.summary,
     path: `/local-services/${service.slug}`,
   });

@@ -515,7 +515,8 @@ h2 {
   margin-bottom: 0;
 }
 
-.front-product-card h2 {
+.front-product-card h2,
+.front-product-card h3 {
   margin-bottom: 0;
   font-size: clamp(1.95rem, 2.5vw, 2.55rem);
   line-height: 1.05;
