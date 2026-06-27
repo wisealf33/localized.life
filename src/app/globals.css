@@ -871,13 +871,15 @@ h2 {
   max-height: 230px;
 }
 
-.event-card h2 {
+.event-card h2,
+.event-card h3 {
   margin-bottom: 4px;
   font-size: clamp(1.2rem, 1.45vw, 1.45rem);
   line-height: 1.15;
 }
 
-.event-card h2 a {
+.event-card h2 a,
+.event-card h3 a {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
