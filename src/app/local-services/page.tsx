@@ -10,9 +10,9 @@ type Props = {
 };
 
 export const metadata: Metadata = pageMetadata({
-  title: "Local Services | Localized.life",
+  title: "Local Services: Cleaning, Yard Help, Repairs & Practical Help",
   description:
-    "Find nearby people offering cleaning, yard help, repairs, hauling, garden help, and other useful local services.",
+    "Find nearby people offering cleaning, yard help, repairs, hauling, garden help, pet care, tutoring, and other useful local services.",
   path: "/local-services",
 });
 

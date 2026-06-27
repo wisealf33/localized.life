@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Localized.life | Useful local life outside noisy feeds",
+  title: "Localized.life | Useful Local Life Outside Noisy Feeds",
   description:
     "Localized.life is a practical local operating system for finding useful real-world community: local goods, events, sales, abundance, services, and local knowledge.",
   path: "/",
@@ -63,7 +63,7 @@ export default function Home() {
 
         <article className="front-product-card front-feature-card">
           <p className="front-badge">Local sales</p>
-          <h2>SaleTrail</h2>
+          <h3>SaleTrail</h3>
           <p>Find garage sales, estate sales, rummage sales, moving sales, and build a useful weekend route.</p>
           <div className="tag-row">
             <span>Garage sales</span>
@@ -78,7 +78,7 @@ export default function Home() {
 
         <article className="front-product-card front-feature-card harvest-teaser-card">
           <p className="front-badge">Local abundance</p>
-          <h2>Harvest</h2>
+          <h3>Harvest</h3>
           <p>Map fruit trees, gardens, seed sharing, gleaning opportunities, and local food abundance.</p>
           <div className="tag-row">
             <span>Fruit trees</span>
@@ -94,7 +94,7 @@ export default function Home() {
 
         <article className="front-product-card">
           <p className="front-badge">Local goods</p>
-          <h2>Local Market</h2>
+          <h3>Local Market</h3>
           <p>Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, and neighborhood makers.</p>
           <div className="tag-row">
             <span>Eggs</span>
@@ -111,7 +111,7 @@ export default function Home() {
 
         <article className="front-product-card">
           <p className="front-badge">Things happening</p>
-          <h2>Local Events</h2>
+          <h3>Local Events</h3>
           <p>Find farmers markets, craft fairs, vendor pop-ups, workshops, festivals, plant swaps, and community gatherings.</p>
           <div className="tag-row">
             <span>Farmers markets</span>
@@ -127,7 +127,7 @@ export default function Home() {
 
         <article className="front-product-card">
           <p className="front-badge">Practical help</p>
-          <h2>Local Services</h2>
+          <h3>Local Services</h3>
           <p>Find nearby people offering cleaning, yard help, repairs, hauling, garden help, and other useful local services.</p>
           <div className="tag-row">
             <span>Cleaning</span>

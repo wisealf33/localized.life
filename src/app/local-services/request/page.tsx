@@ -16,7 +16,7 @@ type Props = {
 };
 
 export const metadata: Metadata = pageMetadata({
-  title: "Request a Local Service | Localized.life",
+  title: "Request a Local Service",
   description: "Request cleaning, yard help, repairs, hauling, pet care, tutoring, and other practical local services.",
   path: "/local-services/request",
 });

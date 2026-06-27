@@ -25,7 +25,7 @@ const eventFilterOptions = eventTypeOptions.filter((option) => option.value !== 
 const eventSignals = ["Markets", "Workshops", "Festivals", "Plant swaps", "Community days"];
 
 export const metadata: Metadata = pageMetadata({
-  title: "Local Events | Localized.life",
+  title: "Local Events: Markets, Festivals, Workshops & Plant Swaps",
   description: "Find farmers markets, craft fairs, pop-ups, workshops, festivals, plant swaps, and other local happenings.",
   path: "/local-events",
   image: "/og/default-saletrail.jpg",

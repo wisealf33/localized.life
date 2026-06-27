@@ -8,7 +8,7 @@ type Props = {
 };
 
 export const metadata: Metadata = pageMetadata({
-  title: "Local Market | Localized.life",
+  title: "Local Market: Eggs, Produce, Farmstands & Handmade Goods",
   description:
     "Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, practical local goods, and neighborhood makers.",
   path: "/local-market",
