@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
+import { localServices } from "@/lib/localServices";
 import { pageMetadata } from "@/lib/seo";
 
 type Props = {
@@ -29,20 +30,89 @@ const serviceTypes = [
   "Farm help",
   "Organizing",
 ];
+const serviceSignals = ["Home help", "Yard work", "Pet care", "Repairs", "Lessons"];
 
 export default async function LocalServicesPage({ searchParams }: Props) {
   const params = await searchParams;
 
   return (
-    <main className="page">
+    <main className="page local-page local-page-services">
       <SiteHeader active="services" product="Project hub" />
-      <section className="hero">
+      <section className="hero local-hero local-hero-services">
         <p className="eyebrow">Practical help</p>
         <h1>Local Services</h1>
         <p className="lede">
-          Find nearby people offering cleaning, yard help, repairs, hauling, garden help, and other useful local
-          services.
+          Request practical local help or offer useful services nearby. Start with the type of help you need, then send
+          a simple request for review.
         </p>
+        <div className="toolbar">
+          <Link className="button primary" href="/local-services/request">
+            Request a service
+          </Link>
+          <Link className="button" href="#submit">
+            Offer a service
+          </Link>
+        </div>
+      </section>
+
+      <section className="local-signal-strip" aria-label="Local Services highlights">
+        {serviceSignals.map((signal) => (
+          <span key={signal}>{signal}</span>
+        ))}
+      </section>
+
+      <section className="panel services-flow-panel" aria-label="How Local Services works">
+        <div>
+          <h2>How this works right now</h2>
+          <p className="muted">
+            This starts as a reviewed local request board, not instant booking. That keeps the launch simple while we
+            learn which services people actually need nearby.
+          </p>
+        </div>
+        <div className="services-flow">
+          <span>Choose help</span>
+          <span>Send request</span>
+          <span>Review queue</span>
+          <span>Connect locally</span>
+        </div>
+      </section>
+
+      <section className="directory-section" aria-labelledby="serviceCategories">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Service types</p>
+            <h2 id="serviceCategories">Pick the kind of help you need.</h2>
+          </div>
+          <Link className="button compact-button" href="/local-services/request">
+            Request any service
+          </Link>
+        </div>
+        <div className="service-card-grid">
+          {localServices.map((service) => (
+            <article className="card service-type-card" key={service.slug}>
+              <div>
+                <p className="eyebrow">{service.category}</p>
+                <h3>
+                  <Link href={`/local-services/${service.slug}`}>{service.title}</Link>
+                </h3>
+                <p className="muted">{service.summary}</p>
+              </div>
+              <div className="tag-row">
+                {service.examples.slice(0, 3).map((example) => (
+                  <span key={example}>{example}</span>
+                ))}
+              </div>
+              <div className="card-actions">
+                <Link className="button primary compact-button" href={`/local-services/request?service=${service.slug}`}>
+                  Request this
+                </Link>
+                <Link className="button compact-button" href={`/local-services/${service.slug}`}>
+                  Details
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <LocalSubmissionForm

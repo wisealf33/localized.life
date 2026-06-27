@@ -15,30 +15,50 @@ export const metadata: Metadata = pageMetadata({
 });
 
 const categories = [
-  "Fresh & Grown",
-  "Raised & Gathered",
-  "Baked & Prepared",
-  "Made & Crafted",
-  "Farmstands & Home Shops",
-  "Backyard Producers",
-  "Small Farms",
+  {
+    title: "Fresh & Grown",
+    description: "Produce, garden starts, flowers, herbs, plants, and seasonal abundance from nearby yards or farms.",
+    examples: ["Produce", "Plants", "Flowers"],
+  },
+  {
+    title: "Raised & Gathered",
+    description: "Eggs, honey, meat shares, mushrooms, firewood, compost, and other useful local resources.",
+    examples: ["Eggs", "Honey", "Firewood"],
+  },
+  {
+    title: "Baked & Prepared",
+    description: "Cottage food, baked goods, jams, sauces, preserves, and small-batch kitchen goods.",
+    examples: ["Bread", "Jams", "Treats"],
+  },
+  {
+    title: "Made & Crafted",
+    description: "Handmade goods, soap, candles, practical craft, home goods, and useful local maker work.",
+    examples: ["Soap", "Candles", "Crafts"],
+  },
 ];
 
 const examples = ["Eggs", "Honey", "Produce", "Plants", "Flowers", "Baked goods", "Soap", "Candles", "Crafts"];
+const marketSignals = ["Farmstand finds", "Backyard abundance", "Cottage food", "Local makers"];
 
 export default async function LocalMarketPage({ searchParams }: Props) {
   const params = await searchParams;
 
   return (
-    <main className="page">
+    <main className="page local-page local-page-market">
       <SiteHeader active="market" product="Project hub" />
-      <section className="hero">
+      <section className="hero local-hero local-hero-market">
         <p className="eyebrow">Local goods</p>
         <h1>Local Market</h1>
         <p className="lede">
           A directory for useful local goods and abundance: things people grow, raise, bake, make, gather, repair, or
           offer nearby.
         </p>
+      </section>
+
+      <section className="local-signal-strip" aria-label="Local Market highlights">
+        {marketSignals.map((signal) => (
+          <span key={signal}>{signal}</span>
+        ))}
       </section>
 
       <LocalSubmissionForm
@@ -60,7 +80,7 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         ctaLabel="Post a local good"
       />
 
-      <section className="grid two">
+      <section className="grid two local-info-grid">
         <article className="card">
           <h2>What belongs here</h2>
           <p className="muted">
@@ -82,12 +102,35 @@ export default async function LocalMarketPage({ searchParams }: Props) {
             small household items should stay in SaleTrail or another resale space unless they connect to growing,
             making, repairing, farmstands, or practical local use.
           </p>
-          <div className="mini-list">
+          <div className="mini-list local-category-list">
             {categories.map((category) => (
-              <span key={category}>{category}</span>
+              <span key={category.title}>{category.title}</span>
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="local-card-grid" aria-labelledby="marketCategories">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Market map</p>
+            <h2 id="marketCategories">Browse by the kind of local good.</h2>
+          </div>
+        </div>
+        {categories.map((category) => (
+          <article className="card local-field-card" key={category.title}>
+            <div>
+              <p className="eyebrow">Local Market</p>
+              <h3>{category.title}</h3>
+              <p className="muted">{category.description}</p>
+            </div>
+            <div className="tag-row">
+              {category.examples.map((example) => (
+                <span key={example}>{example}</span>
+              ))}
+            </div>
+          </article>
+        ))}
       </section>
     </main>
   );

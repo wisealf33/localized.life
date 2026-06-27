@@ -22,6 +22,7 @@ type Props = {
 };
 
 const eventFilterOptions = eventTypeOptions.filter((option) => option.value !== "city_wide_garage_sale");
+const eventSignals = ["Markets", "Workshops", "Festivals", "Plant swaps", "Community days"];
 
 export const metadata: Metadata = pageMetadata({
   title: "Local Events | Localized.life",
@@ -96,15 +97,21 @@ export default async function LocalEventsPage({ searchParams }: Props) {
   const events = await getEvents(eventType);
 
   return (
-    <main className="page">
+    <main className="page local-page local-page-events">
       <SiteHeader active="local-events" product="Project hub" />
-      <section className="hero events-hero">
+      <section className="hero events-hero local-hero local-hero-events">
         <p className="eyebrow">Things happening</p>
         <h1>Local Events</h1>
         <p className="lede">
           Find farmers markets, craft fairs, vendor pop-ups, workshops, festivals, plant swaps, and community gatherings.
           Sale-focused community-wides, estate sales, and garage sales stay in SaleTrail so shoppers can route them.
         </p>
+      </section>
+
+      <section className="local-signal-strip" aria-label="Local Events highlights">
+        {eventSignals.map((signal) => (
+          <span key={signal}>{signal}</span>
+        ))}
       </section>
 
       <LocalSubmissionForm
