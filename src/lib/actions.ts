@@ -1045,6 +1045,105 @@ export async function submitLocalSubmission(formData: FormData) {
   redirect(nextPath);
 }
 
+export async function submitServiceRequest(formData: FormData) {
+  const returnPath = "/local-services/request";
+  let nextPath = returnPath;
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const serviceTitle = required(formData, "service_title");
+    const submitterEmail = requiredEmail(formData, "submitter_email");
+    const manageToken = randomToken();
+    const requesterName = value(formData, "name");
+    const city = value(formData, "city");
+    const state = value(formData, "state").toUpperCase();
+    const timeline = value(formData, "timeline");
+    const budget = value(formData, "budget");
+    const phone = value(formData, "phone");
+    const preferredContact = value(formData, "preferred_contact");
+    const baseDescription = required(formData, "description");
+    const locationLine = [city, state].filter(Boolean).join(", ");
+    const title = `Request: ${serviceTitle}${locationLine ? ` in ${locationLine}` : ""}`;
+    const contact = [
+      requesterName ? `Name: ${requesterName}` : "",
+      phone ? `Phone: ${phone}` : "",
+      `Email: ${submitterEmail}`,
+      preferredContact ? `Preferred contact: ${preferredContact}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    const description = [
+      "Request type: Customer is requesting local service help.",
+      `Service needed: ${serviceTitle}`,
+      timeline ? `Timeline: ${timeline}` : "",
+      budget ? `Budget range: ${budget}` : "",
+      "",
+      baseDescription,
+    ]
+      .filter((line) => line !== "")
+      .join("\n");
+
+    const { error } = await supabase.from("local_submissions").insert({
+      submission_area: "service",
+      title,
+      category: serviceTitle,
+      name: requesterName,
+      contact,
+      submitter_email: submitterEmail,
+      manage_token_hash: hashSecret(manageToken),
+      city,
+      state,
+      website_url: "",
+      description,
+      status: "pending",
+    });
+
+    if (error) throw new Error(error.message);
+
+    let emailResult = { sent: false };
+    try {
+      emailResult = await sendManageLinkEmail({
+        to: submitterEmail,
+        name: requesterName,
+        title,
+        manageToken,
+        kind: "Local Services submission",
+      });
+    } catch (emailError) {
+      console.error("Local service request manage-link email failed", emailError);
+    }
+
+    if (emailResult.sent) {
+      const { error: updateError } = await supabase
+        .from("local_submissions")
+        .update({ manage_email_sent_at: new Date().toISOString() })
+        .eq("manage_token_hash", hashSecret(manageToken));
+      if (updateError) console.error("Local service request email timestamp update failed", updateError);
+    }
+
+    try {
+      revalidatePath("/saletrail/admin");
+      revalidatePath("/local-services/request");
+      revalidatePath("/local-services");
+    } catch (revalidateError) {
+      console.error("Local service request revalidation failed", revalidateError);
+    }
+
+    const manageParam = emailResult.sent ? "" : `&manage=${manageToken}`;
+    nextPath = `${returnPath}?requested=1&email=${emailResult.sent ? "sent" : "setup"}${manageParam}#request`;
+  } catch (error) {
+    console.error("Local service request failed", error);
+    const message =
+      error instanceof Error &&
+      (error.message === "Add a valid email address." || error.message.startsWith("Missing "))
+        ? "Please check the required fields and try again."
+        : "We could not save the service request yet. Please try again in a moment.";
+    nextPath = `${returnPath}?error=${encodeURIComponent(message)}#request`;
+  }
+
+  redirect(nextPath);
+}
+
 export async function updateManagedLocalSubmission(formData: FormData) {
   const supabase = getSupabaseAdmin();
   const token = required(formData, "manage_token");
