@@ -3803,9 +3803,22 @@ code {
     justify-content: flex-start;
     width: 100%;
   }
+
+  .search {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .search-actions,
+  .search-filter-row {
+    grid-column: 1 / -1;
+  }
+
+  .search-actions .button {
+    width: 100%;
+  }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 820px) {
   .two,
   .three,
   .list,
@@ -3951,8 +3964,8 @@ code {
 
   .site-header {
     width: 100dvw;
-    margin-right: 0;
-    margin-left: 0;
+    margin-right: calc(50% - 50dvw);
+    margin-left: calc(50% - 50dvw);
     padding-top: 14px;
     padding-bottom: 14px;
   }
@@ -3960,6 +3973,8 @@ code {
   .site-header-main,
   .site-subnav-row {
     gap: 10px;
+    width: calc(100dvw - 32px);
+    max-width: calc(100dvw - 32px);
   }
 
   .site-product {
@@ -3970,6 +3985,21 @@ code {
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-start;
+  }
+
+  .site-global-nav,
+  .site-product-nav {
+    display: grid;
+    overflow-x: visible;
+    padding-bottom: 4px;
+  }
+
+  .site-global-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .site-product-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .front-hero {
@@ -3984,6 +4014,8 @@ code {
 
   .front-copy,
   .front-copy h1,
+  .hero h1,
+  .hero p,
   .front-copy .lede,
   .front-copy .toolbar,
   .front-signal-row {
@@ -4031,6 +4063,58 @@ code {
   .site-nav-link {
     width: auto;
     flex: 0 0 auto;
+  }
+
+  .site-global-nav .site-nav-link,
+  .site-product-nav .site-subnav-link,
+  .site-product-nav .button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .hero .toolbar .button {
+    width: 100%;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.05rem, 10vw, 2.7rem);
+    line-height: 1.05;
+    max-width: min(100%, 12ch);
+    overflow-wrap: anywhere;
+  }
+
+  .hero p {
+    max-width: min(100%, 34ch);
+    overflow-wrap: anywhere;
+  }
+
+  .search-filter-row {
+    grid-column: auto;
+  }
+
+  .quick-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-chip {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .location-search-action,
+  .location-search-action .location-toggle {
+    width: 100%;
+  }
+
+  .per-page-form,
+  .per-page-form label {
+    width: 100%;
+    min-width: 0;
   }
 }
 
