@@ -2314,6 +2314,55 @@ h2 {
   font-size: 1.2rem;
 }
 
+.mentor-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.mentor-card-grid .section-heading {
+  margin-bottom: 2px;
+}
+
+.mentor-card-grid .section-heading h2 {
+  max-width: 720px;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  line-height: 1.08;
+}
+
+.mentor-skill-card {
+  min-height: 0;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.mentor-skill-card::after {
+  top: 12px;
+  right: 12px;
+  width: 14px;
+  height: 14px;
+}
+
+.mentor-skill-card h3 {
+  margin-bottom: 6px;
+  font-size: 1.16rem;
+}
+
+.mentor-skill-card p {
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.mentor-skill-card .tag-row {
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.mentor-skill-card .tag-row span {
+  padding: 5px 9px;
+  font-size: 0.82rem;
+}
+
 .local-info-grid .card {
   border-radius: 8px;
   border-color: color-mix(in srgb, var(--local-accent) 18%, var(--line));
@@ -4117,6 +4166,10 @@ code {
     min-width: 0;
   }
 
+  .mentor-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4165,6 +4218,10 @@ code {
 
 @media (max-width: 640px) {
   .list {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-card-grid {
     grid-template-columns: 1fr;
   }
 
