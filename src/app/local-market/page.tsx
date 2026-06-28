@@ -1,7 +1,10 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
+import { backlogLeads } from "@/data/backlog-leads";
 import { pageMetadata } from "@/lib/seo";
+import type { BacklogLead } from "@/lib/types";
 
 type Props = {
   searchParams: Promise<{ submitted?: string; email?: string; manage?: string; error?: string }>;
@@ -39,6 +42,30 @@ const categories = [
 
 const examples = ["Eggs", "Honey", "Produce", "Plants", "Flowers", "Baked goods", "Soap", "Candles", "Crafts"];
 const marketSignals = ["Farmstand finds", "Backyard abundance", "Cottage food", "Local makers"];
+const marketLeadTypes = new Set<BacklogLead["lead_type"]>(["local_goods", "food", "gardens"]);
+
+const marketListings = backlogLeads.filter((lead) => marketLeadTypes.has(lead.lead_type));
+
+function listingReportUrl(lead: BacklogLead) {
+  const params = new URLSearchParams({
+    request_type: "bug",
+    page_url: `/local-market#${lead.id}`,
+    message: `Report incorrect Local Market listing information for: ${lead.title}`,
+  });
+  return `/saletrail/feedback?${params.toString()}`;
+}
+
+function listingSummary(lead: BacklogLead) {
+  const summaries: Record<string, string> = {
+    "peotone-chicken-duck-eggs-2026-06-28":
+      "Chicken and duck eggs available near Peotone, with local meet-up and by-the-dozen pricing noted in the public post.",
+    "momence-farm-fresh-eggs-2026-06-28":
+      "Farm fresh eggs available in Momence, with by-the-dozen pricing noted in the public post.",
+    "joliet-sourdough-bread-barn-2026-06-28":
+      "Sourdough bread available for Joliet pickup, with pickup timing noted in the public post.",
+  };
+  return summaries[lead.id] || lead.summary;
+}
 
 export default async function LocalMarketPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -79,6 +106,38 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         errorMessage={params.error}
         ctaLabel="Post a local good"
       />
+
+      <section className="panel stack" aria-labelledby="localMarketListings">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Local Market listings</p>
+            <h2 id="localMarketListings">People offering local goods nearby.</h2>
+          </div>
+        </div>
+        {marketListings.length === 0 ? <p className="muted">No Local Market listings yet.</p> : null}
+        <div className="grid two local-listing-grid">
+          {marketListings.map((listing) => (
+            <article className="card local-listing-card" id={listing.id} key={listing.id}>
+              <div>
+                <p className="eyebrow">{listing.lead_type.replaceAll("_", " ")}</p>
+                <h3>{listing.title}</h3>
+                <p className="muted">{listing.area}</p>
+                <p>{listingSummary(listing)}</p>
+              </div>
+              <div className="card-actions">
+                {listing.source_url ? (
+                  <a className="button primary" href={listing.source_url} target="_blank" rel="noopener noreferrer">
+                    Contact / source
+                  </a>
+                ) : null}
+                <Link className="button" href={listingReportUrl(listing)}>
+                  Report incorrect info
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="grid two local-info-grid">
         <article className="card">

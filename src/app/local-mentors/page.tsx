@@ -1,7 +1,10 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
+import { backlogLeads } from "@/data/backlog-leads";
 import { pageMetadata } from "@/lib/seo";
+import type { BacklogLead } from "@/lib/types";
 
 type Props = {
   searchParams: Promise<{ submitted?: string; email?: string; manage?: string; error?: string }>;
@@ -52,6 +55,37 @@ const mentorTypes = [
 ];
 
 const mentorSignals = ["Music lessons", "Garden skills", "Farm know-how", "Creative coaching", "Life skills"];
+const mentorListingPattern =
+  /\b(tutor|tutoring|lesson|lessons|teacher|class|coach|coaching|mentor|music|piano|guitar|garden lesson|homestead skill)\b/i;
+
+const mentorListings = backlogLeads.filter(
+  (lead) => lead.lead_type === "services" && mentorListingPattern.test(`${lead.title} ${lead.summary} ${lead.notes}`),
+);
+
+function listingReportUrl(lead: BacklogLead) {
+  const params = new URLSearchParams({
+    request_type: "bug",
+    page_url: `/local-mentors#${lead.id}`,
+    message: `Report incorrect Local Mentor listing information for: ${lead.title}`,
+  });
+  return `/saletrail/feedback?${params.toString()}`;
+}
+
+function listingSummary(lead: BacklogLead) {
+  const summaries: Record<string, string> = {
+    "will-county-summer-tutoring-grades-1-8-2026-06-28":
+      "Summer tutoring available for grade-school students in Will County, focused on grades 1-8.",
+    "romeoville-preschool-teacher-tutoring-2026-06-28":
+      "Preschool teacher offering tutoring near Romeoville, with education background and tutoring experience noted.",
+    "plainfield-k2-tutoring-ashley-hustafson-2026-06-28":
+      "K-2 tutoring in Plainfield for reading, writing, and math, with in-person and virtual options noted.",
+    "will-county-kids-music-production-class-2026-06-28":
+      "Kids music production class in the Will County area, with possible online or in-person music lesson options.",
+    "samuel-burns-private-music-lessons-grundy-will-2026-06-28":
+      "Private music lessons available in the Grundy and Will County area, with in-person or online lesson options.",
+  };
+  return summaries[lead.id] || lead.summary;
+}
 
 export default async function LocalMentorsPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -98,6 +132,38 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
         errorMessage={params.error}
         ctaLabel="Post a mentor listing"
       />
+
+      <section className="panel stack" aria-labelledby="localMentorListings">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Local Mentor listings</p>
+            <h2 id="localMentorListings">People teaching lessons and skills nearby.</h2>
+          </div>
+        </div>
+        {mentorListings.length === 0 ? <p className="muted">No Local Mentor listings yet.</p> : null}
+        <div className="grid two local-listing-grid">
+          {mentorListings.map((listing) => (
+            <article className="card local-listing-card" id={listing.id} key={listing.id}>
+              <div>
+                <p className="eyebrow">{listing.lead_type.replaceAll("_", " ")}</p>
+                <h3>{listing.title}</h3>
+                <p className="muted">{listing.area}</p>
+                <p>{listingSummary(listing)}</p>
+              </div>
+              <div className="card-actions">
+                {listing.source_url ? (
+                  <a className="button primary" href={listing.source_url} target="_blank" rel="noopener noreferrer">
+                    Contact / source
+                  </a>
+                ) : null}
+                <Link className="button" href={listingReportUrl(listing)}>
+                  Report incorrect info
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="local-card-grid local-browse-grid" aria-labelledby="mentorCategories">
         <div className="section-heading">
