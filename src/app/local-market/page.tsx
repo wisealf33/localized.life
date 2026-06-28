@@ -110,7 +110,7 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         </article>
       </section>
 
-      <section className="local-card-grid" aria-labelledby="marketCategories">
+      <section className="local-card-grid local-browse-grid" aria-labelledby="marketCategories">
         <div className="section-heading">
           <div>
             <p className="eyebrow">Market map</p>
@@ -118,9 +118,8 @@ export default async function LocalMarketPage({ searchParams }: Props) {
           </div>
         </div>
         {categories.map((category) => (
-          <article className="card local-field-card" key={category.title}>
+          <article className="card local-field-card local-browse-card" key={category.title}>
             <div>
-              <p className="eyebrow">Local Market</p>
               <h3>{category.title}</h3>
               <p className="muted">{category.description}</p>
             </div>

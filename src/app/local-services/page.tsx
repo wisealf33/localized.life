@@ -87,11 +87,10 @@ export default async function LocalServicesPage({ searchParams }: Props) {
             Request any service
           </Link>
         </div>
-        <div className="service-card-grid">
+        <div className="service-card-grid local-browse-grid local-service-browse-grid">
           {localServices.map((service) => (
-            <article className="card service-type-card" key={service.slug}>
+            <article className="card service-type-card local-browse-card" key={service.slug}>
               <div>
-                <p className="eyebrow">{service.category}</p>
                 <h3>
                   <Link href={`/local-services/${service.slug}`}>{service.title}</Link>
                 </h3>
