@@ -33,6 +33,7 @@ import type {
   EventLeadStatus,
   FeedbackRequest,
   ListingRequest,
+  BacklogLead,
   LocalEvent,
   LocalSubmission,
   LocalSubmissionArea,
@@ -146,6 +147,44 @@ const localSubmissionStatusLabels: Record<LocalSubmissionStatus, string> = {
   approved: "Approved",
   rejected: "Rejected",
 };
+
+const localMarketLeadTypes = new Set<BacklogLead["lead_type"]>(["local_goods", "food", "gardens"]);
+const localMentorLeadPattern = /\b(tutor|tutoring|lesson|lessons|teacher|class|coach|coaching|mentor|music|piano|guitar|garden lesson|homestead skill)\b/i;
+
+function isLocalMarketLead(lead: BacklogLead) {
+  return localMarketLeadTypes.has(lead.lead_type);
+}
+
+function isLocalMentorLead(lead: BacklogLead) {
+  return lead.lead_type === "services" && localMentorLeadPattern.test(`${lead.title} ${lead.summary} ${lead.notes}`);
+}
+
+function BacklogLeadCard({ lead }: { lead: BacklogLead }) {
+  return (
+    <article className="card compact">
+      <p className="eyebrow">{lead.lead_type.replaceAll("_", " ")}</p>
+      <h3>{lead.title}</h3>
+      <p className="muted">{lead.area}</p>
+      <p>{lead.summary}</p>
+      {lead.source_url ? (
+        <p>
+          <a className="text-link" href={lead.source_url} target="_blank" rel="noopener noreferrer">
+            Open source
+          </a>
+        </p>
+      ) : null}
+      <details className="admin-details">
+        <summary>Notes</summary>
+        <p className="muted whitespace">
+          {lead.source_label || "No source label"}
+          {lead.source_poster_name ? `\nSource poster: ${lead.source_poster_name}` : ""}
+          {"\n"}
+          {lead.notes}
+        </p>
+      </details>
+    </article>
+  );
+}
 
 function isFacebookOutreachCandidate(sale: Pick<Sale, "categories" | "source_url">) {
   if (sale.categories?.includes("City-wide sale")) return false;
@@ -518,6 +557,9 @@ export default async function AdminPage({ searchParams }: Props) {
   const missingGeneralPhotos = generalPhotoNeeds();
   const missingFestivalPhotos = festivalPhotoNeeds();
   const activeEventLeads = centralIllinoisEventLeads;
+  const localMarketBacklogLeads = backlogLeads.filter(isLocalMarketLead);
+  const localMentorBacklogLeads = backlogLeads.filter(isLocalMentorLead);
+  const otherBacklogLeads = backlogLeads.filter((lead) => !isLocalMarketLead(lead) && !isLocalMentorLead(lead));
 
   return (
     <main className="page">
@@ -564,6 +606,8 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-requests">Corrections/removals ({requests.length})</a>
             <a href="#admin-feedback">Feedback ({feedback.length})</a>
             <a href="#admin-local-submissions">Local submissions ({localSubmissions.length})</a>
+            <a href="#admin-local-market-leads">Local Market leads ({localMarketBacklogLeads.length})</a>
+            <a href="#admin-local-mentor-leads">Local Mentor leads ({localMentorBacklogLeads.length})</a>
             <a href="#admin-monetization">Monetization ({monetizationLeads.length})</a>
             <a href="#admin-events">Events ({events.length})</a>
             <a href="#admin-event-leads">Event leads ({activeEventLeads.length})</a>
@@ -1114,36 +1158,62 @@ export default async function AdminPage({ searchParams }: Props) {
               <p className="eyebrow">Future Localized.life products</p>
               <h2>Backlog leads</h2>
               <p className="muted">
-                Admin-only ideas and source leads that do not belong in SaleTrail yet. These are saved for future local
-                goods, food, tools, gardens, services, or exchange products.
+                Admin-only source leads that do not belong in SaleTrail. Market and Mentor leads are separated below so
+                individual goods, food, lessons, and tutoring leads are easier to review.
               </p>
             </div>
-            <div className="grid two">
-              {backlogLeads.map((lead) => (
-                <article className="card compact" key={lead.id}>
-                  <p className="eyebrow">{lead.lead_type.replaceAll("_", " ")}</p>
-                  <h3>{lead.title}</h3>
-                  <p className="muted">{lead.area}</p>
-                  <p>{lead.summary}</p>
-                  {lead.source_url ? (
-                    <p>
-                      <a className="text-link" href={lead.source_url} target="_blank" rel="noopener noreferrer">
-                        Open source
-                      </a>
-                    </p>
-                  ) : null}
-                  <details className="admin-details">
-                    <summary>Notes</summary>
-                    <p className="muted whitespace">
-                      {lead.source_label || "No source label"}
-                      {lead.source_poster_name ? `\nSource poster: ${lead.source_poster_name}` : ""}
-                      {"\n"}
-                      {lead.notes}
-                    </p>
-                  </details>
-                </article>
-              ))}
+
+            <div className="admin-jump-nav" aria-label="Backlog lead groups">
+              <a href="#admin-local-market-leads">Local Market leads ({localMarketBacklogLeads.length})</a>
+              <a href="#admin-local-mentor-leads">Local Mentor leads ({localMentorBacklogLeads.length})</a>
+              <a href="#admin-other-backlog-leads">Other backlog ({otherBacklogLeads.length})</a>
             </div>
+
+            <section className="stack" id="admin-local-market-leads">
+              <div>
+                <p className="eyebrow">Local Market</p>
+                <h3>Individual goods, food, and garden leads</h3>
+                <p className="muted">
+                  Review these for eggs, sourdough, honey, produce, cottage food, and useful handmade or backyard goods.
+                </p>
+              </div>
+              {localMarketBacklogLeads.length === 0 ? <p className="muted">No Local Market leads yet.</p> : null}
+              <div className="grid two">
+                {localMarketBacklogLeads.map((lead) => (
+                  <BacklogLeadCard lead={lead} key={lead.id} />
+                ))}
+              </div>
+            </section>
+
+            <section className="stack" id="admin-local-mentor-leads">
+              <div>
+                <p className="eyebrow">Local Mentors</p>
+                <h3>Lessons, tutoring, and skill leads</h3>
+                <p className="muted">
+                  Review these for individual tutors, teachers, music lessons, garden lessons, and hands-on learning.
+                </p>
+              </div>
+              {localMentorBacklogLeads.length === 0 ? <p className="muted">No Local Mentor leads yet.</p> : null}
+              <div className="grid two">
+                {localMentorBacklogLeads.map((lead) => (
+                  <BacklogLeadCard lead={lead} key={lead.id} />
+                ))}
+              </div>
+            </section>
+
+            {otherBacklogLeads.length > 0 ? (
+              <section className="stack" id="admin-other-backlog-leads">
+                <div>
+                  <p className="eyebrow">Other</p>
+                  <h3>Other backlog leads</h3>
+                </div>
+                <div className="grid two">
+                  {otherBacklogLeads.map((lead) => (
+                    <BacklogLeadCard lead={lead} key={lead.id} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </section>
 
           <section className="panel stack" id="admin-photo-needs">
