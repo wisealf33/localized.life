@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
 import { sendClaimApprovedEmail, sendClaimInstructionsEmail, sendManageLinkEmail } from "./email";
 import { eventPath, eventTypeOptions } from "./events";
-import { categoryOptions, salePath, saleSharePath, saleUrl } from "./format";
+import { categoryOptions, saleDisplayTitle, saleGeneratedTitle, salePath, saleSharePath, saleUrl } from "./format";
 import { geocodeAddress } from "./geocode";
 import { uploadImageToCloudinary } from "./cloudinary";
 import { getSupabaseAdmin } from "./supabase";
@@ -544,10 +544,12 @@ export async function createCommunitySale(formData: FormData) {
   await requireAdmin();
 
   const supabase = getSupabaseAdmin();
-  const title = required(formData, "title");
+  const rawTitle = required(formData, "title");
+  const categories = normalizeCategories(formData);
+  const address = addressFromForm(formData);
+  const title = saleDisplayTitle({ title: rawTitle, ...address, categories });
   const slug = slugifyTitle(title);
   const schedule = buildSchedule(formData);
-  const address = addressFromForm(formData);
   const coordinates = await geocodeAddress(address);
 
   const insertPayload: Record<string, unknown> = {
@@ -561,7 +563,7 @@ export async function createCommunitySale(formData: FormData) {
     starts_at: schedule.starts_at,
     ends_at: schedule.ends_at,
     sale_schedule: schedule.sale_schedule,
-    categories: normalizeCategories(formData),
+    categories,
     status: "active",
     source_type: "community_added",
     claim_status: "unclaimed",
@@ -607,17 +609,19 @@ export async function createCommunitySalesBatch(formData: FormData) {
   const skipped = 0;
 
   for (const listing of listings) {
-    const title = String(listing.title || "").trim();
+    const rawTitle = String(listing.title || "").trim();
     const address = {
       address_line: String(listing.address_line || "").trim(),
       city: String(listing.city || "").trim(),
       state: String(listing.state || "").trim().toUpperCase(),
       zip: String(listing.zip || "").trim(),
     };
-    if (!title || !address.address_line || !address.city || !address.state || !address.zip) {
+    if (!rawTitle || !address.address_line || !address.city || !address.state || !address.zip) {
       throw new Error("Each batch listing needs title, address_line, city, state, and zip.");
     }
 
+    const categories = normalizeBatchCategories(listing.categories);
+    const title = saleDisplayTitle({ title: rawTitle, ...address, categories });
     const slug = slugifyTitle(title);
     const schedule = buildScheduleFromDays(listing.days);
     const coordinates = await geocodeAddress(address);
@@ -632,7 +636,7 @@ export async function createCommunitySalesBatch(formData: FormData) {
       starts_at: schedule.starts_at,
       ends_at: schedule.ends_at,
       sale_schedule: schedule.sale_schedule,
-      categories: normalizeBatchCategories(listing.categories),
+      categories,
       status: "active",
       source_type: "community_added",
       claim_status: "unclaimed",
@@ -1447,7 +1451,11 @@ export async function addHouseholdToCommunityWide(formData: FormData) {
     redirect(`${salePath(existing.data[0])}?already=1`);
   }
 
-  const title = `${address.address_line} in ${address.city}, ${address.state} - Community-Wide Garage Sale`;
+  const title = saleGeneratedTitle({
+    title: event.title,
+    ...address,
+    categories: ["Community sale"],
+  });
   const slug = slugifyTitle(title);
   const manageToken = randomToken();
   const coordinates = await geocodeAddress(address);

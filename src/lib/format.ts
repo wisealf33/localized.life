@@ -82,6 +82,8 @@ export function fullAddress(sale: Pick<Sale, "address_line" | "city" | "state" |
 
 function saleKind(sale: Pick<Sale, "categories">) {
   const categories = sale.categories || [];
+  if (categories.includes("City-wide sale")) return "City-Wide Sale";
+  if (categories.includes("Community sale")) return "Community Sale";
   if (categories.includes("Estate sale")) return "Estate Sale";
   if (categories.includes("Moving sale")) return "Moving Sale";
   if (categories.includes("Multi-family")) return "Multi-Family Garage Sale";
@@ -90,15 +92,90 @@ function saleKind(sale: Pick<Sale, "categories">) {
 }
 
 function isGeneralLocation(address: string) {
-  return /^(participating homes|village-wide|city-wide|community-wide|exact address hidden|near |around |west side|sandalwood subdivision|neighborhood|subdivision)/i.test(
+  return /^(participating homes|village-wide|city-wide|community-wide|exact address hidden|near |around |west side|sandalwood subdivision|neighborhood|subdivision|[a-z .'-]+ area\b)/i.test(
     address.trim(),
   );
 }
 
+function normalizeTitlePart(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\b(street|st)\b/g, "st")
+    .replace(/\b(avenue|ave)\b/g, "ave")
+    .replace(/\b(road|rd)\b/g, "rd")
+    .replace(/\b(drive|dr)\b/g, "dr")
+    .replace(/\b(lane|ln)\b/g, "ln")
+    .replace(/\b(court|ct)\b/g, "ct")
+    .replace(/\b(place|pl)\b/g, "pl")
+    .replace(/\b(northwest|nw)\b/g, "nw")
+    .replace(/\b(northeast|ne)\b/g, "ne")
+    .replace(/\b(southwest|sw)\b/g, "sw")
+    .replace(/\b(southeast|se)\b/g, "se")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function titleRepeatsLocation(
+  sale: Pick<Sale, "title" | "address_line" | "city" | "state"> & { zip?: string | null },
+) {
+  const title = normalizeTitlePart(sale.title);
+  const address = normalizeTitlePart(sale.address_line);
+  const city = normalizeTitlePart(sale.city);
+  const state = normalizeTitlePart(sale.state);
+  const zip = normalizeTitlePart(sale.zip || "");
+  const full = normalizeTitlePart(`${sale.address_line} ${sale.city} ${sale.state} ${sale.zip || ""}`);
+
+  if (!title || !address) return false;
+  if (title.includes(address) || address.includes(title)) return true;
+  if (full && title.includes(full)) return true;
+
+  const withoutLocation = title
+    .replace(address, "")
+    .replace(city, "")
+    .replace(state, "")
+    .replace(zip, "")
+    .replace(/\b(in|garage|yard|sale|community|wide|area|confirm|location|with|village)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return withoutLocation.length < 8;
+}
+
+function streetLabel(addressLine: string) {
+  const firstPart = addressLine.split(",")[0]?.trim() || addressLine.trim();
+  const namedPlace = firstPart.match(/^(.+?),\s*\d+\s+/);
+  if (namedPlace?.[1]) return namedPlace[1].trim();
+
+  const street = firstPart
+    .replace(/^\d+[a-z]?\s+/i, "")
+    .replace(/\b(st)\b\.?$/i, "Street")
+    .replace(/\b(ave)\b\.?$/i, "Avenue")
+    .replace(/\b(rd)\b\.?$/i, "Road")
+    .replace(/\b(dr)\b\.?$/i, "Drive")
+    .replace(/\b(ln)\b\.?$/i, "Lane")
+    .replace(/\b(ct)\b\.?$/i, "Court")
+    .replace(/\b(pl)\b\.?$/i, "Place")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return street || "";
+}
+
+export function saleGeneratedTitle(sale: Pick<Sale, "title" | "address_line" | "city" | "state" | "categories">) {
+  const address = sale.address_line.trim();
+  const kind = saleKind(sale);
+  if (!address || isGeneralLocation(address)) return `${sale.city} ${kind}`;
+
+  const location = streetLabel(address) || sale.city;
+  return `${location} ${kind}`;
+}
+
 export function saleDisplayTitle(sale: Pick<Sale, "title" | "address_line" | "city" | "state" | "categories">) {
   const address = sale.address_line.trim();
-  if (!address || isGeneralLocation(address)) return sale.title;
-  return `${address} in ${sale.city}, ${sale.state} - ${saleKind(sale)}`;
+  if (!address) return sale.title;
+  if (isGeneralLocation(address) || titleRepeatsLocation(sale)) return saleGeneratedTitle(sale);
+  return sale.title;
 }
 
 export function mapSearchUrl(sale: Pick<Sale, "address_line" | "city" | "state" | "zip">) {
