@@ -7,7 +7,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Localized.life | Useful Local Life Outside Noisy Feeds",
   description:
-    "Localized.life is a practical local operating system for finding useful real-world community: local goods, events, sales, abundance, services, and local knowledge.",
+    "Localized.life is a practical local operating system for finding useful real-world community: local goods, events, sales, abundance, services, mentors, and local knowledge.",
   path: "/",
   image: "/og/default-saletrail.jpg",
 });
@@ -30,7 +30,7 @@ export default function Home() {
           <h1>Useful local life, pulled out of the noise.</h1>
           <p className="lede">
             Localized.life is a practical local operating system for finding useful real-world community: local goods,
-            events, sales, abundance, services, and local knowledge.
+            events, sales, abundance, services, mentors, and local knowledge.
           </p>
           <div className="toolbar">
             <Link className="button primary" href="/saletrail">
@@ -45,6 +45,7 @@ export default function Home() {
             <span>Events</span>
             <span>Sale routes</span>
             <span>Abundance</span>
+            <span>Mentors</span>
             <span>Services</span>
           </div>
         </div>
@@ -54,10 +55,10 @@ export default function Home() {
       <section className="front-product-band front-door-band" aria-label="Localized.life public doors">
         <div className="front-door-intro">
           <p className="front-badge">Start here</p>
-          <h2>Five clear doors into local life.</h2>
+          <h2>Six clear doors into local life.</h2>
           <p>
             Choose the area that matches what you are looking for: local goods, things happening nearby, sale routes,
-            food abundance, or practical local help.
+            food abundance, practical local help, or people who can teach useful skills.
           </p>
         </div>
 
@@ -126,6 +127,22 @@ export default function Home() {
         </article>
 
         <article className="front-product-card">
+          <p className="front-badge">Learn nearby</p>
+          <h3>Local Mentors</h3>
+          <p>Find music lessons, garden coaching, farming skills, creative practice, tutoring, and hands-on learning nearby.</p>
+          <div className="tag-row">
+            <span>Music lessons</span>
+            <span>Garden skills</span>
+            <span>Farm know-how</span>
+            <span>Tutoring</span>
+            <span>Creative coaching</span>
+          </div>
+          <Link className="button" href="/local-mentors">
+            View Local Mentors
+          </Link>
+        </article>
+
+        <article className="front-product-card">
           <p className="front-badge">Practical help</p>
           <h3>Local Services</h3>
           <p>Find nearby people offering cleaning, yard help, repairs, hauling, garden help, and other useful local services.</p>
@@ -155,7 +172,7 @@ export default function Home() {
           </p>
           <aside className="front-field-note" aria-label="Localized.life motto">
             <strong>Start with what is nearby.</strong>
-            <span>Find local sales, goods, events, abundance, and practical help without digging through noisy feeds.</span>
+            <span>Find local sales, goods, events, abundance, mentors, and practical help without digging through noisy feeds.</span>
           </aside>
         </div>
       </section>

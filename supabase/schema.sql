@@ -209,7 +209,7 @@ create table if not exists public.feedback_requests (
 
 create table if not exists public.local_submissions (
   id uuid primary key default gen_random_uuid(),
-  submission_area text not null check (submission_area in ('market', 'event', 'service')),
+  submission_area text not null check (submission_area in ('market', 'event', 'service', 'mentor')),
   title text not null,
   category text,
   name text,

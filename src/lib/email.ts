@@ -27,7 +27,12 @@ type ManageLinkEmail = {
   name?: string | null;
   title: string;
   manageToken: string;
-  kind: "SaleTrail listing" | "Local Market submission" | "Local Event submission" | "Local Services submission";
+  kind:
+    | "SaleTrail listing"
+    | "Local Market submission"
+    | "Local Event submission"
+    | "Local Services submission"
+    | "Local Mentors submission";
   publicUrl?: string | null;
 };
 

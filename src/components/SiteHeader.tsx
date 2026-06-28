@@ -4,6 +4,7 @@ type ActiveNav =
   | "home"
   | "market"
   | "local-events"
+  | "mentors"
   | "saletrail"
   | "harvest"
   | "services"
@@ -43,6 +44,9 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
           </Link>
           <Link className={navClass(active, "local-events")} href="/local-events">
             Local Events
+          </Link>
+          <Link className={navClass(active, "mentors")} href="/local-mentors">
+            Local Mentors
           </Link>
           <Link className={navClass(active, "services")} href="/local-services">
             Local Services

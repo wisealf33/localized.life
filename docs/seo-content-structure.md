@@ -48,8 +48,8 @@ Footer
 ## Localized Public Page Pattern
 
 ```text
-title: Local goods, service, event, sale, or harvest phrase
-description: specific thing the page helps people find, submit, map, or request
+title: Local goods, mentor, service, event, sale, or harvest phrase
+description: specific thing the page helps people find, submit, map, learn, or request
 h1: short visible page name
 h2: submit, browse, filter, map, route, or explanation sections
 h3: cards, categories, event names, service types, listing names

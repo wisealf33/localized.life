@@ -41,7 +41,7 @@ const outreachStatuses = new Set<OutreachStatus>([
 
 const feedbackRequestTypes = new Set<FeedbackRequestType>(["feature", "bug", "general"]);
 const feedbackStatuses = new Set(["pending", "reviewed", "resolved", "rejected"]);
-const localSubmissionAreas = new Set<LocalSubmissionArea>(["market", "event", "service"]);
+const localSubmissionAreas = new Set<LocalSubmissionArea>(["market", "event", "service", "mentor"]);
 const localSubmissionStatuses = new Set<LocalSubmissionStatus>(["pending", "reviewed", "approved", "rejected"]);
 const localEventTypes = new Set<LocalEventType>(eventTypeOptions.map((option) => option.value));
 const monetizationLeadCategories = new Set<MonetizationLeadCategory>([
@@ -1007,7 +1007,9 @@ export async function submitLocalSubmission(formData: FormData) {
             ? "Local Market submission"
             : submissionArea === "event"
               ? "Local Event submission"
-              : "Local Services submission",
+              : submissionArea === "mentor"
+                ? "Local Mentors submission"
+                : "Local Services submission",
       });
     } catch (emailError) {
       console.error("Local submission manage-link email failed", emailError);
