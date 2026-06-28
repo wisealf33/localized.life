@@ -99,7 +99,7 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
         ctaLabel="Post a mentor listing"
       />
 
-      <section className="local-card-grid mentor-card-grid" aria-labelledby="mentorCategories">
+      <section className="local-card-grid local-browse-grid" aria-labelledby="mentorCategories">
         <div className="section-heading">
           <div>
             <p className="eyebrow">Mentor map</p>
@@ -107,7 +107,7 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
           </div>
         </div>
         {mentorCategories.map((category) => (
-          <article className="card local-field-card mentor-skill-card" key={category.title}>
+          <article className="card local-field-card local-browse-card" key={category.title}>
             <div>
               <h3>{category.title}</h3>
               <p className="muted">{category.description}</p>
