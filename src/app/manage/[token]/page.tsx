@@ -20,6 +20,7 @@ const areaLabels: Record<LocalSubmission["submission_area"], string> = {
   market: "Local Market",
   event: "Local Events",
   service: "Local Services",
+  mentor: "Local Mentors",
 };
 
 async function getSubmission(token: string) {

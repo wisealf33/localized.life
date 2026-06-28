@@ -118,6 +118,13 @@ h2 {
   --local-warm: #f7fbff;
 }
 
+.local-page-mentors {
+  --local-accent: #8a4bb8;
+  --local-accent-dark: #623285;
+  --local-accent-soft: #f5edff;
+  --local-warm: #fff8f1;
+}
+
 .local-page-services {
   --local-accent: #2f6fd1;
   --local-accent-dark: #1f4f9d;
@@ -168,6 +175,16 @@ h2 {
     linear-gradient(90deg, transparent 18%, var(--local-accent) 18% 82%, transparent 82%) 0 25% / 100% 10px no-repeat,
     linear-gradient(90deg, transparent 33%, color-mix(in srgb, var(--local-accent) 42%, #ffffff) 33% 36%, transparent 36% 64%, color-mix(in srgb, var(--local-accent) 42%, #ffffff) 64% 67%, transparent 67%),
     linear-gradient(0deg, transparent 42%, color-mix(in srgb, var(--local-accent) 42%, #ffffff) 42% 45%, transparent 45% 67%, color-mix(in srgb, var(--local-accent) 42%, #ffffff) 67% 70%, transparent 70%),
+    color-mix(in srgb, var(--local-accent-soft) 56%, #ffffff);
+}
+
+.local-page-mentors .local-hero::before {
+  background:
+    radial-gradient(circle at 29% 31%, var(--local-accent) 0 7px, transparent 8px),
+    linear-gradient(90deg, transparent 43%, color-mix(in srgb, var(--local-accent) 68%, #ffffff) 43% 76%, transparent 76%) 0 31% / 100% 7px no-repeat,
+    linear-gradient(90deg, transparent 24%, color-mix(in srgb, var(--local-accent) 44%, #ffffff) 24% 78%, transparent 78%) 0 51% / 100% 6px no-repeat,
+    linear-gradient(90deg, transparent 24%, color-mix(in srgb, var(--local-accent) 34%, #ffffff) 24% 68%, transparent 68%) 0 66% / 100% 6px no-repeat,
+    radial-gradient(circle at 73% 70%, #f2c84b 0 6px, transparent 7px),
     color-mix(in srgb, var(--local-accent-soft) 56%, #ffffff);
 }
 
@@ -543,8 +560,8 @@ h2 {
   align-items: stretch;
 }
 
-.front-door-band .front-product-card {
-  grid-column: span 2;
+.front-door-band .front-product-card:not(.front-feature-card) {
+  grid-column: span 3;
 }
 
 .front-door-band .front-feature-card {
@@ -3933,6 +3950,9 @@ code {
   }
 
   .site-header {
+    width: 100dvw;
+    margin-right: 0;
+    margin-left: 0;
     padding-top: 14px;
     padding-bottom: 14px;
   }
@@ -3950,6 +3970,35 @@ code {
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-start;
+  }
+
+  .front-hero {
+    box-sizing: border-box;
+    width: 100dvw;
+    min-width: 0;
+  }
+
+  .front-product-band {
+    width: min(1180px, calc(100dvw - 32px));
+  }
+
+  .front-copy,
+  .front-copy h1,
+  .front-copy .lede,
+  .front-copy .toolbar,
+  .front-signal-row {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .front-product-band.front-door-band {
+    grid-template-columns: 1fr;
+  }
+
+  .front-product-band.front-door-band .front-product-card,
+  .front-product-band.front-door-band .front-feature-card,
+  .front-product-band.front-door-band .front-product-card:not(.front-feature-card) {
+    grid-column: auto;
   }
 
   .site-footer-inner {

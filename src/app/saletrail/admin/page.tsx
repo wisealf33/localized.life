@@ -137,6 +137,7 @@ const localSubmissionAreaLabels: Record<LocalSubmissionArea, string> = {
   market: "Local Market",
   event: "Local Events",
   service: "Local Services",
+  mentor: "Local Mentors",
 };
 
 const localSubmissionStatusLabels: Record<LocalSubmissionStatus, string> = {
@@ -701,7 +702,7 @@ export default async function AdminPage({ searchParams }: Props) {
           <section className="panel stack" id="admin-local-submissions">
             <div>
               <p className="eyebrow">Needs review</p>
-              <h2>Local Market, Events, and Services submissions</h2>
+              <h2>Local Market, Events, Services, and Mentors submissions</h2>
               <p className="muted">
                 Public submissions for the broader Localized.life doors. These are review-only until a real public
                 directory workflow is built for each section.
