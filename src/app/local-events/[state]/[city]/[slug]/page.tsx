@@ -14,6 +14,7 @@ import {
   formatEventHours,
 } from "@/lib/events";
 import { fullAddress, saleDisplayTitle, salePath } from "@/lib/format";
+import { optimizedImageUrl } from "@/lib/images";
 import { absoluteUrl, cleanDescription, pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocalEvent, Sale } from "@/lib/types";
@@ -69,6 +70,7 @@ export default async function EventDetailPage({ params }: Props) {
   if (!event) notFound();
   const usesSaleTrailFeatures = eventUsesSaleTrailFeatures(event.event_type);
   const supportsSaleStops = eventSupportsSaleStops(event.event_type);
+  const previewImage = eventPreviewImagePath(event);
   const sales = supportsSaleStops ? await getEventSales(event.id) : [];
   const mappedSales = sales.map((sale) => ({
     slug: sale.slug,
@@ -122,6 +124,14 @@ export default async function EventDetailPage({ params }: Props) {
           {event.county ? ` · ${event.county}` : ""}
         </p>
         {event.description ? <p>{event.description}</p> : null}
+        {previewImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="event-detail-image"
+            src={optimizedImageUrl(previewImage, { width: 1200, crop: "limit" })}
+            alt={`${event.title} preview`}
+          />
+        ) : null}
         <div className="toolbar">
           <Link className="button" href="/local-events">
             Back to events
