@@ -2,8 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
-import { eventPath, eventPreviewImagePath, eventTypeLabel, eventTypeOptions } from "@/lib/events";
-import { optimizedImageUrl } from "@/lib/images";
+import { eventPath, eventTypeLabel, eventTypeOptions } from "@/lib/events";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocalEvent, LocalEventType } from "@/lib/types";
@@ -182,18 +181,9 @@ export default async function LocalEventsPage({ searchParams }: Props) {
           </div>
         ) : (
           events.map((event) => {
-            const image = eventPreviewImagePath(event);
             const descriptionPreview = previewText(event.description);
             return (
               <article className="card event-card" key={event.id}>
-                {image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    className="sale-card-image"
-                    src={optimizedImageUrl(image, { width: 900, crop: "limit" })}
-                    alt={`${event.title} preview`}
-                  />
-                ) : null}
                 <div>
                   <p className="eyebrow">{eventTypeLabel(event.event_type)}</p>
                   <h3>
