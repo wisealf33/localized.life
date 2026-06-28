@@ -5,7 +5,7 @@ import { submitFeedbackRequest } from "@/lib/actions";
 import { pageMetadata } from "@/lib/seo";
 
 type Props = {
-  searchParams: Promise<{ submitted?: string }>;
+  searchParams: Promise<{ submitted?: string; request_type?: string; page_url?: string; message?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -17,6 +17,10 @@ export const metadata: Metadata = pageMetadata({
 
 export default async function FeedbackPage({ searchParams }: Props) {
   const params = await searchParams;
+  const requestType =
+    params.request_type === "bug" || params.request_type === "general" || params.request_type === "feature"
+      ? params.request_type
+      : "feature";
 
   return (
     <main className="page narrow">
@@ -40,7 +44,7 @@ export default async function FeedbackPage({ searchParams }: Props) {
         <form action={submitFeedbackRequest} className="panel form">
           <label>
             What is this about?
-            <select name="request_type" defaultValue="feature" required>
+            <select name="request_type" defaultValue={requestType} required>
               <option value="feature">Feature request</option>
               <option value="bug">Bug report</option>
               <option value="general">General feedback</option>
@@ -56,11 +60,21 @@ export default async function FeedbackPage({ searchParams }: Props) {
           </label>
           <label>
             Page URL
-            <input name="page_url" placeholder="Paste the page where you saw the issue, optional" />
+            <input
+              name="page_url"
+              defaultValue={params.page_url || ""}
+              placeholder="Paste the page where you saw the issue, optional"
+            />
           </label>
           <label>
             Message
-            <textarea name="message" rows={7} placeholder="Tell me what should be added, fixed, or improved." required />
+            <textarea
+              name="message"
+              rows={7}
+              defaultValue={params.message || ""}
+              placeholder="Tell me what should be added, fixed, or improved."
+              required
+            />
           </label>
           <button className="button primary" type="submit">
             Send feedback

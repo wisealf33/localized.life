@@ -2378,6 +2378,39 @@ h2 {
   margin-top: 2px;
 }
 
+.local-listing-grid {
+  align-items: stretch;
+}
+
+.local-listing-card {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 260px;
+  gap: 16px;
+  border-radius: 8px;
+  border-color: color-mix(in srgb, var(--local-accent) 22%, var(--line));
+  background:
+    linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--local-accent-soft) 34%, #ffffff) 100%);
+}
+
+.local-listing-card .eyebrow {
+  background: var(--local-accent-soft);
+  color: var(--local-accent-dark);
+}
+
+.local-listing-card h3 {
+  margin-bottom: 6px;
+}
+
+.local-listing-card .card-actions {
+  align-items: center;
+  gap: 8px;
+}
+
+.local-listing-card .button {
+  width: fit-content;
+}
+
 .local-info-grid .card {
   border-radius: 8px;
   border-color: color-mix(in srgb, var(--local-accent) 18%, var(--line));
