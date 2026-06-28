@@ -4,7 +4,6 @@ import { AutoSubmitSearchForm } from "@/components/AutoSubmitSearchForm";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
 import { SiteHeader } from "@/components/SiteHeader";
-import { StatusBadge } from "@/components/StatusBadge";
 import { UseLocationButton } from "@/components/UseLocationButton";
 import { rangeDates, rangeOptions, rangeParam } from "@/lib/dateFilters";
 import { eventPath, eventPreviewImagePath, formatEventHours } from "@/lib/events";
@@ -277,10 +276,6 @@ function visibilityRank(sale: Pick<Sale, "source_type" | "claim_status">) {
   return 3;
 }
 
-function canClaim(sale: Pick<Sale, "source_type" | "claim_status">) {
-  return sale.source_type === "community_added" && sale.claim_status !== "claimed";
-}
-
 function previewText(value: string | null | undefined, maxLength = 150) {
   const text = String(value || "").replace(/\s+/g, " ").trim();
   if (!text) return "";
@@ -305,7 +300,6 @@ function SaleCard({ sale }: { sale: Sale }) {
         />
       ) : null}
       <div className="card-top">
-        <StatusBadge sale={sale} />
         <span className="muted">
           {sale.city}, {sale.state}
         </span>
@@ -346,11 +340,6 @@ function SaleCard({ sale }: { sale: Sale }) {
             }}
             variant="secondary"
           />
-          {canClaim(sale) ? (
-            <Link className="quiet-link" href={`/saletrail/claim/${sale.slug}`}>
-              Claim listing
-            </Link>
-          ) : null}
         </div>
       </div>
     </article>
