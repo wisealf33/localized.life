@@ -2,6 +2,8 @@
 
 Local Market and Local Mentors should prioritize individual people, households, gardens, small homestead setups, and informal teachers in the nearby area.
 
+Local Market items with enough public detail can become public listings. Local Mentor items found from outside sources should stay private as outreach leads until the person agrees to be listed and the lesson format, service area, and contact path are clear.
+
 ## Good Fits
 
 - Backyard eggs, honey, produce, flowers, starts, plants, sourdough, cottage foods, preserves, compost, firewood, and handmade useful goods.
@@ -25,4 +27,4 @@ Local Market and Local Mentors should prioritize individual people, households, 
 
 ## Facebook Use
 
-Facebook is a lead source only. Use public posts, public profiles/pages, or user-provided screenshots/links when they show enough detail. Do not scrape private groups, private profiles, Marketplace, or logged-in-only content.
+Facebook is a lead source only. Use public posts, public profiles/pages, or user-provided screenshots/links when they show enough detail. Do not scrape private groups, private profiles, Marketplace, or logged-in-only content. Treat mentor-related Facebook finds as private outreach leads first, not public listings.
