@@ -607,7 +607,7 @@ export default async function AdminPage({ searchParams }: Props) {
             <a href="#admin-feedback">Feedback ({feedback.length})</a>
             <a href="#admin-local-submissions">Local submissions ({localSubmissions.length})</a>
             <a href="#admin-local-market-leads">Local Market listings ({localMarketBacklogLeads.length})</a>
-            <a href="#admin-local-mentor-leads">Local Mentor listings ({localMentorBacklogLeads.length})</a>
+            <a href="#admin-local-mentor-leads">Local Mentor leads ({localMentorBacklogLeads.length})</a>
             <a href="#admin-monetization">Monetization ({monetizationLeads.length})</a>
             <a href="#admin-events">Events ({events.length})</a>
             <a href="#admin-event-leads">Event leads ({activeEventLeads.length})</a>
@@ -1158,14 +1158,14 @@ export default async function AdminPage({ searchParams }: Props) {
               <p className="eyebrow">Future Localized.life products</p>
               <h2>Local listing review queue</h2>
               <p className="muted">
-                Admin-only source-backed listings that do not belong in SaleTrail. Market and Mentor listings are
-                separated below so individual goods, food, lessons, and tutoring are easier to review.
+                Admin-only source-backed items that do not belong in SaleTrail. Market listings and private mentor
+                outreach leads are separated below so goods, food, lessons, and tutoring are easier to review.
               </p>
             </div>
 
             <div className="admin-jump-nav" aria-label="Local listing groups">
               <a href="#admin-local-market-leads">Local Market listings ({localMarketBacklogLeads.length})</a>
-              <a href="#admin-local-mentor-leads">Local Mentor listings ({localMentorBacklogLeads.length})</a>
+              <a href="#admin-local-mentor-leads">Local Mentor leads ({localMentorBacklogLeads.length})</a>
               <a href="#admin-other-backlog-leads">Other backlog ({otherBacklogLeads.length})</a>
             </div>
 
@@ -1188,12 +1188,13 @@ export default async function AdminPage({ searchParams }: Props) {
             <section className="stack" id="admin-local-mentor-leads">
               <div>
                 <p className="eyebrow">Local Mentors</p>
-                <h3>Lessons, tutoring, and skill listings</h3>
+                <h3>Private lesson, tutoring, and skill leads</h3>
                 <p className="muted">
-                  Review these for individual tutors, teachers, music lessons, garden lessons, and hands-on learning.
+                  Review these before publishing. Contact the person first, confirm they want to be listed, and only
+                  turn them into a public mentor listing when contact details, area, and lesson format are clear.
                 </p>
               </div>
-              {localMentorBacklogLeads.length === 0 ? <p className="muted">No Local Mentor listings yet.</p> : null}
+              {localMentorBacklogLeads.length === 0 ? <p className="muted">No Local Mentor leads yet.</p> : null}
               <div className="grid two">
                 {localMentorBacklogLeads.map((lead) => (
                   <BacklogLeadCard lead={lead} key={lead.id} />
