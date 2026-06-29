@@ -25,7 +25,7 @@ export const backlogLeads: BacklogLead[] = [
     summary:
       "Individual-style local egg lead. Search result mentions chicken and duck eggs, Peotone meet-up, and posted prices by dozen.",
     notes:
-      "Review source before publishing. Needs poster name/contact path and confirmation this is an individual backyard/homestead offer, not a business page or registered seller.",
+      "Do not publish. Follow-up research indicated this source may not be local to the listed Illinois area. Keep as an example of why market listings need regional verification before going public.",
     created_at: "2026-06-28T21:20:00.000Z",
   },
   {

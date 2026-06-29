@@ -45,9 +45,12 @@ const examples = ["Eggs", "Honey", "Produce", "Plants", "Flowers", "Baked goods"
 const marketSignals = ["Farmstand finds", "Backyard abundance", "Cottage food", "Local makers"];
 const marketLeadTypes = new Set<BacklogLead["lead_type"]>(["local_goods", "food", "gardens"]);
 const profileSourceLeadIds = new Set(localMarketProfiles.map((profile) => profile.sourceLeadId));
+const hiddenMarketLeadIds = new Set([
+  "peotone-chicken-duck-eggs-2026-06-28",
+]);
 
 const marketListings = backlogLeads.filter(
-  (lead) => marketLeadTypes.has(lead.lead_type) && !profileSourceLeadIds.has(lead.id),
+  (lead) => marketLeadTypes.has(lead.lead_type) && !profileSourceLeadIds.has(lead.id) && !hiddenMarketLeadIds.has(lead.id),
 );
 
 function listingReportUrl(lead: BacklogLead) {
@@ -61,8 +64,6 @@ function listingReportUrl(lead: BacklogLead) {
 
 function listingSummary(lead: BacklogLead) {
   const summaries: Record<string, string> = {
-    "peotone-chicken-duck-eggs-2026-06-28":
-      "Chicken and duck eggs available near Peotone, with local meet-up and by-the-dozen pricing noted in the public post.",
     "momence-farm-fresh-eggs-2026-06-28":
       "Farm fresh eggs available in Momence, with by-the-dozen pricing noted in the public post.",
     "joliet-sourdough-bread-barn-2026-06-28":
