@@ -39,6 +39,9 @@ export default function Home() {
             <Link className="button" href="/local-market">
               Explore Local Market
             </Link>
+            <Link className="button" href="/membership">
+              Membership
+            </Link>
           </div>
           <div className="front-signal-row" aria-label="Localized.life project signals">
             <span>Local goods</span>
@@ -175,6 +178,20 @@ export default function Home() {
             <span>Find local sales, goods, events, abundance, mentors, and practical help without digging through noisy feeds.</span>
           </aside>
         </div>
+      </section>
+
+      <section className="front-membership-callout" aria-labelledby="membershipCallout">
+        <div>
+          <p className="front-badge">Trust layer</p>
+          <h2 id="membershipCallout">Membership makes Localized manageable.</h2>
+          <p>
+            Claimed profiles, protected pickup details, regional managers, owner updates, saved routes, and paid local
+            tools all work better when Localized is built around members from the start.
+          </p>
+        </div>
+        <Link className="button primary" href="/membership">
+          View membership model
+        </Link>
       </section>
     </main>
   );

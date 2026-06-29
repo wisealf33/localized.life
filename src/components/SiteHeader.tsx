@@ -8,6 +8,7 @@ type ActiveNav =
   | "saletrail"
   | "harvest"
   | "services"
+  | "membership"
   | "find"
   | "map"
   | "list"
@@ -50,6 +51,9 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
           </Link>
           <Link className={navClass(active, "services")} href="/local-services">
             Local Services
+          </Link>
+          <Link className={navClass(active, "membership")} href="/membership">
+            Membership
           </Link>
         </nav>
       </div>
