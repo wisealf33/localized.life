@@ -2411,6 +2411,65 @@ h2 {
   width: fit-content;
 }
 
+.local-profile-card .tag-row {
+  margin-top: 14px;
+}
+
+.local-profile-grid .local-profile-card {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.market-profile-hero {
+  gap: 18px;
+}
+
+.market-profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.market-profile-meta span {
+  border: 1px solid color-mix(in srgb, var(--local-accent) 22%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--local-accent-soft) 45%, #ffffff);
+  color: var(--text);
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.market-profile-layout {
+  align-items: start;
+}
+
+.market-product-list {
+  display: grid;
+  gap: 12px;
+}
+
+.market-product-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  border-radius: 8px;
+  border-color: color-mix(in srgb, var(--local-accent) 18%, var(--line));
+}
+
+.market-product-card strong {
+  border-radius: 999px;
+  background: var(--local-accent-soft);
+  color: var(--local-accent-dark);
+  font-size: 0.9rem;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.market-profile-side {
+  border-color: color-mix(in srgb, var(--local-accent) 18%, var(--line));
+}
+
 .local-info-grid .card {
   border-radius: 8px;
   border-color: color-mix(in srgb, var(--local-accent) 18%, var(--line));
@@ -4273,6 +4332,18 @@ code {
   .local-browse-grid,
   .local-service-browse-grid {
     grid-template-columns: 1fr;
+  }
+
+  .market-product-card {
+    grid-template-columns: 1fr;
+  }
+
+  .market-profile-hero .eyebrow {
+    max-width: calc(100% - 88px);
+  }
+
+  .market-product-card strong {
+    width: fit-content;
   }
 
   .sale-card {

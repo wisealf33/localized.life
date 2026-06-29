@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { backlogLeads } from "@/data/backlog-leads";
+import { localMarketProfiles, marketProfilePath } from "@/data/local-market-profiles";
 import { pageMetadata } from "@/lib/seo";
 import type { BacklogLead } from "@/lib/types";
 
@@ -43,8 +44,11 @@ const categories = [
 const examples = ["Eggs", "Honey", "Produce", "Plants", "Flowers", "Baked goods", "Soap", "Candles", "Crafts"];
 const marketSignals = ["Farmstand finds", "Backyard abundance", "Cottage food", "Local makers"];
 const marketLeadTypes = new Set<BacklogLead["lead_type"]>(["local_goods", "food", "gardens"]);
+const profileSourceLeadIds = new Set(localMarketProfiles.map((profile) => profile.sourceLeadId));
 
-const marketListings = backlogLeads.filter((lead) => marketLeadTypes.has(lead.lead_type));
+const marketListings = backlogLeads.filter(
+  (lead) => marketLeadTypes.has(lead.lead_type) && !profileSourceLeadIds.has(lead.id),
+);
 
 function listingReportUrl(lead: BacklogLead) {
   const params = new URLSearchParams({
@@ -65,6 +69,15 @@ function listingSummary(lead: BacklogLead) {
       "Sourdough bread available for Joliet pickup, with pickup timing noted in the public post.",
   };
   return summaries[lead.id] || lead.summary;
+}
+
+function profileReportUrl(profileName: string, slug: string) {
+  const params = new URLSearchParams({
+    request_type: "bug",
+    page_url: `/local-market/${slug}`,
+    message: `Report incorrect Local Market profile information for: ${profileName}`,
+  });
+  return `/saletrail/feedback?${params.toString()}`;
 }
 
 export default async function LocalMarketPage({ searchParams }: Props) {
@@ -114,7 +127,38 @@ export default async function LocalMarketPage({ searchParams }: Props) {
             <h2 id="localMarketListings">People offering local goods nearby.</h2>
           </div>
         </div>
-        {marketListings.length === 0 ? <p className="muted">No Local Market listings yet.</p> : null}
+        {localMarketProfiles.length ? (
+          <div className="grid two local-listing-grid local-profile-grid">
+            {localMarketProfiles.map((profile) => (
+              <article className="card local-listing-card local-profile-card" key={profile.slug}>
+                <div>
+                  <p className="eyebrow">
+                    {profile.claimStatus === "claimed" ? "Claimed profile" : "Unclaimed profile"}
+                  </p>
+                  <h3>{profile.profileName}</h3>
+                  <p className="muted">{profile.area}</p>
+                  <p>{profile.summary}</p>
+                  <div className="tag-row">
+                    {profile.products.map((product) => (
+                      <span key={product.name}>{product.category}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="card-actions">
+                  <Link className="button primary" href={marketProfilePath(profile)}>
+                    View profile
+                  </Link>
+                  <Link className="button" href={profileReportUrl(profile.profileName, profile.slug)}>
+                    Report incorrect info
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
+        {marketListings.length === 0 && localMarketProfiles.length === 0 ? (
+          <p className="muted">No Local Market listings yet.</p>
+        ) : null}
         <div className="grid two local-listing-grid">
           {marketListings.map((listing) => (
             <article className="card local-listing-card" id={listing.id} key={listing.id}>
