@@ -45,7 +45,7 @@ export function LocalSubmissionForm({
   manageToken,
   errorMessage,
   ctaLabel = "Open submission form",
-  summaryNote = "No account needed. We email you a private manage link.",
+  summaryNote = "Submit now. Claimed profiles and member tools are being built around this.",
   categoryOptions,
   categoryHelper,
   contactLabel = "Public contact method (optional)",
