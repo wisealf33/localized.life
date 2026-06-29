@@ -13,14 +13,6 @@ function expectedAdminSession() {
   return hashSecret(`saletrail-admin:${password}`);
 }
 
-function safeMemberRedirect(value: FormDataEntryValue | null, fallback: string) {
-  const path = typeof value === "string" ? value : "";
-  if (path === "/members/dashboard" || path === "/members/login" || path === "/saletrail/admin") {
-    return path;
-  }
-  return fallback;
-}
-
 export async function isAdminAuthenticated() {
   const expected = expectedAdminSession();
   if (!expected) return false;
@@ -49,10 +41,10 @@ export async function adminLogin(formData: FormData) {
     path: adminCookiePath,
   });
 
-  redirect(safeMemberRedirect(formData.get("redirect_to"), "/saletrail/admin"));
+  redirect("/saletrail/admin");
 }
 
-export async function adminLogout(formData?: FormData) {
+export async function adminLogout() {
   const cookieStore = await cookies();
   cookieStore.set(adminCookie, "", {
     httpOnly: true,
@@ -68,5 +60,5 @@ export async function adminLogout(formData?: FormData) {
     path: "/saletrail/admin",
     expires: new Date(0),
   });
-  redirect(safeMemberRedirect(formData?.get("redirect_to") || null, "/saletrail/admin"));
+  redirect("/saletrail/admin");
 }

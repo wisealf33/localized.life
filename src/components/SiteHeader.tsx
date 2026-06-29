@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { isAdminAuthenticated } from "@/lib/admin";
 
 type ActiveNav =
   | "home"
@@ -10,7 +9,6 @@ type ActiveNav =
   | "harvest"
   | "services"
   | "membership"
-  | "members"
   | "find"
   | "map"
   | "list"
@@ -25,12 +23,9 @@ function navClass(active: ActiveNav | undefined, item: ActiveNav, baseClass = "s
   return active === item ? `${baseClass} active` : baseClass;
 }
 
-export async function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
+export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
   const showSaleTrailNav = product === "SaleTrail";
   const saleTrailActive = showSaleTrailNav || active === "saletrail";
-  const isMember = await isAdminAuthenticated();
-  const memberHref = isMember ? "/members/dashboard" : "/members/login";
-  const memberLabel = isMember ? "Members dashboard" : "Members login";
 
   return (
     <header className="site-header">
@@ -56,12 +51,6 @@ export async function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderPr
           </Link>
           <Link className={navClass(active, "services")} href="/local-services">
             Local Services
-          </Link>
-          <Link
-            className={active === "members" ? "button compact-button active" : "button compact-button"}
-            href={memberHref}
-          >
-            {memberLabel}
           </Link>
         </nav>
       </div>
