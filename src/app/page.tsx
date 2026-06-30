@@ -96,7 +96,7 @@ export default function Home() {
           </Link>
         </article>
 
-        <article className="front-product-card">
+        <article className="front-product-card front-door-card front-door-market">
           <p className="front-badge">Local goods</p>
           <h3>Local Market</h3>
           <p>Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, and neighborhood makers.</p>
@@ -113,7 +113,7 @@ export default function Home() {
           </Link>
         </article>
 
-        <article className="front-product-card">
+        <article className="front-product-card front-door-card front-door-events">
           <p className="front-badge">Things happening</p>
           <h3>Local Events</h3>
           <p>Find farmers markets, craft fairs, vendor pop-ups, workshops, festivals, plant swaps, and community gatherings.</p>
@@ -129,7 +129,7 @@ export default function Home() {
           </Link>
         </article>
 
-        <article className="front-product-card">
+        <article className="front-product-card front-door-card front-door-mentors">
           <p className="front-badge">Learn nearby</p>
           <h3>Local Mentors</h3>
           <p>Find music lessons, garden coaching, farming skills, creative practice, tutoring, and hands-on learning nearby.</p>
@@ -145,7 +145,7 @@ export default function Home() {
           </Link>
         </article>
 
-        <article className="front-product-card">
+        <article className="front-product-card front-door-card front-door-services">
           <p className="front-badge">Practical help</p>
           <h3>Local Services</h3>
           <p>Find nearby people offering cleaning, yard help, repairs, hauling, garden help, and other useful local services.</p>
