@@ -122,14 +122,14 @@ export default function HarvestPage() {
           <p className="harvest-eyebrow">Get involved</p>
           <h2>People make the harvest network real.</h2>
           <p>
-            Harvest needs people who can post growing sites, spot local food abundance, help during harvest windows, and
+            Harvest needs people who can host growing sites, spot local food abundance, help during harvest windows, and
             move food back into the community. The registry is the starting point; the local crew turns it into a food
             network.
           </p>
         </div>
         <div className="harvest-involvement-options">
           <article>
-            <span>Post</span>
+            <span>Host</span>
             <h3>Post a harvest site</h3>
             <p>Share fruit trees, nut trees, berry rows, gardens, or perennial food plants that may be available to the network.</p>
           </article>
