@@ -1248,12 +1248,14 @@ h2 {
   font-size: clamp(1.08rem, 1.8vw, 1.28rem);
 }
 
-.event-filter-panel {
+.event-filter-panel,
+.local-directory-filter {
   display: grid;
   gap: 16px;
 }
 
-.event-filter-panel h2 {
+.event-filter-panel h2,
+.local-directory-filter h2 {
   margin: 0 0 6px;
 }
 
@@ -1265,14 +1267,16 @@ h2 {
   margin-top: 6px;
 }
 
-.event-directory-search {
+.event-directory-search,
+.local-directory-search {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) auto;
   gap: 12px;
   align-items: end;
 }
 
-.event-directory-search label {
+.event-directory-search label,
+.local-directory-search label {
   display: grid;
   gap: 6px;
   color: var(--muted);
@@ -1280,26 +1284,34 @@ h2 {
   font-weight: 800;
 }
 
-.event-directory-search input {
+.event-directory-search input,
+.local-directory-search input {
   min-height: 48px;
   border-radius: 8px;
   font-size: 1rem;
 }
 
-.event-search-actions {
+.event-search-actions,
+.local-search-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.event-search-actions .button {
+.event-search-actions .button,
+.local-search-actions .button {
   min-height: 48px;
 }
 
-.event-result-count {
+.event-result-count,
+.local-result-count {
   margin: 0;
   color: var(--muted);
   font-weight: 800;
+}
+
+.local-directory-empty {
+  grid-column: 1 / -1;
 }
 
 .local-page-events .filter-chip {
@@ -4311,11 +4323,13 @@ code {
     width: 100%;
   }
 
-  .event-directory-search {
+  .event-directory-search,
+  .local-directory-search {
     grid-template-columns: 1fr;
   }
 
-  .event-search-actions .button {
+  .event-search-actions .button,
+  .local-search-actions .button {
     flex: 1 1 150px;
   }
 }

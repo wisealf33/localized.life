@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
+import { cleanDirectorySearch, matchesDirectorySearch } from "@/lib/localDirectory";
 import { pageMetadata } from "@/lib/seo";
 
 type Props = {
-  searchParams: Promise<{ submitted?: string; email?: string; manage?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; submitted?: string; email?: string; manage?: string; error?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -96,6 +98,11 @@ const mentorSignals = ["AI classes", "Tutoring", "Music lessons", "Garden skills
 
 export default async function LocalMentorsPage({ searchParams }: Props) {
   const params = await searchParams;
+  const searchTerm = cleanDirectorySearch(params.q);
+  const visibleMentorCategories = mentorCategories.filter((category) =>
+    matchesDirectorySearch(searchTerm, [category.title, category.description, ...category.examples]),
+  );
+  const hasFilters = Boolean(searchTerm);
 
   return (
     <main className="page local-page local-page-mentors">
@@ -114,6 +121,99 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
         {mentorSignals.map((signal) => (
           <span key={signal}>{signal}</span>
         ))}
+      </section>
+
+      <section className="panel event-filter-panel local-directory-filter">
+        <div>
+          <h2>Find Mentors</h2>
+          <p className="muted">
+            Search by skill, lesson type, tutoring area, or learning format. Mentors help people learn a skill, not just
+            finish a job.
+          </p>
+        </div>
+        <form action="/local-mentors" className="event-directory-search local-directory-search" method="get">
+          <label>
+            Search mentors
+            <input
+              defaultValue={searchTerm}
+              name="q"
+              placeholder="Try AI class, math tutor, music, garden, sewing..."
+              type="search"
+            />
+          </label>
+          <div className="event-search-actions local-search-actions">
+            <button className="button primary" type="submit">
+              Search
+            </button>
+            {hasFilters ? (
+              <Link className="button" href="/local-mentors">
+                Clear
+              </Link>
+            ) : null}
+          </div>
+        </form>
+        <p className="event-result-count local-result-count" aria-live="polite">
+          Showing {visibleMentorCategories.length} mentor {visibleMentorCategories.length === 1 ? "category" : "categories"}
+          {searchTerm ? ` for "${searchTerm}"` : ""}.
+        </p>
+      </section>
+
+      <section className="panel stack" aria-labelledby="localMentorListings">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Local Mentor listings</p>
+            <h2 id="localMentorListings">Approved mentor listings will appear here.</h2>
+          </div>
+        </div>
+        <p className="muted">
+          Mentor items found from outside sources stay private until the person is contacted, the details are clear, and
+          the listing is ready to show publicly.
+        </p>
+      </section>
+
+      <section className="local-card-grid local-browse-grid" aria-labelledby="mentorCategories">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Mentor map</p>
+            <h2 id="mentorCategories">Browse by the kind of skill people can learn or teach.</h2>
+          </div>
+        </div>
+        {visibleMentorCategories.length === 0 ? (
+          <div className="empty local-directory-empty">
+            <h3>No Matching Mentor Categories Yet</h3>
+            <p>Try another search, clear the filter, or submit the kind of mentor listing you want to add.</p>
+            <div className="toolbar">
+              <Link className="button" href="/local-mentors">
+                View all mentors
+              </Link>
+              <Link className="button primary" href="#submit">
+                Post a mentor listing
+              </Link>
+            </div>
+          </div>
+        ) : (
+          visibleMentorCategories.map((category) => (
+            <article className="card local-field-card local-browse-card" key={category.title}>
+              <div>
+                <h3>{category.title}</h3>
+                <p className="muted">{category.description}</p>
+              </div>
+              <div className="tag-row">
+                {category.examples.map((example) => (
+                  <span key={example}>{example}</span>
+                ))}
+              </div>
+              <div className="card-actions">
+                <Link className="button primary compact-button" href={`/local-mentors?q=${encodeURIComponent(category.title)}`}>
+                  Browse this
+                </Link>
+                <Link className="button compact-button" href="#submit">
+                  Post mentor listing
+                </Link>
+              </div>
+            </article>
+          ))
+        )}
       </section>
 
       <LocalSubmissionForm
@@ -140,41 +240,6 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
         errorMessage={params.error}
         ctaLabel="Post a mentor listing"
       />
-
-      <section className="panel stack" aria-labelledby="localMentorListings">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Local Mentor listings</p>
-            <h2 id="localMentorListings">Approved mentor listings will appear here.</h2>
-          </div>
-        </div>
-        <p className="muted">
-          Mentor items found from outside sources stay private until the person is contacted, the details are clear, and
-          the listing is ready to show publicly.
-        </p>
-      </section>
-
-      <section className="local-card-grid local-browse-grid" aria-labelledby="mentorCategories">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Mentor map</p>
-            <h2 id="mentorCategories">Browse by the kind of skill people can learn or teach.</h2>
-          </div>
-        </div>
-        {mentorCategories.map((category) => (
-          <article className="card local-field-card local-browse-card" key={category.title}>
-            <div>
-              <h3>{category.title}</h3>
-              <p className="muted">{category.description}</p>
-            </div>
-            <div className="tag-row">
-              {category.examples.map((example) => (
-                <span key={example}>{example}</span>
-              ))}
-            </div>
-          </article>
-        ))}
-      </section>
 
       <section className="grid two local-info-grid">
         <article className="card">
