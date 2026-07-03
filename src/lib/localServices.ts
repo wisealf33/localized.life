@@ -89,14 +89,6 @@ export const localServices: LocalService[] = [
     requestPrompts: ["Children's ages", "Time window", "Special routines or requirements"],
   },
   {
-    slug: "tutoring-lessons",
-    title: "Tutoring & Lessons",
-    category: "Tutoring",
-    summary: "School help, skill lessons, music, tech basics, reading support, and practical tutoring.",
-    examples: ["Homework help", "Reading", "Math", "Music or skill lessons"],
-    requestPrompts: ["Subject or skill", "Student age/level", "In-person or online preference"],
-  },
-  {
     slug: "farm-homestead-help",
     title: "Farm & Homestead Help",
     category: "Farm help",
