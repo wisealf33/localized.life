@@ -13,6 +13,7 @@ const eventColumns =
 type Props = {
   searchParams: Promise<{
     type?: string;
+    q?: string;
     submitted?: string;
     email?: string;
     manage?: string;
@@ -34,8 +35,16 @@ function eventTypeParam(value: string | undefined): LocalEventType | undefined {
   return eventFilterOptions.some((option) => option.value === value) ? (value as LocalEventType) : undefined;
 }
 
-function eventsUrl(type?: LocalEventType) {
-  return type ? `/local-events?type=${type}` : "/local-events";
+function cleanSearchParam(value: string | undefined) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
+function eventsUrl(type?: LocalEventType, searchTerm?: string) {
+  const params = new URLSearchParams();
+  if (type) params.set("type", type);
+  if (searchTerm) params.set("q", searchTerm);
+  const query = params.toString();
+  return query ? `/local-events?${query}` : "/local-events";
 }
 
 async function getEvents(type?: LocalEventType) {
@@ -90,10 +99,44 @@ function previewText(value: string | null | undefined, maxLength = 180) {
   return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}...` : text;
 }
 
+function searchText(value: string | null | undefined) {
+  return String(value || "").toLowerCase();
+}
+
+function eventMatchesSearch(event: LocalEvent, searchTerm: string) {
+  const terms = searchTerm
+    .toLowerCase()
+    .split(/\s+/)
+    .map((term) => term.trim())
+    .filter(Boolean);
+
+  if (terms.length === 0) return true;
+
+  const haystack = [
+    event.title,
+    eventTypeLabel(event.event_type),
+    event.description,
+    event.address_line,
+    event.city,
+    event.state,
+    event.zip,
+    event.county,
+    event.event_schedule,
+    event.source_platform,
+    formatEventCardDate(event),
+  ]
+    .map(searchText)
+    .join(" ");
+
+  return terms.every((term) => haystack.includes(term));
+}
+
 export default async function LocalEventsPage({ searchParams }: Props) {
   const params = await searchParams;
   const eventType = eventTypeParam(params.type);
-  const events = await getEvents(eventType);
+  const searchTerm = cleanSearchParam(params.q);
+  const events = (await getEvents(eventType)).filter((event) => eventMatchesSearch(event, searchTerm));
+  const hasFilters = Boolean(eventType || searchTerm);
 
   return (
     <main className="page local-page local-page-events">
@@ -134,20 +177,47 @@ export default async function LocalEventsPage({ searchParams }: Props) {
 
       <section className="panel event-filter-panel">
         <div>
-          <h2>Find Events By Type</h2>
+          <h2>Find Events</h2>
           <p className="muted">
-            Local Events is for scheduled happenings people attend. Vendor markets, craft fairs, workshops, festivals,
+            Search by event name, town, county, ZIP, date, or type. Vendor markets, craft fairs, workshops, festivals,
             and plant swaps belong here.
           </p>
         </div>
+        <form action="/local-events" className="event-directory-search" method="get">
+          {eventType ? <input name="type" type="hidden" value={eventType} /> : null}
+          <label>
+            Search events
+            <input
+              defaultValue={searchTerm}
+              name="q"
+              placeholder="Try Manteno, market, festival, Kankakee County..."
+              type="search"
+            />
+          </label>
+          <div className="event-search-actions">
+            <button className="button primary" type="submit">
+              Search
+            </button>
+            {hasFilters ? (
+              <Link className="button" href="/local-events">
+                Clear
+              </Link>
+            ) : null}
+          </div>
+        </form>
+        <p className="event-result-count" aria-live="polite">
+          Showing {events.length} {events.length === 1 ? "event" : "events"}
+          {searchTerm ? ` for "${searchTerm}"` : ""}
+          {eventType ? ` in ${eventTypeLabel(eventType)}` : ""}.
+        </p>
         <div className="quick-filters event-filter-row" aria-label="Event type filters">
-          <Link className={!eventType ? "filter-chip active" : "filter-chip"} href={eventsUrl()}>
+          <Link className={!eventType ? "filter-chip active" : "filter-chip"} href={eventsUrl(undefined, searchTerm)}>
             All Events
           </Link>
           {eventFilterOptions.map((option) => (
             <Link
               className={eventType === option.value ? "filter-chip active" : "filter-chip"}
-              href={eventsUrl(option.value)}
+              href={eventsUrl(option.value, searchTerm)}
               key={option.value}
             >
               {option.label}
@@ -166,7 +236,9 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         {events.length === 0 ? (
           <div className="empty">
             <h2>No Matching Events Yet</h2>
-            <p>Try another event type, or open SaleTrail to see garage sales, community-wides, and estate sales.</p>
+            <p>
+              Try another search or event type, or open SaleTrail to see garage sales, community-wides, and estate sales.
+            </p>
             <div className="toolbar">
               <Link className="button" href="/local-events">
                 View all events
