@@ -1265,6 +1265,43 @@ h2 {
   margin-top: 6px;
 }
 
+.event-directory-search {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.event-directory-search label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.event-directory-search input {
+  min-height: 48px;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.event-search-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.event-search-actions .button {
+  min-height: 48px;
+}
+
+.event-result-count {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .local-page-events .filter-chip {
   border-radius: 8px;
 }
@@ -4272,6 +4309,14 @@ code {
 
   .search-actions .button {
     width: 100%;
+  }
+
+  .event-directory-search {
+    grid-template-columns: 1fr;
+  }
+
+  .event-search-actions .button {
+    flex: 1 1 150px;
   }
 }
 
