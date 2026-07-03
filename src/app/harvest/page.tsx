@@ -122,20 +122,21 @@ export default function HarvestPage() {
           <p className="harvest-eyebrow">Get involved</p>
           <h2>People make the harvest network real.</h2>
           <p>
-            Harvest needs spotters, growers, harvesters, drivers, preservation help, area coordinators, and community
-            hosts. The registry is the starting point; the local crew is the part that turns it into food movement.
+            Harvest needs people who can post growing sites, spot local food abundance, help during harvest windows, and
+            move food back into the community. The registry is the starting point; the local crew turns it into a food
+            network.
           </p>
         </div>
         <div className="harvest-involvement-options">
           <article>
-            <span>Spot</span>
-            <h3>Find harvestable plants</h3>
-            <p>Notice fruit trees, nut trees, berry rows, and perennial food plants in your area.</p>
+            <span>Post</span>
+            <h3>Post a harvest site</h3>
+            <p>Share fruit trees, nut trees, berry rows, gardens, or perennial food plants that may be available to the network.</p>
           </article>
           <article>
-            <span>Host</span>
-            <h3>Share a site</h3>
-            <p>Register plants that could be harvested, cared for, or included in future campaigns.</p>
+            <span>Spot</span>
+            <h3>Find harvestable plants</h3>
+            <p>Notice fruit trees, nut trees, berry rows, gardens, and perennial food plants growing in your area.</p>
           </article>
           <article>
             <span>Harvest</span>
@@ -143,9 +144,9 @@ export default function HarvestPage() {
             <p>Pick, sort, pack, preserve, and distribute food during harvest windows.</p>
           </article>
           <article>
-            <span>Move</span>
-            <h3>Help logistics</h3>
-            <p>Move harvested food, tools, trees, supplies, and volunteers where they need to go.</p>
+            <span>Abundance</span>
+            <h3>Share food locally</h3>
+            <p>Help extra fruit, nuts, produce, and preserved food reach nearby families, kitchens, pantries, and community tables.</p>
           </article>
         </div>
       </section>
