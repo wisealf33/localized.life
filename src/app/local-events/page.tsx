@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { eventPath, eventTypeLabel, eventTypeOptions } from "@/lib/events";
+import { cleanDirectorySearch } from "@/lib/localDirectory";
 import { pageMetadata } from "@/lib/seo";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocalEvent, LocalEventType } from "@/lib/types";
@@ -36,7 +37,7 @@ function eventTypeParam(value: string | undefined): LocalEventType | undefined {
 }
 
 function cleanSearchParam(value: string | undefined) {
-  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80);
+  return cleanDirectorySearch(value);
 }
 
 function eventsUrl(type?: LocalEventType, searchTerm?: string) {
@@ -156,26 +157,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         ))}
       </section>
 
-      <LocalSubmissionForm
-        area="event"
-        eyebrow="Submit an event"
-        title="Add a Local Event"
-        description="Use this for farmers markets, craft fairs, pop-ups, workshops, festivals, plant swaps, community days, classes, or other local happenings. Garage sales and estate sales should still go through SaleTrail."
-        categoryLabel="Event type"
-        categoryPlaceholder="Farmers market, craft fair, workshop, festival..."
-        titleLabel="Event name"
-        titlePlaceholder="Saturday farmers market, holiday craft fair..."
-        descriptionLabel="Tell people about the event"
-        descriptionPlaceholder="Include the date, time, location, organizer, what people can expect, and any useful link."
-        returnPath="/local-events"
-        submitted={Boolean(params.submitted)}
-        emailStatus={params.email}
-        manageToken={params.manage}
-        errorMessage={params.error}
-        ctaLabel="Submit a local event"
-      />
-
-      <section className="panel event-filter-panel">
+      <section className="panel event-filter-panel local-directory-filter">
         <div>
           <h2>Find Events</h2>
           <p className="muted">
@@ -183,7 +165,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
             and plant swaps belong here.
           </p>
         </div>
-        <form action="/local-events" className="event-directory-search" method="get">
+        <form action="/local-events" className="event-directory-search local-directory-search" method="get">
           {eventType ? <input name="type" type="hidden" value={eventType} /> : null}
           <label>
             Search events
@@ -194,7 +176,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
               type="search"
             />
           </label>
-          <div className="event-search-actions">
+          <div className="event-search-actions local-search-actions">
             <button className="button primary" type="submit">
               Search
             </button>
@@ -205,7 +187,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
             ) : null}
           </div>
         </form>
-        <p className="event-result-count" aria-live="polite">
+        <p className="event-result-count local-result-count" aria-live="polite">
           Showing {events.length} {events.length === 1 ? "event" : "events"}
           {searchTerm ? ` for "${searchTerm}"` : ""}
           {eventType ? ` in ${eventTypeLabel(eventType)}` : ""}.
@@ -283,6 +265,25 @@ export default async function LocalEventsPage({ searchParams }: Props) {
           })
         )}
       </section>
+
+      <LocalSubmissionForm
+        area="event"
+        eyebrow="Submit an event"
+        title="Add a Local Event"
+        description="Use this for farmers markets, craft fairs, pop-ups, workshops, festivals, plant swaps, community days, classes, or other local happenings. Garage sales and estate sales should still go through SaleTrail."
+        categoryLabel="Event type"
+        categoryPlaceholder="Farmers market, craft fair, workshop, festival..."
+        titleLabel="Event name"
+        titlePlaceholder="Saturday farmers market, holiday craft fair..."
+        descriptionLabel="Tell people about the event"
+        descriptionPlaceholder="Include the date, time, location, organizer, what people can expect, and any useful link."
+        returnPath="/local-events"
+        submitted={Boolean(params.submitted)}
+        emailStatus={params.email}
+        manageToken={params.manage}
+        errorMessage={params.error}
+        ctaLabel="Submit a local event"
+      />
     </main>
   );
 }

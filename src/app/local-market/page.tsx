@@ -4,11 +4,12 @@ import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { backlogLeads } from "@/data/backlog-leads";
 import { localMarketProfiles, marketProfilePath } from "@/data/local-market-profiles";
+import { cleanDirectorySearch, matchesDirectorySearch } from "@/lib/localDirectory";
 import { pageMetadata } from "@/lib/seo";
 import type { BacklogLead } from "@/lib/types";
 
 type Props = {
-  searchParams: Promise<{ submitted?: string; email?: string; manage?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; submitted?: string; email?: string; manage?: string; error?: string }>;
 };
 
 export const metadata: Metadata = pageMetadata({
@@ -83,6 +84,24 @@ function profileReportUrl(profileName: string, slug: string) {
 
 export default async function LocalMarketPage({ searchParams }: Props) {
   const params = await searchParams;
+  const searchTerm = cleanDirectorySearch(params.q);
+  const visibleProfiles = localMarketProfiles.filter((profile) =>
+    matchesDirectorySearch(searchTerm, [
+      profile.profileName,
+      profile.area,
+      profile.summary,
+      profile.claimStatus,
+      ...profile.products.flatMap((product) => [product.name, product.category, product.price, product.details]),
+    ]),
+  );
+  const visibleMarketListings = marketListings.filter((listing) =>
+    matchesDirectorySearch(searchTerm, [listing.title, listing.area, listing.summary, listing.notes, listing.lead_type]),
+  );
+  const visibleCategories = categories.filter((category) =>
+    matchesDirectorySearch(searchTerm, [category.title, category.description, ...category.examples]),
+  );
+  const visibleListingCount = visibleProfiles.length + visibleMarketListings.length;
+  const hasFilters = Boolean(searchTerm);
 
   return (
     <main className="page local-page local-page-market">
@@ -102,24 +121,40 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         ))}
       </section>
 
-      <LocalSubmissionForm
-        area="market"
-        eyebrow="Submit a local good"
-        title="Add yourself to Local Market"
-        description="Use this if you offer local goods, farmstand items, backyard abundance, handmade items, cottage food, plants, or practical farm and garden items. Please do not submit random resale items or small marketplace listings."
-        categoryLabel="What do you sell?"
-        categoryPlaceholder="Eggs, honey, produce, candles, baked goods..."
-        titleLabel="Listing or profile name"
-        titlePlaceholder="Smith Family Eggs, Maple Street Farmstand..."
-        descriptionLabel="Tell shoppers what you offer"
-        descriptionPlaceholder="What do you sell, where are you located, when are you available, and how should people contact you?"
-        returnPath="/local-market"
-        submitted={Boolean(params.submitted)}
-        emailStatus={params.email}
-        manageToken={params.manage}
-        errorMessage={params.error}
-        ctaLabel="Post a local good"
-      />
+      <section className="panel event-filter-panel local-directory-filter">
+        <div>
+          <h2>Find Local Goods</h2>
+          <p className="muted">
+            Search by product, town, county, seller profile, or kind of local good. Local Market is for useful local
+            goods and abundance, not random resale posts.
+          </p>
+        </div>
+        <form action="/local-market" className="event-directory-search local-directory-search" method="get">
+          <label>
+            Search local goods
+            <input
+              defaultValue={searchTerm}
+              name="q"
+              placeholder="Try eggs, honey, sourdough, plants, Peotone..."
+              type="search"
+            />
+          </label>
+          <div className="event-search-actions local-search-actions">
+            <button className="button primary" type="submit">
+              Search
+            </button>
+            {hasFilters ? (
+              <Link className="button" href="/local-market">
+                Clear
+              </Link>
+            ) : null}
+          </div>
+        </form>
+        <p className="event-result-count local-result-count" aria-live="polite">
+          Showing {visibleListingCount} {visibleListingCount === 1 ? "listing" : "listings"}
+          {searchTerm ? ` for "${searchTerm}"` : ""}.
+        </p>
+      </section>
 
       <section className="panel stack" aria-labelledby="localMarketListings">
         <div className="section-heading">
@@ -128,9 +163,9 @@ export default async function LocalMarketPage({ searchParams }: Props) {
             <h2 id="localMarketListings">People offering local goods nearby.</h2>
           </div>
         </div>
-        {localMarketProfiles.length ? (
+        {visibleProfiles.length ? (
           <div className="grid two local-listing-grid local-profile-grid">
-            {localMarketProfiles.map((profile) => (
+            {visibleProfiles.map((profile) => (
               <article className="card local-listing-card local-profile-card" key={profile.slug}>
                 <div>
                   <p className="eyebrow">
@@ -157,11 +192,22 @@ export default async function LocalMarketPage({ searchParams }: Props) {
             ))}
           </div>
         ) : null}
-        {marketListings.length === 0 && localMarketProfiles.length === 0 ? (
-          <p className="muted">No Local Market listings yet.</p>
+        {visibleListingCount === 0 ? (
+          <div className="empty local-directory-empty">
+            <h3>No Matching Local Goods Yet</h3>
+            <p>Try another search, clear the filter, or submit a local good for review.</p>
+            <div className="toolbar">
+              <Link className="button" href="/local-market">
+                View all local goods
+              </Link>
+              <Link className="button primary" href="#submit">
+                Post a local good
+              </Link>
+            </div>
+          </div>
         ) : null}
         <div className="grid two local-listing-grid">
-          {marketListings.map((listing) => (
+          {visibleMarketListings.map((listing) => (
             <article className="card local-listing-card" id={listing.id} key={listing.id}>
               <div>
                 <p className="eyebrow">{listing.lead_type.replaceAll("_", " ")}</p>
@@ -183,6 +229,25 @@ export default async function LocalMarketPage({ searchParams }: Props) {
           ))}
         </div>
       </section>
+
+      <LocalSubmissionForm
+        area="market"
+        eyebrow="Submit a local good"
+        title="Add yourself to Local Market"
+        description="Use this if you offer local goods, farmstand items, backyard abundance, handmade items, cottage food, plants, or practical farm and garden items. Please do not submit random resale items or small marketplace listings."
+        categoryLabel="What do you sell?"
+        categoryPlaceholder="Eggs, honey, produce, candles, baked goods..."
+        titleLabel="Listing or profile name"
+        titlePlaceholder="Smith Family Eggs, Maple Street Farmstand..."
+        descriptionLabel="Tell shoppers what you offer"
+        descriptionPlaceholder="What do you sell, where are you located, when are you available, and how should people contact you?"
+        returnPath="/local-market"
+        submitted={Boolean(params.submitted)}
+        emailStatus={params.email}
+        manageToken={params.manage}
+        errorMessage={params.error}
+        ctaLabel="Post a local good"
+      />
 
       <section className="grid two local-info-grid">
         <article className="card">
@@ -207,7 +272,7 @@ export default async function LocalMarketPage({ searchParams }: Props) {
             making, repairing, farmstands, or practical local use.
           </p>
           <div className="mini-list local-category-list">
-            {categories.map((category) => (
+            {visibleCategories.map((category) => (
               <span key={category.title}>{category.title}</span>
             ))}
           </div>
@@ -221,19 +286,39 @@ export default async function LocalMarketPage({ searchParams }: Props) {
             <h2 id="marketCategories">Browse by the kind of local good.</h2>
           </div>
         </div>
-        {categories.map((category) => (
-          <article className="card local-field-card local-browse-card" key={category.title}>
-            <div>
-              <h3>{category.title}</h3>
-              <p className="muted">{category.description}</p>
+        {visibleCategories.length === 0 ? (
+          <div className="empty local-directory-empty">
+            <h3>No Matching Market Categories Yet</h3>
+            <p>Try another search or view all local goods categories.</p>
+            <div className="toolbar">
+              <Link className="button" href="/local-market">
+                View all categories
+              </Link>
             </div>
-            <div className="tag-row">
-              {category.examples.map((example) => (
-                <span key={example}>{example}</span>
-              ))}
-            </div>
-          </article>
-        ))}
+          </div>
+        ) : (
+          visibleCategories.map((category) => (
+            <article className="card local-field-card local-browse-card" key={category.title}>
+              <div>
+                <h3>{category.title}</h3>
+                <p className="muted">{category.description}</p>
+              </div>
+              <div className="tag-row">
+                {category.examples.map((example) => (
+                  <span key={example}>{example}</span>
+                ))}
+              </div>
+              <div className="card-actions">
+                <Link className="button primary compact-button" href={`/local-market?q=${encodeURIComponent(category.title)}`}>
+                  Browse this
+                </Link>
+                <Link className="button compact-button" href="#submit">
+                  Post local good
+                </Link>
+              </div>
+            </article>
+          ))
+        )}
       </section>
     </main>
   );
