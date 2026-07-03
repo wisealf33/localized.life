@@ -2536,8 +2536,10 @@ h2 {
 .service-type-card {
   position: relative;
   overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   min-height: 285px;
-  align-content: start;
+  align-content: stretch;
   border-radius: 8px;
   border-color: color-mix(in srgb, var(--local-accent) 20%, var(--line));
   background:
@@ -2582,6 +2584,15 @@ h2 {
 
 .service-type-card h3 a:hover {
   color: var(--local-accent-dark);
+}
+
+.service-type-card .tag-row {
+  align-content: start;
+  align-self: start;
+}
+
+.service-type-card .card-actions {
+  align-self: end;
 }
 
 .local-card-grid {
