@@ -149,7 +149,8 @@ const localSubmissionStatusLabels: Record<LocalSubmissionStatus, string> = {
 };
 
 const localMarketLeadTypes = new Set<BacklogLead["lead_type"]>(["local_goods", "food", "gardens"]);
-const localMentorLeadPattern = /\b(tutor|tutoring|lesson|lessons|teacher|class|coach|coaching|mentor|music|piano|guitar|garden lesson|homestead skill)\b/i;
+const localMentorLeadPattern =
+  /\b(ai tutor|ai class|computer help|tech help|digital skills|tutor|tutoring|lesson|lessons|teacher|class|coach|coaching|mentor|music|piano|guitar|garden lesson|homestead skill)\b/i;
 
 function isLocalMarketLead(lead: BacklogLead) {
   return localMarketLeadTypes.has(lead.lead_type);
