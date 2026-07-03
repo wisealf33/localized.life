@@ -10,15 +10,19 @@ type Props = {
 };
 
 export const metadata: Metadata = pageMetadata({
-  title: "Local Services: Cleaning, Yard Help, Repairs & Practical Help",
+  title: "Local Services: Cleaning, Yard Help, Assembly, Mounting & Practical Help",
   description:
-    "Find nearby people offering cleaning, yard help, repairs, hauling, garden help, pet care, tutoring, and other useful local services.",
+    "Find nearby people offering cleaning, yard help, furniture assembly, TV mounting, repairs, hauling, garden help, pet care, tutoring, and other useful local services.",
   path: "/local-services",
 });
 
 const serviceTypes = [
   "Cleaning",
   "Handyman",
+  "Furniture assembly",
+  "TV mounting",
+  "Wall mounting",
+  "Shelves or picture hanging",
   "Dog walking",
   "Babysitting",
   "Pet care",
@@ -26,6 +30,7 @@ const serviceTypes = [
   "Garden help",
   "Hauling",
   "Repairs",
+  "Home setup",
   "Tutoring",
   "Farm help",
   "Organizing",
