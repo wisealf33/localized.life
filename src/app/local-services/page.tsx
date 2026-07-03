@@ -12,7 +12,7 @@ type Props = {
 export const metadata: Metadata = pageMetadata({
   title: "Local Services: Cleaning, Yard Help, Assembly, Mounting & Practical Help",
   description:
-    "Find nearby people offering cleaning, yard help, furniture assembly, TV mounting, repairs, hauling, garden help, pet care, tutoring, and other useful local services.",
+    "Find nearby people offering cleaning, yard help, furniture assembly, TV mounting, repairs, hauling, garden help, pet care, and other useful local services.",
   path: "/local-services",
 });
 
@@ -31,11 +31,10 @@ const serviceTypes = [
   "Hauling",
   "Repairs",
   "Home setup",
-  "Tutoring",
   "Farm help",
   "Organizing",
 ];
-const serviceSignals = ["Home help", "Yard work", "Pet care", "Repairs", "Lessons"];
+const serviceSignals = ["Home help", "Yard work", "Pet care", "Repairs", "Setup help"];
 
 export default async function LocalServicesPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -149,7 +148,7 @@ export default async function LocalServicesPage({ searchParams }: Props) {
           <h2>Help and local work, not goods.</h2>
           <p className="muted">
             Local Services is separate from Local Market. This page is for practical local help: repairs, hauling,
-            cleaning, yard work, garden help, tutoring, pet care, and similar services.
+            cleaning, yard work, garden help, pet care, assembly, mounting, and similar services.
           </p>
           <div className="tag-row">
             {serviceTypes.map((type) => (
