@@ -104,14 +104,6 @@ export const localServices: LocalService[] = [
     examples: ["Printer setup", "Wi-Fi help", "Phone help", "Smart TV setup"],
     requestPrompts: ["Device or software involved", "Error message or goal", "In-home or remote help"],
   },
-  {
-    slug: "other-practical-help",
-    title: "Other Practical Help",
-    category: "Other",
-    summary: "Useful local help that does not fit neatly into another service category yet.",
-    examples: ["Errands", "Organizing", "Setup help", "One-off practical jobs"],
-    requestPrompts: ["What outcome you need", "When you need it", "Any constraints or supplies"],
-  },
 ];
 
 export function serviceBySlug(slug: string) {

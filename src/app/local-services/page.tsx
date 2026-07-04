@@ -111,9 +111,15 @@ export default async function LocalServicesPage({ searchParams }: Props) {
             <p className="eyebrow">Service types</p>
             <h2 id="serviceCategories">Pick the kind of help you need.</h2>
           </div>
-          <Link className="button compact-button" href="/local-services/request">
-            Request any service
-          </Link>
+          <div className="service-request-callout">
+            <div>
+              <p className="eyebrow">Need something else?</p>
+              <p>Send a request with the job, location, timing, and any photos or notes that would help review it.</p>
+            </div>
+            <Link className="button primary compact-button" href="/local-services/request">
+              Request other help
+            </Link>
+          </div>
         </div>
         <div className="service-card-grid local-browse-grid local-service-browse-grid">
           {visibleServices.length === 0 ? (
