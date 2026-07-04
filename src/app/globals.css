@@ -1858,6 +1858,32 @@ h2 {
   margin: 0;
 }
 
+.service-request-callout {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  max-width: 520px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--local-accent) 26%, var(--line));
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--local-accent-soft) 48%, #ffffff) 100%);
+  box-shadow: 0 14px 34px rgb(15 23 42 / 7%);
+}
+
+.service-request-callout .eyebrow {
+  margin-bottom: 5px;
+}
+
+.service-request-callout p:not(.eyebrow) {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
 .featured-list {
   margin-top: 0;
 }
@@ -4365,6 +4391,15 @@ code {
   .section-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .service-request-callout {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
+  .service-request-callout .button {
+    width: 100%;
   }
 
   .services-flow {
