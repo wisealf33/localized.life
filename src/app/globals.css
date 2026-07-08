@@ -786,6 +786,7 @@ h2 {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding-top: clamp(42px, 6vw, 64px);
+  padding-bottom: clamp(32px, 5vw, 56px);
   display: grid;
   grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
   gap: clamp(24px, 4vw, 52px);
