@@ -9,6 +9,9 @@ export type Person = {
   how_met: string | null;
   private_notes: string | null;
   abilities: string | null;
+  created_by_person_id: string | null;
+  claim_status: "unclaimed" | "claimed";
+  claimed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -61,6 +64,7 @@ export type Need = {
   completed_at: string | null;
   assigned_person_id: string | null;
   connector_notes: string | null;
+  amount_cents: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -71,5 +75,6 @@ export type ConnectorInteraction = {
   connector_person_id: string;
   need_id: string | null;
   note: string;
+  visibility: "private" | "shared";
   occurred_at: string;
 };

@@ -5103,6 +5103,41 @@ code {
   align-items: flex-start;
 }
 
+.connector-quick-work {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #d6e4d8;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fbfdfb;
+}
+
+.connector-quick-work legend {
+  padding: 0 8px;
+  color: var(--connector-green-dark);
+  font-weight: 900;
+}
+
+.connector-invite-result {
+  display: grid;
+  gap: 12px;
+}
+
+.connector-invite-result label {
+  display: grid;
+  gap: 7px;
+  font-weight: 850;
+}
+
+.connector-invite-result input {
+  width: 100%;
+  border: 1px solid #a9c7b2;
+  border-radius: 6px;
+  padding: 12px;
+  background: #ffffff;
+  color: var(--connector-ink);
+}
+
 .connector-people-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -5117,6 +5152,28 @@ code {
 
 .connector-person-card .button {
   margin-top: auto;
+}
+
+.connector-person-title {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.connector-claim-badge {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #fff4d6;
+  color: #8a5b00;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.connector-claim-badge.claimed {
+  background: var(--good);
+  color: var(--good-text);
 }
 
 .connector-person-summary {
@@ -5219,12 +5276,34 @@ code {
   margin: 6px 0;
 }
 
+.connector-personal-hero {
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.65fr);
+}
+
+.connector-claim-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.connector-claim-panel {
+  border-color: #bdd8c6;
+}
+
+.connector-claim-message {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 820px) {
   .connector-public-hero,
   .connector-start-panel,
   .connector-need-form-panel,
   .connector-admin-needs-layout,
   .connector-history-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .connector-claim-grid {
     grid-template-columns: 1fr;
   }
 

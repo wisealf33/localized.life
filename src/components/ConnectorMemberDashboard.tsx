@@ -4,12 +4,14 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowser, isSupabaseBrowserConfigured } from "@/lib/supabase-browser";
+import { AccountSignIn } from "@/components/AccountSignIn";
 import type {
   ConnectorProfile,
   ConnectorRelationship,
   Household,
   HouseholdMembership,
   Need,
+  ConnectorInteraction,
 } from "@/lib/connectorTypes";
 
 type MemberPerson = {
@@ -31,6 +33,7 @@ type DashboardData = {
   memberships: HouseholdMembership[];
   households: Household[];
   needs: Need[];
+  interactions: ConnectorInteraction[];
 };
 
 type ViewState =
@@ -68,7 +71,6 @@ export function ConnectorMemberDashboard() {
   const [view, setView] = useState<ViewState>(() =>
     isSupabaseBrowserConfigured() ? { status: "loading" } : { status: "config" },
   );
-  const [loginMessage, setLoginMessage] = useState("");
   const [formMessage, setFormMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -86,35 +88,11 @@ export function ConnectorMemberDashboard() {
     }
 
     const user = userData.user;
-    let personResult = await supabase
+    const personResult = await supabase
       .from("people")
       .select(personFields)
       .eq("auth_user_id", user.id)
       .maybeSingle();
-
-    if (!personResult.data && user.email) {
-      personResult = await supabase
-        .from("people")
-        .select(personFields)
-        .ilike("email", user.email)
-        .maybeSingle();
-
-      if (personResult.data && !personResult.data.auth_user_id) {
-        const { error: linkError } = await supabase
-          .from("people")
-          .update({ auth_user_id: user.id, updated_at: new Date().toISOString() })
-          .eq("id", personResult.data.id);
-        if (linkError) {
-          setView({ status: "error", message: "Your account was found, but it could not be linked yet." });
-          return;
-        }
-        personResult = await supabase
-          .from("people")
-          .select(personFields)
-          .eq("auth_user_id", user.id)
-          .maybeSingle();
-      }
-    }
 
     if (personResult.error || !personResult.data) {
       setView({ status: "unconnected", email: user.email || "this account" });
@@ -156,21 +134,28 @@ export function ConnectorMemberDashboard() {
           .select("id, name, address_line, town, state, zip")
           .in("id", householdIds)
       : Promise.resolve({ data: [], error: null });
-    const needsPromise = supabase.from("needs").select(needFields).order("created_at", { ascending: false });
+    const needsPromise = supabase.from("needs").select(`${needFields}, amount_cents`).order("created_at", { ascending: false });
+    const interactionsPromise = supabase
+      .from("connector_interactions")
+      .select("id, person_id, connector_person_id, need_id, note, visibility, occurred_at")
+      .eq("person_id", person.id)
+      .eq("visibility", "shared")
+      .order("occurred_at", { ascending: false });
 
-    const [directRelationship, householdRelationship, householdsResult, needsResult] = await Promise.all([
+    const [directRelationship, householdRelationship, householdsResult, needsResult, interactionsResult] = await Promise.all([
       directRelationshipPromise,
       householdRelationshipPromise,
       householdsPromise,
       needsPromise,
+      interactionsPromise,
     ]);
     const relationship = (directRelationship.data || householdRelationship.data) as ConnectorRelationship | null;
     if (!relationship) {
       setView({ status: "unconnected", email: user.email || "this account" });
       return;
     }
-    if (householdsResult.error || needsResult.error) {
-      setView({ status: "error", message: householdsResult.error?.message || needsResult.error?.message || "Could not load dashboard." });
+    if (householdsResult.error || needsResult.error || interactionsResult.error) {
+      setView({ status: "error", message: householdsResult.error?.message || needsResult.error?.message || interactionsResult.error?.message || "Could not load dashboard." });
       return;
     }
 
@@ -195,6 +180,7 @@ export function ConnectorMemberDashboard() {
         memberships,
         households: (householdsResult.data || []) as Household[],
         needs: (needsResult.data || []) as Need[],
+        interactions: (interactionsResult.data || []) as ConnectorInteraction[],
       },
     });
   }, []);
@@ -214,24 +200,6 @@ export function ConnectorMemberDashboard() {
       data.subscription.unsubscribe();
     };
   }, [loadDashboard]);
-
-  async function requestSignIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const email = String(new FormData(form).get("email") || "").trim();
-    const supabase = getSupabaseBrowser();
-    if (!supabase || !email) return;
-
-    setLoginMessage("Sending your private sign-in link...");
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/connector/dashboard`,
-      },
-    });
-    setLoginMessage(error ? "We could not send that link. Check the email and try again." : "Check your email for your private sign-in link.");
-  }
 
   async function submitNeed(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -285,26 +253,7 @@ export function ConnectorMemberDashboard() {
   }
 
   if (view.status === "signed-out") {
-    return (
-      <section className="panel connector-login-panel">
-        <p className="eyebrow">Private member access</p>
-        <h2>Open your Connector dashboard</h2>
-        <p className="muted">Use the email address connected to your Localized.life relationship. No password is needed.</p>
-        <form className="form connector-login-form" onSubmit={requestSignIn}>
-          <label>
-            Email address
-            <input name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
-          </label>
-          <button className="button primary" type="submit">
-            Email me a sign-in link
-          </button>
-        </form>
-        {loginMessage ? <p className="notice good">{loginMessage}</p> : null}
-        <p className="muted connector-small-copy">
-          Not connected yet? Start from <Link href="/connect/garrett">Garrett&apos;s Connector page</Link>.
-        </p>
-      </section>
-    );
+    return <AccountSignIn title="Open your Localized.life dashboard" returnTo="/connector/dashboard" />;
   }
 
   if (view.status === "unconnected") {
@@ -326,7 +275,7 @@ export function ConnectorMemberDashboard() {
     return <div className="notice bad">{view.message}</div>;
   }
 
-  const { connector, person, memberships, households, needs } = view.data;
+  const { connector, person, memberships, households, needs, interactions } = view.data;
   const openNeeds = needs.filter((need) => ["new", "working", "scheduled"].includes(need.status));
   const completedNeeds = needs.filter((need) => ["completed", "closed"].includes(need.status));
   const managerHouseholdIds = new Set(
@@ -415,6 +364,27 @@ export function ConnectorMemberDashboard() {
             <h3>Nothing open right now</h3>
             <p>When you send a need, it will appear here while you and {connector.display_name} work on it.</p>
           </div>
+        )}
+      </section>
+
+      <section className="connector-dashboard-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Shared activity</p>
+            <h2>Your relationship history</h2>
+          </div>
+        </div>
+        {interactions.length ? (
+          <div className="connector-history-list">
+            {interactions.map((interaction) => (
+              <article className="connector-history-item" key={interaction.id}>
+                <time dateTime={interaction.occurred_at}>{formatDate(interaction.occurred_at)}</time>
+                <p>{interaction.note}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">Shared updates will appear here. Private Connector Notes never do.</p>
         )}
       </section>
 

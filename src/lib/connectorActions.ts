@@ -6,6 +6,7 @@ import { requireAdmin } from "./admin";
 import { sendConnectorInviteEmail } from "./email";
 import { getSupabaseAdmin } from "./supabase";
 import type { NeedStatus } from "./connectorTypes";
+import { hashSecret, randomToken } from "./tokens";
 
 const needStatuses = new Set<NeedStatus>(["new", "working", "scheduled", "completed", "closed"]);
 
@@ -141,6 +142,8 @@ async function connectPerson({
         state: state ? state.toUpperCase() : null,
         how_met: howMet || null,
         private_notes: privateNotes || null,
+        created_by_person_id: connector.person_id,
+        claim_status: "unclaimed",
       })
       .select("id")
       .single();
@@ -233,14 +236,34 @@ export async function startConnectorRelationship(formData: FormData) {
       privateNotes: "Connected through the public Connector page.",
       updateExistingDetails: false,
     });
-    const emailResult = await sendInvite({
-      personId: result.personId,
-      email,
-      name: displayName,
-      connectorName: result.connector.display_name,
-    });
-    revalidatePath("/connector/admin");
-    nextPath = `${nextPath}?connected=1&invite=${emailResult.sent ? "sent" : "setup"}`;
+    const supabase = getSupabaseAdmin();
+    const { data: person } = await supabase
+      .from("people")
+      .select("claim_status")
+      .eq("id", result.personId)
+      .single();
+    if (person?.claim_status === "claimed") {
+      nextPath = "/connector/dashboard";
+    } else {
+      const token = randomToken(32);
+      const now = new Date().toISOString();
+      await supabase
+        .from("connector_claim_invitations")
+        .update({ revoked_at: now })
+        .eq("person_id", result.personId)
+        .eq("connector_person_id", result.connector.person_id)
+        .is("claimed_at", null)
+        .is("revoked_at", null);
+      const { error: invitationError } = await supabase.from("connector_claim_invitations").insert({
+        person_id: result.personId,
+        connector_person_id: result.connector.person_id,
+        created_by_person_id: result.connector.person_id,
+        token_hash: hashSecret(token),
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+      if (invitationError) throw new Error(invitationError.message);
+      nextPath = `/connect/${encodeURIComponent(connectorSlug)}/${encodeURIComponent(token)}`;
+    }
   } catch (error) {
     console.error("Public Connector connection failed", error);
     nextPath = `${nextPath}?error=1`;
