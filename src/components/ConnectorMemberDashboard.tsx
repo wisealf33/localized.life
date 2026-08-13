@@ -227,7 +227,7 @@ export function ConnectorMemberDashboard() {
       email,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/connector`,
+        emailRedirectTo: `${window.location.origin}/connector/dashboard`,
       },
     });
     setLoginMessage(error ? "We could not send that link. Check the email and try again." : "Check your email for your private sign-in link.");

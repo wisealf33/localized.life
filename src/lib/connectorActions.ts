@@ -44,7 +44,7 @@ async function getConnector(slug: string) {
 
 async function createInviteLink(email: string) {
   const supabase = getSupabaseAdmin();
-  const options = { redirectTo: siteUrl("/connector") };
+  const options = { redirectTo: siteUrl("/connector/dashboard") };
   let result = await supabase.auth.admin.generateLink({ type: "invite", email, options });
 
   if (result.error) {

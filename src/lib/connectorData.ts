@@ -44,6 +44,21 @@ export async function getConnectorProfileBySlug(slug: string) {
   return data as ConnectorProfile | null;
 }
 
+export async function getActiveConnectorProfiles() {
+  const supabase = getSupabasePublic();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("connector_profiles")
+    .select(connectorProfileFields)
+    .eq("active", true)
+    .order("display_name");
+  if (error) {
+    console.error("Connector profile list failed", error);
+    return [];
+  }
+  return (data || []) as ConnectorProfile[];
+}
+
 export type ConnectorPersonSummary = Person & {
   household: Household | null;
   openNeeds: number;

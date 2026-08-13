@@ -47,7 +47,7 @@ export default async function PublicConnectorPage({ params, searchParams }: Prop
           ) : (
             <p>Your relationship was saved. {connector.display_name} can send your account-access link directly.</p>
           )}
-          <a className="button primary compact-button" href="/connector">
+          <a className="button primary compact-button" href="/connector/dashboard">
             Open the Connector dashboard
           </a>
         </section>

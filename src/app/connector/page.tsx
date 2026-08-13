@@ -1,23 +1,66 @@
 import type { Metadata } from "next";
-import { ConnectorMemberDashboard } from "@/components/ConnectorMemberDashboard";
+import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
+import { getActiveConnectorProfiles } from "@/lib/connectorData";
 
 export const metadata: Metadata = {
-  title: "Your Connector",
-  description: "Your private Localized.life Connector dashboard.",
-  robots: { index: false, follow: false },
+  title: "Local Connectors",
+  description: "Find a Localized.life Connector and keep a trusted local relationship for practical needs and introductions.",
 };
 
-export default function ConnectorDashboardPage() {
+export const revalidate = 300;
+
+export default async function ConnectorFrontDoorPage() {
+  const connectors = await getActiveConnectorProfiles();
+
   return (
     <main className="page connector-page">
       <SiteHeader product="Project hub" />
-      <section className="hero compact-hero connector-dashboard-hero">
-        <p className="eyebrow">A personal way back</p>
-        <h1>Your Connector</h1>
-        <p className="lede">Ask for help, see what you are working on together, and keep a simple history over time.</p>
+      <section className="hero connector-dashboard-hero">
+        <p className="eyebrow">Useful local relationships</p>
+        <h1>Find your Connector</h1>
+        <p className="lede">
+          A Connector is a real local person you can return to when you need practical help, information, or the right
+          introduction.
+        </p>
+        <div className="toolbar">
+          <Link className="button primary" href="/connector/dashboard">
+            Open my private dashboard
+          </Link>
+        </div>
       </section>
-      <ConnectorMemberDashboard />
+
+      <section className="connector-dashboard-section" aria-labelledby="available-connectors">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Available now</p>
+            <h2 id="available-connectors">Local Connectors</h2>
+            <p className="muted">Choose the person you know or want to begin a local relationship with.</p>
+          </div>
+        </div>
+        {connectors.length ? (
+          <div className="connector-people-grid">
+            {connectors.map((connector) => (
+              <article className="card connector-person-card" key={connector.person_id}>
+                <div>
+                  <p className="eyebrow">Local Connector</p>
+                  <h3>{connector.display_name}</h3>
+                  <p className="connector-headline">{connector.headline}</p>
+                  <p className="muted">{connector.intro}</p>
+                </div>
+                <Link className="button primary" href={`/connect/${connector.slug}`}>
+                  Connect with {connector.display_name}
+                </Link>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty connector-empty">
+            <h2>Connector pages are being prepared</h2>
+            <p>Check back soon for the first local Connector.</p>
+          </div>
+        )}
+      </section>
     </main>
   );
 }

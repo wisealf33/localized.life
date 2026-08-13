@@ -29,7 +29,7 @@ export function ConnectorSessionLink() {
   return signedIn ? (
     <div className="notice good connector-session-notice">
       <p>You are signed in to Localized.life.</p>
-      <Link className="button primary compact-button" href="/connector">
+      <Link className="button primary compact-button" href="/connector/dashboard">
         Open your Connector dashboard
       </Link>
     </div>
