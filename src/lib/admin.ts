@@ -20,9 +20,10 @@ export async function isAdminAuthenticated() {
   return cookieStore.get(adminCookie)?.value === expected;
 }
 
-export async function requireAdmin() {
+export async function requireAdmin(returnPath = "/saletrail/admin") {
   if (!(await isAdminAuthenticated())) {
-    redirect("/saletrail/admin?auth=expired");
+    const safeReturnPath = returnPath === "/connector/admin" ? returnPath : "/saletrail/admin";
+    redirect(`${safeReturnPath}?auth=expired`);
   }
 }
 
@@ -41,10 +42,11 @@ export async function adminLogin(formData: FormData) {
     path: adminCookiePath,
   });
 
-  redirect("/saletrail/admin");
+  const returnPath = String(formData.get("return_path") || "");
+  redirect(returnPath === "/connector/admin" ? returnPath : "/saletrail/admin");
 }
 
-export async function adminLogout() {
+export async function adminLogout(formData: FormData) {
   const cookieStore = await cookies();
   cookieStore.set(adminCookie, "", {
     httpOnly: true,
@@ -60,5 +62,6 @@ export async function adminLogout() {
     path: "/saletrail/admin",
     expires: new Date(0),
   });
-  redirect("/saletrail/admin");
+  const returnPath = String(formData.get("return_path") || "");
+  redirect(returnPath === "/connector/admin" ? returnPath : "/saletrail/admin");
 }

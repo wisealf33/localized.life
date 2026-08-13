@@ -36,6 +36,13 @@ type ManageLinkEmail = {
   publicUrl?: string | null;
 };
 
+type ConnectorInviteEmail = {
+  to: string;
+  name: string;
+  connectorName: string;
+  inviteUrl: string;
+};
+
 function emailClient() {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.SALETRAIL_EMAIL_FROM;
@@ -235,6 +242,54 @@ export async function sendManageLinkEmail({ to, name, title, manageToken, kind, 
 
   if (error) {
     console.error("Manage link email failed", error);
+    return { sent: false, reason: error.message };
+  }
+
+  return { sent: true };
+}
+
+export async function sendConnectorInviteEmail({
+  to,
+  name,
+  connectorName,
+  inviteUrl,
+}: ConnectorInviteEmail) {
+  const client = emailClient();
+  if (!client) return { sent: false, reason: "Email is not configured." };
+
+  const safeName = escapeHtml(name || "there");
+  const safeConnectorName = escapeHtml(connectorName);
+  const safeInviteUrl = escapeHtml(inviteUrl);
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #20201d; line-height: 1.5;">
+      <h1 style="font-size: 24px;">${safeConnectorName} connected with you on Localized.life</h1>
+      <p>Hi ${safeName},</p>
+      <p>${safeConnectorName} is now your Connector. When you need something, you can use your private Localized.life dashboard to ask for help and keep track of what you are working on together.</p>
+      <p><a href="${safeInviteUrl}">Open your Connector dashboard</a></p>
+      <p>This sign-in link is private and expires. If it has expired, request another sign-in link from the dashboard.</p>
+    </div>
+  `;
+  const text = [
+    `Hi ${name || "there"},`,
+    "",
+    `${connectorName} is now your Connector on Localized.life.`,
+    "",
+    "Use your private dashboard to ask for help and keep track of what you are working on together:",
+    inviteUrl,
+    "",
+    "This sign-in link is private and expires. If it has expired, request another sign-in link from the dashboard.",
+  ].join("\n");
+
+  const { error } = await client.resend.emails.send({
+    from: client.from,
+    to,
+    subject: `${connectorName} is your Connector on Localized.life`,
+    html,
+    text,
+  });
+
+  if (error) {
+    console.error("Connector invite email failed", error);
     return { sent: false, reason: error.message };
   }
 
