@@ -45,7 +45,7 @@ async function getConnector(slug: string) {
 
 async function createInviteLink(email: string) {
   const supabase = getSupabaseAdmin();
-  const options = { redirectTo: siteUrl("/connector/dashboard") };
+  const options = { redirectTo: siteUrl("/account") };
   let result = await supabase.auth.admin.generateLink({ type: "invite", email, options });
 
   if (result.error) {
@@ -243,7 +243,7 @@ export async function startConnectorRelationship(formData: FormData) {
       .eq("id", result.personId)
       .single();
     if (person?.claim_status === "claimed") {
-      nextPath = "/connector/dashboard";
+      nextPath = "/account";
     } else {
       const { data: existingInvitation, error: invitationLookupError } = await supabase
         .from("connector_claim_invitations")

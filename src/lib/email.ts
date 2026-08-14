@@ -265,7 +265,7 @@ export async function sendConnectorInviteEmail({
       <h1 style="font-size: 24px;">${safeConnectorName} connected with you on Localized.life</h1>
       <p>Hi ${safeName},</p>
       <p>${safeConnectorName} is now your Connector. When you need something, you can use your private Localized.life dashboard to ask for help and keep track of what you are working on together.</p>
-      <p><a href="${safeInviteUrl}">Open your Connector dashboard</a></p>
+      <p><a href="${safeInviteUrl}">Open your Localized.life account</a></p>
       <p>This sign-in link is private and expires. If it has expired, request another sign-in link from the dashboard.</p>
     </div>
   `;

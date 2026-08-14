@@ -8,10 +8,12 @@ export function ClaimPersonProfile({
   token,
   personName,
   emailHint,
+  returnTo = "/account",
 }: {
   token: string;
   personName: string;
   emailHint: string | null;
+  returnTo?: string;
 }) {
   const [signedIn, setSignedIn] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -117,7 +119,7 @@ export function ClaimPersonProfile({
   }
 
   if (claimed) {
-    return <section className="panel connector-claim-panel"><p className="eyebrow">Account ready</p><h2>Welcome, {personName}</h2><p>{message}</p><Link className="button primary" href="/connector/dashboard">Open my page</Link></section>;
+    return <section className="panel connector-claim-panel"><p className="eyebrow">Account ready</p><h2>Welcome, {personName}</h2><p>{message}</p><Link className="button primary" href={returnTo}>Open my account</Link></section>;
   }
 
   if (signedIn) {

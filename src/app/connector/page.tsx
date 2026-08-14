@@ -24,8 +24,8 @@ export default async function ConnectorFrontDoorPage() {
           introduction.
         </p>
         <div className="toolbar">
-          <Link className="button primary" href="/connector/dashboard">
-            Open my private dashboard
+          <Link className="button primary" href="/account">
+            Open my account
           </Link>
         </div>
       </section>

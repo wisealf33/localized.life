@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ConnectorDashboardPage() {
+export default function AccountPage() {
   return (
     <main className="page account-page">
       <SiteHeader product="Project hub" />

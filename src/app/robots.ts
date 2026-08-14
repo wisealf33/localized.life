@@ -14,6 +14,8 @@ export default function robots(): MetadataRoute.Robots {
           "/manage",
           "/connector/admin",
           "/connector/dashboard",
+          "/account",
+          "/claim/",
         ],
       },
     ],

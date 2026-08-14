@@ -17,11 +17,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Confirm your email, then open this page again." }, { status: 401 });
   }
 
-  const { data: invitation, error: invitationError } = await supabase
+  const { data: personInvitation, error: personInvitationError } = await supabase
+    .from("person_claim_invitations")
+    .select("id, person_id, expires_at, claimed_at, revoked_at")
+    .eq("token_hash", hashSecret(token))
+    .maybeSingle();
+  const connectorInvitationResult = personInvitation
+    ? { data: null, error: null }
+    : await supabase
     .from("connector_claim_invitations")
     .select("id, person_id, expires_at, claimed_at, revoked_at")
     .eq("token_hash", hashSecret(token))
     .maybeSingle();
+  const invitation = personInvitation || connectorInvitationResult.data;
+  const invitationTable = personInvitation ? "person_claim_invitations" : "connector_claim_invitations";
+  const invitationError = personInvitationError || connectorInvitationResult.error;
   const expired = invitation?.expires_at ? new Date(invitation.expires_at).getTime() <= Date.now() : false;
   if (invitationError || !invitation || invitation.revoked_at || expired) {
     return NextResponse.json({ error: "This private link is no longer active." }, { status: 410 });
@@ -76,7 +86,7 @@ export async function POST(request: Request) {
   }
 
   const { error: finishError } = await supabase
-    .from("connector_claim_invitations")
+    .from(invitationTable)
     .update({ claimed_at: now })
     .eq("id", invitation.id)
     .is("claimed_at", null)
@@ -86,10 +96,32 @@ export async function POST(request: Request) {
   }
 
   await supabase
-    .from("connector_claim_invitations")
+    .from(invitationTable)
     .update({ revoked_at: now })
     .eq("person_id", person.id)
     .neq("id", invitation.id)
+    .is("claimed_at", null)
+    .is("revoked_at", null);
+
+  if (invitationTable === "person_claim_invitations") {
+    const { error: attributionError } = await supabase
+      .from("person_referral_attributions")
+      .update({
+        status: "confirmed",
+        confirmed_at: now,
+        updated_at: now,
+      })
+      .eq("referred_person_id", person.id)
+      .eq("status", "captured");
+    if (attributionError) {
+      console.error("Person claimed, but referral confirmation failed", attributionError);
+    }
+  }
+
+  await supabase
+    .from(invitationTable === "person_claim_invitations" ? "connector_claim_invitations" : "person_claim_invitations")
+    .update({ revoked_at: now })
+    .eq("person_id", person.id)
     .is("claimed_at", null)
     .is("revoked_at", null);
 
