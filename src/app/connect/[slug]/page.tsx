@@ -23,7 +23,7 @@ export default async function PublicConnectorPage({ params, searchParams }: Prop
 
   return (
     <main className="page connector-page connector-public-page">
-      <SiteHeader product="Project hub" />
+      <SiteHeader product="Connector" />
       <section className="connector-public-hero">
         <div>
           <p className="eyebrow">Your local Connector</p>

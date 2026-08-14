@@ -46,7 +46,7 @@ export function AccountSignIn({
 
   return (
     <section className="panel connector-login-panel">
-      <p className="eyebrow">Your normal account</p>
+      <p className="eyebrow">Account access</p>
       <h2>{title}</h2>
       <p className="muted">Use your email and password. A private email link is also available.</p>
       <form className="form connector-login-form" onSubmit={signIn} data-account-sign-in>

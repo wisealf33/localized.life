@@ -16,7 +16,7 @@ type ActiveNav =
 
 type SiteHeaderProps = {
   active?: ActiveNav;
-  product?: "SaleTrail" | "Harvest" | "Project hub";
+  product?: "SaleTrail" | "Harvest" | "Project hub" | "Connector";
 };
 
 function navClass(active: ActiveNav | undefined, item: ActiveNav, baseClass = "site-nav-link") {

@@ -31,11 +31,11 @@ export function ClaimPersonProfile({
     const payload = await response.json();
     setBusy(false);
     if (!response.ok) {
-      setMessage(payload.error || "This profile could not be claimed.");
+      setMessage(payload.error || "We could not connect this profile to your account.");
       return;
     }
     setClaimed(true);
-    setMessage("Your existing Person profile is now your account. Its history stayed with you.");
+    setMessage("Your account is ready. You can now sign in from any device.");
   }, [token]);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export function ClaimPersonProfile({
       return;
     }
     if (data.session) await claim();
-    else setMessage("Check your email to confirm your account, then this same invitation will finish the claim.");
+    else setMessage("Check your email to confirm your account, then return to this page.");
   }
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
@@ -117,29 +117,29 @@ export function ClaimPersonProfile({
   }
 
   if (claimed) {
-    return <section className="panel connector-claim-panel"><p className="eyebrow">Profile claimed</p><h2>Welcome back, {personName}</h2><p>{message}</p><Link className="button primary" href="/connector/dashboard">Open your Localized.life dashboard</Link></section>;
+    return <section className="panel connector-claim-panel"><p className="eyebrow">Account ready</p><h2>Welcome, {personName}</h2><p>{message}</p><Link className="button primary" href="/connector/dashboard">Open my page</Link></section>;
   }
 
   if (signedIn) {
-    return <section className="panel connector-claim-panel"><p className="eyebrow">Account detected</p><h2>Attach this account to {personName}</h2><p className="muted">Only continue if this browser is signed into {personName}&apos;s own account. This keeps the existing Person and history.</p><div className="toolbar"><button className="button primary" type="button" disabled={busy} onClick={claim}>{busy ? "Claiming…" : "Claim My Profile"}</button><button className="button" type="button" disabled={busy} onClick={signOut}>Use a different account</button></div>{message ? <p className="notice bad">{message}</p> : null}</section>;
+    return <section className="panel connector-claim-panel"><p className="eyebrow">Signed in</p><h2>Is this the account for {personName}?</h2><p className="muted">Continue if this account belongs to {personName}. Otherwise, sign in with another account.</p><div className="toolbar"><button className="button primary" type="button" disabled={busy} onClick={claim}>{busy ? "Connecting…" : "Yes, continue"}</button><button className="button" type="button" disabled={busy} onClick={signOut}>Use another account</button></div>{message ? <p className="notice bad">{message}</p> : null}</section>;
   }
 
   return (
     <section className="connector-claim-grid">
       <form className="panel form connector-claim-panel" onSubmit={createAccount}>
-        <p className="eyebrow">New to Localized.life</p>
-        <h2>Create your normal account</h2>
-        {emailHint ? <p className="muted">Use the address Garrett has for you ({emailHint}).</p> : null}
+        <p className="eyebrow">New account</p>
+        <h2>Create your account</h2>
+        {emailHint ? <p className="muted">Use the email address connected to this page ({emailHint}).</p> : null}
         <label>Email<input data-claim-email name="email" type="email" autoComplete="email" required /></label>
         <label>Create password<input name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
-        <button className="button primary" type="submit" disabled={busy}>Create account and claim</button>
+        <button className="button primary" type="submit" disabled={busy}>Create my account</button>
       </form>
       <form className="panel form connector-claim-panel" onSubmit={signIn}>
-        <p className="eyebrow">Already have an account</p>
-        <h2>Sign in and claim</h2>
+        <p className="eyebrow">Returning member</p>
+        <h2>Sign in</h2>
         <label>Email<input name="email" type="email" autoComplete="email" required /></label>
         <label>Password<input name="password" type="password" autoComplete="current-password" required /></label>
-        <button className="button" type="submit" disabled={busy}>Sign in</button>
+        <button className="button" type="submit" disabled={busy}>Sign in and continue</button>
         <button className="text-button" type="button" onClick={magicLink} disabled={busy}>Email me a sign-in link instead</button>
       </form>
       {message ? <p className="notice connector-claim-message">{message}</p> : null}

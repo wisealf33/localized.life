@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function ConnectorDashboardPage() {
   return (
     <main className="page connector-page">
-      <SiteHeader product="Project hub" />
+      <SiteHeader product="Connector" />
       <section className="hero compact-hero connector-dashboard-hero">
         <p className="eyebrow">A personal way back</p>
         <h1>Your Connector</h1>

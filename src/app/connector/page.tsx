@@ -15,7 +15,7 @@ export default async function ConnectorFrontDoorPage() {
 
   return (
     <main className="page connector-page">
-      <SiteHeader product="Project hub" />
+      <SiteHeader product="Connector" />
       <section className="hero connector-dashboard-hero">
         <p className="eyebrow">Useful local relationships</p>
         <h1>Find your Connector</h1>
