@@ -210,6 +210,9 @@ create table if not exists public.feedback_requests (
 create table if not exists public.local_submissions (
   id uuid primary key default gen_random_uuid(),
   submission_area text not null check (submission_area in ('market', 'event', 'service', 'mentor')),
+  post_type text not null check (post_type in ('service', 'goods', 'event', 'mentoring', 'request')),
+  owner_person_id uuid,
+  owner_state text not null default 'active' check (owner_state in ('active', 'paused', 'closed', 'removed')),
   title text not null,
   category text,
   name text,
@@ -300,6 +303,10 @@ create index if not exists feedback_requests_status_idx
 
 create index if not exists local_submissions_status_idx
   on public.local_submissions (submission_area, status, created_at desc);
+
+create index if not exists local_submissions_owner_idx
+  on public.local_submissions (owner_person_id, owner_state, updated_at desc)
+  where owner_person_id is not null;
 
 create unique index if not exists local_submissions_manage_token_hash_idx
   on public.local_submissions (manage_token_hash)

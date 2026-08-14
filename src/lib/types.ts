@@ -155,6 +155,9 @@ export type FeedbackRequest = {
 export type LocalSubmission = {
   id: string;
   submission_area: LocalSubmissionArea;
+  post_type: "service" | "goods" | "event" | "mentoring" | "request";
+  owner_person_id: string | null;
+  owner_state: "active" | "paused" | "closed" | "removed";
   title: string;
   category: string | null;
   name: string | null;

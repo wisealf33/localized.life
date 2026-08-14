@@ -6,6 +6,15 @@ import { hashSecret, invitationToken } from "@/lib/tokens";
 export const dynamic = "force-dynamic";
 
 const needStatuses = new Set(["new", "working", "scheduled", "completed", "closed"]);
+const postTypes = new Set(["service", "goods", "event", "mentoring", "request"]);
+const postOwnerStates = new Set(["active", "paused", "closed", "removed"]);
+const postAreaByType = {
+  service: "service",
+  goods: "market",
+  event: "event",
+  mentoring: "mentor",
+  request: "service",
+} as const;
 
 function text(value: unknown, max = 4000) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -20,6 +29,18 @@ function email(value: unknown) {
   if (!next) return null;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) throw new Error("Add a valid email address.");
   return next;
+}
+
+function publicUrl(value: unknown) {
+  const next = text(value, 1000);
+  if (!next) return null;
+  try {
+    const parsed = new URL(next);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
+    return parsed.toString();
+  } catch {
+    throw new Error("Add a complete public link beginning with http:// or https://.");
+  }
 }
 
 function siteUrl(path: string) {
@@ -123,7 +144,7 @@ export async function GET(request: Request) {
 
   const supabase = getSupabaseAdmin();
   const actorPersonId = actor.person.id;
-  const [connectorResult, connectionsResult, needsResult] = await Promise.all([
+  const [connectorResult, connectionsResult, needsResult, postsResult] = await Promise.all([
     supabase
       .from("connector_profiles")
       .select("person_id, slug, display_name, headline, intro, active")
@@ -142,9 +163,15 @@ export async function GET(request: Request) {
       .or(`requester_person_id.eq.${actorPersonId},connector_person_id.eq.${actorPersonId},assigned_person_id.eq.${actorPersonId}`)
       .order("updated_at", { ascending: false })
       .limit(30),
+    supabase
+      .from("local_submissions")
+      .select("id, post_type, owner_state, title, category, contact, city, state, website_url, description, status, admin_notes, created_at, updated_at")
+      .eq("owner_person_id", actorPersonId)
+      .order("updated_at", { ascending: false })
+      .limit(100),
   ]);
 
-  const firstError = connectorResult.error || connectionsResult.error || needsResult.error;
+  const firstError = connectorResult.error || connectionsResult.error || needsResult.error || postsResult.error;
   if (firstError) return NextResponse.json({ error: firstError.message }, { status: 500 });
 
   const connections = connectionsResult.data || [];
@@ -212,6 +239,7 @@ export async function GET(request: Request) {
     connector: connectorResult.data || null,
     people,
     activity,
+    posts: postsResult.data || [],
   });
 }
 
@@ -241,6 +269,86 @@ export async function POST(request: Request) {
         .eq("id", actor.person.id)
         .eq("auth_user_id", actor.user.id);
       if (error) throw new Error(error.message);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "create-post") {
+      const postType = text(body.postType, 20) as keyof typeof postAreaByType;
+      const title = text(body.title, 180);
+      const description = text(body.description, 5000);
+      if (!postTypes.has(postType)) throw new Error("Choose a valid post type.");
+      if (!title) throw new Error("Add a title.");
+      if (!description) throw new Error("Add a description.");
+
+      const state = text(body.state, 2).toUpperCase() || actor.person.state || null;
+      const { data: post, error } = await supabase
+        .from("local_submissions")
+        .insert({
+          submission_area: postAreaByType[postType],
+          post_type: postType,
+          owner_person_id: actor.person.id,
+          owner_state: "active",
+          title,
+          category: nullable(body.category, 180),
+          name: actor.person.display_name,
+          contact: nullable(body.contact, 1000),
+          submitter_email: actor.person.email || actor.user.email || null,
+          city: nullable(body.city, 120) || actor.person.town || null,
+          state,
+          website_url: publicUrl(body.websiteUrl),
+          description,
+          status: "pending",
+        })
+        .select("id")
+        .single();
+      if (error || !post) throw new Error(error?.message || "Your post could not be saved.");
+      return NextResponse.json({ ok: true, postId: post.id });
+    }
+
+    if (action === "update-post") {
+      const postId = text(body.postId, 80);
+      const title = text(body.title, 180);
+      const description = text(body.description, 5000);
+      if (!postId) throw new Error("Choose a post to update.");
+      if (!title) throw new Error("Add a title.");
+      if (!description) throw new Error("Add a description.");
+
+      const { data: post, error } = await supabase
+        .from("local_submissions")
+        .update({
+          title,
+          category: nullable(body.category, 180),
+          contact: nullable(body.contact, 1000),
+          city: nullable(body.city, 120),
+          state: nullable(body.state, 2)?.toUpperCase() || null,
+          website_url: publicUrl(body.websiteUrl),
+          description,
+          owner_state: "active",
+          status: "pending",
+          admin_notes: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", postId)
+        .eq("owner_person_id", actor.person.id)
+        .select("id")
+        .maybeSingle();
+      if (error || !post) throw new Error(error?.message || "This post is not available in your account.");
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "set-post-state") {
+      const postId = text(body.postId, 80);
+      const ownerState = text(body.ownerState, 20);
+      if (!postId || !postOwnerStates.has(ownerState)) throw new Error("Choose a valid post update.");
+
+      const { data: post, error } = await supabase
+        .from("local_submissions")
+        .update({ owner_state: ownerState, updated_at: new Date().toISOString() })
+        .eq("id", postId)
+        .eq("owner_person_id", actor.person.id)
+        .select("id")
+        .maybeSingle();
+      if (error || !post) throw new Error(error?.message || "This post is not available in your account.");
       return NextResponse.json({ ok: true });
     }
 

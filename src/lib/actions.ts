@@ -954,6 +954,11 @@ export async function submitLocalSubmission(formData: FormData) {
     const supabase = getSupabaseAdmin();
     const submissionArea = required(formData, "submission_area") as LocalSubmissionArea;
     if (!localSubmissionAreas.has(submissionArea)) throw new Error("Invalid submission area.");
+    const postType = submissionArea === "market"
+      ? "goods"
+      : submissionArea === "mentor"
+        ? "mentoring"
+        : submissionArea;
     const submitterEmail = requiredEmail(formData, "submitter_email");
     const manageToken = randomToken();
     const title = required(formData, "title");
@@ -984,6 +989,7 @@ export async function submitLocalSubmission(formData: FormData) {
 
     const { error } = await supabase.from("local_submissions").insert({
       submission_area: submissionArea,
+      post_type: postType,
       title,
       category: value(formData, "category"),
       name: value(formData, "name"),
@@ -1091,6 +1097,7 @@ export async function submitServiceRequest(formData: FormData) {
 
     const { error } = await supabase.from("local_submissions").insert({
       submission_area: "service",
+      post_type: "request",
       title,
       category: serviceTitle,
       name: requesterName,

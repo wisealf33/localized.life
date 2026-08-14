@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   CalendarBlank,
   CaretRight,
@@ -70,6 +70,7 @@ type AccountData = {
   connector: { person_id: string; slug: string; display_name: string; headline: string } | null;
   people: ConnectionPerson[];
   activity: ActivityItem[];
+  posts: Array<{ id: string }>;
 };
 
 type ViewState =
@@ -81,12 +82,16 @@ type ViewState =
   | { status: "ready"; data: AccountData };
 
 const postTypes = [
-  { value: "service", label: "Service", helper: "Offer practical local help", href: "/local-services#submit", Icon: Wrench },
-  { value: "goods", label: "Goods", helper: "Sell or share local goods", href: "/local-market#submit", Icon: Package },
-  { value: "event", label: "Event", helper: "Add something happening nearby", href: "/local-events#submit", Icon: CalendarBlank },
-  { value: "mentoring", label: "Mentoring", helper: "Teach a skill or offer lessons", href: "/local-mentors#submit", Icon: GraduationCap },
-  { value: "request", label: "Request", helper: "Ask for practical local help", href: "/local-services/request", Icon: Question },
+  { value: "service", label: "Service", helper: "Offer practical local help", Icon: Wrench },
+  { value: "goods", label: "Goods", helper: "Sell or share local goods", Icon: Package },
+  { value: "event", label: "Event", helper: "Add something happening nearby", Icon: CalendarBlank },
+  { value: "mentoring", label: "Mentoring", helper: "Teach a skill or offer lessons", Icon: GraduationCap },
+  { value: "request", label: "Request", helper: "Ask for practical local help", Icon: Question },
 ] as const;
+
+function isDesignPreview() {
+  return process.env.NODE_ENV === "development" && new URLSearchParams(window.location.search).get("preview") === "1";
+}
 
 const statusLabels: Record<ActivityItem["status"], string> = {
   new: "New",
@@ -146,6 +151,7 @@ function designPreviewData(): AccountData {
       { id: "activity-4", title: "Peotone Plant Swap", details: "Bring extra tomatoes and herbs.", status: "scheduled", scheduled_for: "2026-08-22T18:00:00-05:00", completed_at: null, updated_at: "2026-08-13T12:00:00Z", requester_name: "Garrett", perspective: "Your request" },
       { id: "activity-5", title: "Honey pickup window", details: "Orders can be picked up at your porch.", status: "scheduled", scheduled_for: "2026-08-23T09:00:00-05:00", completed_at: null, updated_at: "2026-08-12T12:00:00Z", requester_name: "Garrett", perspective: "Your request" },
     ],
+    posts: [{ id: "post-1" }, { id: "post-2" }, { id: "post-3" }, { id: "post-4" }, { id: "post-5" }],
   };
 }
 
@@ -163,7 +169,7 @@ export function ClaimedPersonDashboard() {
   const [invitation, setInvitation] = useState<{ name: string; url: string } | null>(null);
 
   const loadAccount = useCallback(async () => {
-    if (process.env.NODE_ENV === "development" && new URLSearchParams(window.location.search).get("preview") === "1") {
+    if (isDesignPreview()) {
       setView({ status: "ready", data: designPreviewData() });
       return;
     }
@@ -303,8 +309,6 @@ export function ClaimedPersonDashboard() {
     setView({ status: "signed-out" });
   }
 
-  const activePost = useMemo(() => postTypes.find((type) => type.value === postType) || postTypes[0], [postType]);
-
   if (view.status === "loading") {
     return <section className="account-loading" aria-live="polite">Opening your account…</section>;
   }
@@ -321,6 +325,7 @@ export function ClaimedPersonDashboard() {
 
   const { data } = view;
   const visiblePeople = peopleExpanded ? data.people : data.people.slice(0, 4);
+  const postsQuery = isDesignPreview() ? "?preview=1" : "";
 
   return (
     <div className="account-dashboard">
@@ -359,7 +364,7 @@ export function ClaimedPersonDashboard() {
               <div className="account-composer-icon" aria-hidden="true"><PencilSimple weight="bold" /></div>
               <div className="account-composer-copy"><h2 id="account-composer-title">Share something with your community</h2><p>Choose a type so your post reaches the right people.</p></div>
               <label className="account-post-select"><span className="sr-only">Post type</span><select value={postType} onChange={(event) => setPostType(event.target.value as typeof postType)}>{postTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</select></label>
-              <Link className="button primary account-start-button" href={activePost.href}>Start a post</Link>
+              <Link className="button primary account-start-button" href={`/account/posts?new=${postType}${isDesignPreview() ? "&preview=1" : ""}`}>Start a post</Link>
             </div>
             <div className="account-post-types">
               {postTypes.map(({ value, label, Icon }) => (
@@ -393,6 +398,11 @@ export function ClaimedPersonDashboard() {
               <div className="account-empty-list"><ListChecks weight="duotone" /><div><h3>Nothing needs your attention</h3><p>Posts, requests, and upcoming plans will appear here.</p></div></div>
             )}
           </section>
+          <Link className="account-manage-all-posts" href={`/account/posts${postsQuery}`}>
+            <PencilSimple weight="duotone" />
+            <span><strong>Manage all posts</strong><small>{data.posts.length} {data.posts.length === 1 ? "post" : "posts"} across services, goods, events, mentoring, and requests</small></span>
+            <CaretRight />
+          </Link>
         </div>
 
         <aside className="account-sidebar" aria-label="People and account tools">

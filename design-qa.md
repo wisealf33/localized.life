@@ -43,3 +43,13 @@ final result: passed
 - Generic person-to-person connections and reusable claim invitations are private service-role records with row-level security enabled.
 - Connector tools are rendered only when the authenticated Person has an active Connector role.
 - Reward and community-token concepts remain absent from the interface while the existing referral attribution structure remains available for future use.
+
+## Post management extension — 2026-08-14
+
+- Dashboard priority: the post composer remains first, followed immediately by `Today and next`. The full publication library is not embedded above current activity.
+- Dashboard entry: `Manage all posts` appears after the current-activity list and carries the Person into the dedicated `/account/posts` workflow.
+- Dedicated manager: desktop and 390-pixel mobile views were inspected for the page header, summary counts, scrollable type filters, post history, status labels, and editing form.
+- Management behavior: filtering to a single post type, opening an existing post, restoring a paused post, opening a new-post form, switching its type, and saving a preview post were exercised successfully.
+- Content model: Services, Goods, Events, Mentoring, and Requests share one owner-controlled history. Owner lifecycle (`active`, `paused`, `closed`, `removed`) remains separate from review status (`pending`, `reviewed`, `approved`, `rejected`).
+- Accessibility and resilience: headings, regions, field labels, buttons, mobile tap targets, horizontal filter overflow, and wrapped descriptions were checked without overlap or clipped controls.
+- Final extension result: passed.
