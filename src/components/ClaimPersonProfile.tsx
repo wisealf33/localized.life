@@ -44,11 +44,9 @@ export function ClaimPersonProfile({
     const check = window.setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
       setSignedIn(Boolean(data.session));
-      if (data.session) void claim();
     }, 0);
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSignedIn(Boolean(session));
-      if (session) window.setTimeout(() => void claim(), 0);
     });
     return () => {
       window.clearTimeout(check);
@@ -112,12 +110,18 @@ export function ClaimPersonProfile({
     setMessage(error ? error.message : "Check your email for a private sign-in link.");
   }
 
+  async function signOut() {
+    await getSupabaseBrowser()?.auth.signOut();
+    setSignedIn(false);
+    setMessage("");
+  }
+
   if (claimed) {
     return <section className="panel connector-claim-panel"><p className="eyebrow">Profile claimed</p><h2>Welcome back, {personName}</h2><p>{message}</p><Link className="button primary" href="/connector/dashboard">Open your Localized.life dashboard</Link></section>;
   }
 
   if (signedIn) {
-    return <section className="panel connector-claim-panel"><p className="eyebrow">Signed in</p><h2>Attach this account to {personName}</h2><p className="muted">This updates the same Person Garrett created. It does not make a duplicate.</p><button className="button primary" type="button" disabled={busy} onClick={claim}>{busy ? "Claiming…" : "Claim My Profile"}</button>{message ? <p className="notice bad">{message}</p> : null}</section>;
+    return <section className="panel connector-claim-panel"><p className="eyebrow">Account detected</p><h2>Attach this account to {personName}</h2><p className="muted">Only continue if this browser is signed into {personName}&apos;s own account. This keeps the existing Person and history.</p><div className="toolbar"><button className="button primary" type="button" disabled={busy} onClick={claim}>{busy ? "Claiming…" : "Claim My Profile"}</button><button className="button" type="button" disabled={busy} onClick={signOut}>Use a different account</button></div>{message ? <p className="notice bad">{message}</p> : null}</section>;
   }
 
   return (

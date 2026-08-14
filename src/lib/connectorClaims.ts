@@ -3,7 +3,7 @@ import "server-only";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret } from "./tokens";
 
-export async function getClaimInvitation(slug: string, token: string) {
+export async function getClaimInvitationByToken(token: string) {
   if (!token || token.length < 32) return null;
   const supabase = getSupabaseAdmin();
   const { data: invitation, error } = await supabase
@@ -18,7 +18,6 @@ export async function getClaimInvitation(slug: string, token: string) {
       .from("connector_profiles")
       .select("person_id, slug, display_name, headline, intro, active")
       .eq("person_id", invitation.connector_person_id)
-      .eq("slug", slug)
       .eq("active", true)
       .maybeSingle(),
     supabase
@@ -51,4 +50,9 @@ export async function getClaimInvitation(slug: string, token: string) {
     state,
     expiresAt: invitation.expires_at,
   } as const;
+}
+
+export async function getClaimInvitation(slug: string, token: string) {
+  const invitation = await getClaimInvitationByToken(token);
+  return invitation?.connector.slug === slug ? invitation : null;
 }
