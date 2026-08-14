@@ -5138,6 +5138,21 @@ code {
   color: var(--connector-ink);
 }
 
+.connector-ready-invitation {
+  margin-top: 20px;
+  border: 2px solid #5c9c70;
+  box-shadow: 0 12px 30px rgb(39 103 73 / 14%);
+}
+
+.connector-ready-invitation .eyebrow {
+  margin-bottom: 0;
+}
+
+.connector-card-invite-button {
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
 .connector-people-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

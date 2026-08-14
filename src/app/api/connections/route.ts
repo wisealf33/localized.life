@@ -265,14 +265,16 @@ export async function POST(request: Request) {
 
       const workTitle = text(body.workTitle, 160);
       if (workTitle) {
-        const status = statuses.has(text(body.workStatus, 20)) ? text(body.workStatus, 20) : "completed";
+        const status = statuses.has(text(body.workStatus, 20)) ? text(body.workStatus, 20) : "new";
         const now = new Date().toISOString();
+        const scheduledFor = nullable(body.workScheduledFor, 80);
         const result = await supabase.from("needs").insert({
           requester_person_id: personId,
           connector_person_id: actor.person.id,
           title: workTitle,
           details: text(body.workDetails, 4000),
           status,
+          scheduled_for: scheduledFor ? new Date(scheduledFor).toISOString() : null,
           amount_cents: moneyToCents(body.workAmount),
           completed_at: status === "completed" ? now : null,
         });
