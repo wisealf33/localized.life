@@ -53,7 +53,7 @@ type PersonDetail = Overview & {
     occurred_at: string;
   }>;
   households: Array<{ id: string; name: string | null }>;
-  activeInvitation: { expires_at: string } | null;
+  activeInvitation: { url: string } | null;
 };
 
 function date(value: string | null | undefined, withTime = false) {
@@ -182,7 +182,13 @@ export function MyConnections({ personId }: { personId?: string }) {
       setInvitationUrl(result.invitation?.url || "");
       setInvitationPersonId(targetPersonId);
       setInvitationPersonName(targetPersonName);
-      setMessage(action === "revoke-invite" ? "Invitation revoked." : "A fresh secure invitation is ready.");
+      setMessage(
+        action === "revoke-invite"
+          ? "Invitation revoked."
+          : result.invitation?.replaced
+            ? "The old invitation was disabled and a new private link is ready."
+            : "Private invitation link ready.",
+      );
       await load();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update the invitation.");
@@ -191,19 +197,33 @@ export function MyConnections({ personId }: { personId?: string }) {
     }
   }
 
-  async function copyInvitation() {
-    if (!invitationUrl) return;
-    await navigator.clipboard.writeText(invitationUrl);
+  async function copyInvitation(url = invitationUrl) {
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
     setMessage("Invitation link copied.");
   }
 
-  async function shareInvitation(name: string) {
-    if (!invitationUrl) return;
+  async function shareInvitation(name: string, url = invitationUrl) {
+    if (!url) return;
     if (navigator.share) {
-      await navigator.share({ title: "Your Localized.life profile", text: `${name}, claim the profile I started for you:`, url: invitationUrl });
+      await navigator.share({ title: "Your Localized.life profile", text: `${name}, claim the profile I started for you:`, url });
     } else {
-      await copyInvitation();
+      await copyInvitation(url);
     }
+  }
+
+  async function replaceInvitation(targetPersonId: string, targetPersonName: string) {
+    const confirmed = window.confirm(
+      "Replacing this link immediately disables the old one. Only continue if the old link was exposed or should no longer work.",
+    );
+    if (!confirmed) return;
+    await invitationAction("generate-invite", targetPersonId, targetPersonName);
+  }
+
+  async function revokeInvitation(targetPersonId: string, targetPersonName: string) {
+    const confirmed = window.confirm("Revoke this invitation? The current link will stop working immediately.");
+    if (!confirmed) return;
+    await invitationAction("revoke-invite", targetPersonId, targetPersonName);
   }
 
   async function signOut() {
@@ -217,6 +237,7 @@ export function MyConnections({ personId }: { personId?: string }) {
   if (personId && "person" in data) {
     const detail = data as PersonDetail;
     const person = detail.person;
+    const activeInvitationUrl = invitationUrl || detail.activeInvitation?.url || "";
     return (
       <div className="connector-member-shell">
         <Link className="back-link" href="/connections">← My Connections</Link>
@@ -245,20 +266,20 @@ export function MyConnections({ personId }: { personId?: string }) {
             </dl>
             {person.claim_status === "unclaimed" ? (
               <div className="stack">
-                <button className="button primary compact-button" type="button" disabled={busy} onClick={() => invitationAction("generate-invite")}>
-                  {detail.activeInvitation ? "Regenerate secure invitation" : "Create secure invitation"}
-                </button>
-                {detail.activeInvitation ? <p className="muted connector-small-copy">An active invitation exists until {date(detail.activeInvitation.expires_at)}. Regenerate it to get a copyable URL.</p> : null}
-                {invitationUrl ? (
-                  <div className="connector-invite-result">
-                    <label>Private claim link<input value={invitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label>
+                {activeInvitationUrl ? (
+                  <div className="connector-invite-result" id="person-invitation">
+                    <label>Unclaimed Person link<input value={activeInvitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label>
                     <div className="toolbar">
-                      <button className="button" type="button" onClick={copyInvitation}>Copy link</button>
-                      <button className="button" type="button" onClick={() => shareInvitation(person.display_name)}>Text or share</button>
-                      <button className="text-button" type="button" onClick={() => invitationAction("revoke-invite", person.id, person.display_name)}>Revoke</button>
+                      <button className="button primary" type="button" onClick={() => copyInvitation(activeInvitationUrl)}>Copy link</button>
+                      <button className="button" type="button" onClick={() => shareInvitation(person.display_name, activeInvitationUrl)}>Text or share</button>
+                    </div>
+                    <p className="muted connector-small-copy">Use this same private link whenever you message them. It stays active until they claim the profile or you deliberately disable it.</p>
+                    <div className="connector-invite-security-actions">
+                      <button className="text-button" type="button" disabled={busy} onClick={() => replaceInvitation(person.id, person.display_name)}>Replace compromised link</button>
+                      <button className="text-button" type="button" disabled={busy} onClick={() => revokeInvitation(person.id, person.display_name)}>Revoke link</button>
                     </div>
                   </div>
-                ) : null}
+                ) : <button className="button primary compact-button" type="button" disabled={busy} onClick={() => invitationAction("generate-invite")}>Create private invitation link</button>}
               </div>
             ) : <p className="notice good">This Person now uses their own normal Localized.life account.</p>}
           </article>
@@ -355,9 +376,9 @@ export function MyConnections({ personId }: { personId?: string }) {
           <fieldset className="connector-quick-work"><legend>First Need or work, optional</legend><p className="muted connector-small-copy">Add this before work begins, while it is underway, when it is scheduled, or after it is completed.</p><label>What do they need, or what work is involved?<input name="workTitle" placeholder="Storm / tree / yard cleanup" /></label><div className="grid two"><label>Current status<select name="workStatus" defaultValue="new"><option value="new">New — just learned about it</option><option value="working">Working on it</option><option value="scheduled">Scheduled</option><option value="completed">Completed</option></select></label><label>Amount, if known<input name="workAmount" type="number" min="0" step="0.01" placeholder="150.00" /></label></div><label>Scheduled time, optional<input name="workScheduledFor" type="datetime-local" /></label><label>Short detail<textarea name="workDetails" rows={2} /></label></fieldset>
           <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Add Person and show invitation"}</button>
         </form>
-        {invitationUrl && invitationPersonId ? <section className="notice good stack connector-invite-result connector-ready-invitation" id="ready-invitation"><p className="eyebrow">Ready to send now</p><strong>{invitationPersonName || "This Person"} is connected. Their private invitation is below.</strong><label>Secure personalized claim link<input value={invitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label><div className="toolbar"><button className="button primary" type="button" onClick={copyInvitation}>Copy private link</button><button className="button" type="button" onClick={() => shareInvitation(invitationPersonName || "Your connection")}>Text or share now</button><Link className="button" href={`/connections/${invitationPersonId}`}>Open Person</Link></div><p className="muted connector-small-copy">Keep this link private. It lets this Person claim the exact profile and history you started for them.</p></section> : null}
+        {invitationUrl && invitationPersonId ? <section className="notice good stack connector-invite-result connector-ready-invitation" id="ready-invitation"><p className="eyebrow">Ready to send now</p><strong>{invitationPersonName || "This Person"} is connected. Their private invitation is below.</strong><label>Secure personalized claim link<input value={invitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label><div className="toolbar"><button className="button primary" type="button" onClick={() => copyInvitation()}>Copy private link</button><button className="button" type="button" onClick={() => shareInvitation(invitationPersonName || "Your connection")}>Text or share now</button><Link className="button" href={`/connections/${invitationPersonId}`}>Open Person</Link></div><p className="muted connector-small-copy">Keep this link private. It lets this Person claim the exact profile and history you started for them.</p></section> : null}
       </section>
-      <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">Relationships</p><h2>People you are connected with</h2></div></div>{overview.people.length ? <div className="connector-people-grid">{overview.people.map((person) => <article className="card connector-person-card" key={person.id}><div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p></div><div className="connector-person-summary"><span>{person.openNeeds} open {person.openNeeds === 1 ? "Need" : "Needs"}</span><span>{person.phone || person.email || "Contact details not added"}</span></div>{person.claim_status === "unclaimed" ? <button className="button connector-card-invite-button" type="button" disabled={busy} onClick={() => invitationAction("generate-invite", person.id, person.display_name)}>Create link to text</button> : null}<Link className="button primary compact-button" href={`/connections/${person.id}`}>Open Person</Link></article>)}</div> : <div className="empty connector-empty"><h3>No connections yet</h3><p>Add the first Person above as soon as you learn about them or their Need.</p></div>}</section>
+      <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">Relationships</p><h2>People you are connected with</h2></div></div>{overview.people.length ? <div className="connector-people-grid">{overview.people.map((person) => <article className="card connector-person-card" key={person.id}><div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p></div><div className="connector-person-summary"><span>{person.openNeeds} open {person.openNeeds === 1 ? "Need" : "Needs"}</span><span>{person.phone || person.email || "Contact details not added"}</span></div><Link className="button primary compact-button" href={`/connections/${person.id}`}>{person.claim_status === "unclaimed" ? "Open Person and invitation" : "Open Person"}</Link></article>)}</div> : <div className="empty connector-empty"><h3>No connections yet</h3><p>Add the first Person above as soon as you learn about them or their Need.</p></div>}</section>
       <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">Work queue</p><h2>Open Needs</h2></div></div>{openNeeds.length ? <div className="connector-need-list">{openNeeds.map((need) => { const person = overview.people.find((entry) => entry.id === need.requester_person_id); return <article className="card connector-need-card" key={need.id}><div className="connector-need-card-top"><div><p className="eyebrow">{person?.display_name || "Connected Person"}</p><h3>{need.title}</h3></div><span className={`connector-status connector-status-${need.status}`}>{need.status}</span></div>{person ? <Link className="button compact-button" href={`/connections/${person.id}#needs`}>Open Person</Link> : null}</article>; })}</div> : <p className="muted">No open Needs right now.</p>}</section>
     </div>
   );

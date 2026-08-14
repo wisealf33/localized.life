@@ -6,7 +6,7 @@ import { requireAdmin } from "./admin";
 import { sendConnectorInviteEmail } from "./email";
 import { getSupabaseAdmin } from "./supabase";
 import type { NeedStatus } from "./connectorTypes";
-import { hashSecret, randomToken } from "./tokens";
+import { hashSecret, invitationToken } from "./tokens";
 
 const needStatuses = new Set<NeedStatus>(["new", "working", "scheduled", "completed", "closed"]);
 
@@ -245,23 +245,30 @@ export async function startConnectorRelationship(formData: FormData) {
     if (person?.claim_status === "claimed") {
       nextPath = "/connector/dashboard";
     } else {
-      const token = randomToken(32);
-      const now = new Date().toISOString();
-      await supabase
+      const { data: existingInvitation, error: invitationLookupError } = await supabase
         .from("connector_claim_invitations")
-        .update({ revoked_at: now })
+        .select("id")
         .eq("person_id", result.personId)
         .eq("connector_person_id", result.connector.person_id)
         .is("claimed_at", null)
-        .is("revoked_at", null);
-      const { error: invitationError } = await supabase.from("connector_claim_invitations").insert({
-        person_id: result.personId,
-        connector_person_id: result.connector.person_id,
-        created_by_person_id: result.connector.person_id,
-        token_hash: hashSecret(token),
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-      if (invitationError) throw new Error(invitationError.message);
+        .is("revoked_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (invitationLookupError) throw new Error(invitationLookupError.message);
+
+      const token = existingInvitation?.id || invitationToken();
+      if (!existingInvitation) {
+        const { error: invitationError } = await supabase.from("connector_claim_invitations").insert({
+          id: token,
+          person_id: result.personId,
+          connector_person_id: result.connector.person_id,
+          created_by_person_id: result.connector.person_id,
+          token_hash: hashSecret(token),
+          expires_at: null,
+        });
+        if (invitationError) throw new Error(invitationError.message);
+      }
       nextPath = `/connect/${encodeURIComponent(connectorSlug)}/${encodeURIComponent(token)}`;
     }
   } catch (error) {

@@ -29,7 +29,7 @@ export async function getClaimInvitation(slug: string, token: string) {
   ]);
   if (!connector || !person) return null;
 
-  const expired = new Date(invitation.expires_at).getTime() <= Date.now();
+  const expired = invitation.expires_at ? new Date(invitation.expires_at).getTime() <= Date.now() : false;
   const state = invitation.revoked_at
     ? "revoked"
     : invitation.claimed_at || person.claim_status === "claimed"

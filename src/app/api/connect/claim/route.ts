@@ -22,7 +22,8 @@ export async function POST(request: Request) {
     .select("id, person_id, expires_at, claimed_at, revoked_at")
     .eq("token_hash", hashSecret(token))
     .maybeSingle();
-  if (invitationError || !invitation || invitation.revoked_at || new Date(invitation.expires_at).getTime() <= Date.now()) {
+  const expired = invitation?.expires_at ? new Date(invitation.expires_at).getTime() <= Date.now() : false;
+  if (invitationError || !invitation || invitation.revoked_at || expired) {
     return NextResponse.json({ error: "This invitation is invalid, revoked, or expired." }, { status: 410 });
   }
 

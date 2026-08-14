@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson, isConnectedPerson } from "@/lib/connectionAccess";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { hashSecret, randomToken } from "@/lib/tokens";
+import { hashSecret, invitationToken } from "@/lib/tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -40,12 +40,30 @@ async function requireConnection(connectorPersonId: string, personId: string) {
   }
 }
 
-async function createInvitation(connector: { person_id: string; slug: string }, personId: string) {
+async function createInvitation(
+  connector: { person_id: string; slug: string },
+  personId: string,
+  replaceExisting = false,
+) {
   await requireConnection(connector.person_id, personId);
   const supabase = getSupabaseAdmin();
-  const rawToken = randomToken(32);
+  const { data: existingInvitation, error: lookupError } = await supabase
+    .from("connector_claim_invitations")
+    .select("id")
+    .eq("person_id", personId)
+    .eq("connector_person_id", connector.person_id)
+    .is("claimed_at", null)
+    .is("revoked_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (lookupError) throw new Error(lookupError.message);
+  if (existingInvitation && !replaceExisting) {
+    return { url: invitationUrl(connector.slug, existingInvitation.id), reused: true };
+  }
+
+  const rawToken = invitationToken();
   const now = new Date().toISOString();
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const { error: revokeError } = await supabase
     .from("connector_claim_invitations")
@@ -57,14 +75,15 @@ async function createInvitation(connector: { person_id: string; slug: string }, 
   if (revokeError) throw new Error(revokeError.message);
 
   const { error } = await supabase.from("connector_claim_invitations").insert({
+    id: rawToken,
     person_id: personId,
     connector_person_id: connector.person_id,
     created_by_person_id: connector.person_id,
     token_hash: hashSecret(rawToken),
-    expires_at: expiresAt,
+    expires_at: null,
   });
   if (error) throw new Error(error.message);
-  return { url: invitationUrl(connector.slug, rawToken), expiresAt };
+  return { url: invitationUrl(connector.slug, rawToken), replaced: Boolean(existingInvitation) };
 }
 
 export async function GET(request: Request) {
@@ -114,12 +133,11 @@ export async function GET(request: Request) {
           .eq("connector_person_id", actor.person.id)
           .is("claimed_at", null)
           .is("revoked_at", null)
-          .gt("expires_at", new Date().toISOString())
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
       ]);
-    const firstError = [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult].find(
+    const firstError = [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult, inviteResult].find(
       (result) => result.error,
     )?.error;
     if (firstError || !personResult.data || !relationshipResult.data) {
@@ -143,7 +161,12 @@ export async function GET(request: Request) {
       interactions: interactionsResult.data || [],
       memberships: membershipsResult.data || [],
       households: householdsResult.data || [],
-      activeInvitation: inviteResult.data || null,
+      activeInvitation: inviteResult.data
+        ? {
+            ...inviteResult.data,
+            url: invitationUrl(actor.connector!.slug, inviteResult.data.id),
+          }
+        : null,
     });
   }
 
@@ -290,7 +313,7 @@ export async function POST(request: Request) {
     await requireConnection(actor.person.id, personId);
 
     if (action === "generate-invite") {
-      return NextResponse.json({ ok: true, invitation: await createInvitation(actor.connector!, personId) });
+      return NextResponse.json({ ok: true, invitation: await createInvitation(actor.connector!, personId, true) });
     }
 
     if (action === "revoke-invite") {

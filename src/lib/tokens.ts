@@ -8,6 +8,10 @@ export function hashSecret(secret: string) {
   return crypto.createHash("sha256").update(secret).digest("hex");
 }
 
+export function invitationToken() {
+  return crypto.randomUUID();
+}
+
 export function claimCode() {
   return crypto.randomBytes(3).toString("hex").toUpperCase();
 }

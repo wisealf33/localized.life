@@ -5148,9 +5148,10 @@ code {
   margin-bottom: 0;
 }
 
-.connector-card-invite-button {
-  margin-top: auto;
-  margin-bottom: 8px;
+.connector-invite-security-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
 }
 
 .connector-people-grid {
