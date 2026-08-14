@@ -23,7 +23,7 @@ export default async function PersonalizedConnectorPage({ params }: { params: Pr
     <main className="page narrow connector-page connector-claim-page">
       <SiteHeader product="Project hub" />
       <section className="connector-public-hero connector-personal-hero">
-        <div><p className="eyebrow">Private profile with {invitation.connector.display_name}</p><h1>{invitation.person.displayName}&apos;s Localized.life</h1><p className="lede">Keep track of work, requests, and useful help from this one private link. You do not need to create an account yet.</p></div>
+        <div><p className="eyebrow">Private Localized.life profile with {invitation.connector.display_name}</p><h1>{invitation.person.displayName}</h1><p className="lede">Keep track of work, requests, and useful help from this one private link. You do not need to create an account yet.</p></div>
         <div className="connector-promise-card"><p>Private link access</p><strong>This link opens your working profile. Keep it private and return anytime.</strong></div>
       </section>
       {invitation.state === "active" ? (
