@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "./admin";
 import { sendConnectorInviteEmail } from "./email";
 import { getSupabaseAdmin } from "./supabase";
+import { captureReferral } from "./referrals";
 import type { NeedStatus } from "./connectorTypes";
 import { hashSecret, invitationToken } from "./tokens";
 
@@ -182,6 +183,14 @@ async function connectPerson({
     });
     if (error) throw new Error(error.message);
   }
+
+  await captureReferral({
+    referredPersonId: personId,
+    referrerPersonId: connector.person_id,
+    sourceType: "connector_introduction",
+    sourceReference: `connector:${connector.person_id}`,
+    metadata: { entry_method: "connector_relationship" },
+  });
 
   if (householdName && created) {
     const { data: household, error: householdError } = await supabase

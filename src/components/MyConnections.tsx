@@ -34,6 +34,20 @@ type Overview = {
   connector: { slug: string; display_name: string };
   people: PersonSummary[];
   needs: NeedRecord[];
+  referralIntake: {
+    canAssign: boolean;
+    unassigned: Array<{
+      id: string;
+      display_name: string;
+      email: string | null;
+      phone: string | null;
+      town: string | null;
+      state: string | null;
+      claim_status: "claimed" | "unclaimed";
+      created_at: string;
+    }>;
+    referrerOptions: Array<{ id: string; display_name: string; role: string }>;
+  };
 };
 
 type PersonDetail = Overview & {
@@ -159,6 +173,8 @@ export function MyConnections({ personId }: { personId?: string }) {
       if (action === "add-person") {
         setMessage("Person saved, connected to you, and ready to invite now.");
         form.reset();
+      } else if (action === "assign-referrer") {
+        setMessage("Referral assigned.");
       } else {
         setMessage("Saved.");
       }
@@ -365,6 +381,17 @@ export function MyConnections({ personId }: { personId?: string }) {
       </section>
       {message ? <p className="notice good">{message}</p> : null}
       <section className="connector-admin-stats"><div><strong>{overview.people.length}</strong><span>connections</span></div><div><strong>{openNeeds.length}</strong><span>open Needs</span></div><div><strong>{overview.people.filter((person) => person.claim_status === "unclaimed").length}</strong><span>unclaimed</span></div></section>
+      {overview.referralIntake.canAssign ? <section className="connector-dashboard-section" id="referral-intake">
+        <div className="section-heading"><div><p className="eyebrow">Referral intake</p><h2>People waiting for a referrer</h2><p className="muted">Review each person and record the Connector or coordinator who brought them into the community.</p></div><span className="connector-referral-count">{overview.referralIntake.unassigned.length} waiting</span></div>
+        {overview.referralIntake.unassigned.length ? <div className="connector-referral-list">{overview.referralIntake.unassigned.map((person) => <article className="card connector-referral-card" key={person.id}>
+          <div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p><p className="connector-referral-contact">{person.phone || person.email || "Contact details not added"}</p><p className="muted connector-small-copy">Entered {date(person.created_at)}</p></div>
+          <form className="connector-referral-form" onSubmit={(event) => submit(event, "assign-referrer")}>
+            <input type="hidden" name="referredPersonId" value={person.id} />
+            <label>Direct referrer<select name="referrerPersonId" required defaultValue=""><option value="" disabled>Choose a person</option>{overview.referralIntake.referrerOptions.map((referrer) => <option value={referrer.id} key={referrer.id}>{referrer.display_name} — {referrer.role}</option>)}</select></label>
+            <button className="button primary compact-button" type="submit" disabled={busy}>Assign referral</button>
+          </form>
+        </article>)}</div> : <div className="empty connector-empty"><h3>No unassigned referrals</h3><p>Everyone in the system has a direct referrer recorded.</p></div>}
+      </section> : null}
       <section className="panel connector-add-person" id="add-person">
         <div className="section-heading"><div><p className="eyebrow">Fast phone entry</p><h2>Add a Person</h2><p className="muted">Start the record as soon as you learn about the Person or their Need. Only a name is required, and you can invite them immediately.</p></div></div>
         <form className="form connector-quick-add-form" onSubmit={(event) => submit(event, "add-person")}>

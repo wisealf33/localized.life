@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson, isConnectedPerson } from "@/lib/connectionAccess";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { assignReferral, captureReferral, isReferralCoordinator } from "@/lib/referrals";
 import { hashSecret, invitationToken } from "@/lib/tokens";
 
 export const dynamic = "force-dynamic";
@@ -170,7 +171,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const [relationshipsResult, needsResult] = await Promise.all([
+  const [relationshipsResult, needsResult, coordinatorResult] = await Promise.all([
     supabase
       .from("connector_relationships")
       .select("id, person_id, started_at")
@@ -183,9 +184,18 @@ export async function GET(request: Request) {
       .select("id, requester_person_id, title, details, status, scheduled_for, amount_cents, created_at, updated_at")
       .eq("connector_person_id", actor.person.id)
       .order("updated_at", { ascending: false }),
+    supabase
+      .from("referral_coordinators")
+      .select("person_id")
+      .eq("person_id", actor.person.id)
+      .eq("active", true)
+      .maybeSingle(),
   ]);
-  if (relationshipsResult.error || needsResult.error) {
-    return NextResponse.json({ error: relationshipsResult.error?.message || needsResult.error?.message }, { status: 500 });
+  if (relationshipsResult.error || needsResult.error || coordinatorResult.error) {
+    return NextResponse.json(
+      { error: relationshipsResult.error?.message || needsResult.error?.message || coordinatorResult.error?.message },
+      { status: 500 },
+    );
   }
   const ids = (relationshipsResult.data || []).flatMap((relationship) =>
     relationship.person_id ? [relationship.person_id] : [],
@@ -208,11 +218,56 @@ export async function GET(request: Request) {
     }))
     .sort((a, b) => a.display_name.localeCompare(b.display_name));
 
+  let unassignedReferrals: Array<Record<string, unknown>> = [];
+  let referrerOptions: Array<{ id: string; display_name: string; role: string }> = [];
+  if (coordinatorResult.data) {
+    const [candidatesResult, attributionsResult, connectorsResult, coordinatorsResult] = await Promise.all([
+      supabase
+        .from("people")
+        .select("id, display_name, email, phone, town, state, claim_status, created_at")
+        .neq("id", actor.person.id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("person_referral_attributions")
+        .select("referred_person_id")
+        .in("status", ["captured", "confirmed"]),
+      supabase.from("connector_profiles").select("person_id").eq("active", true),
+      supabase.from("referral_coordinators").select("person_id").eq("active", true),
+    ]);
+    const referralError =
+      candidatesResult.error || attributionsResult.error || connectorsResult.error || coordinatorsResult.error;
+    if (referralError) return NextResponse.json({ error: referralError.message }, { status: 500 });
+
+    const assignedIds = new Set((attributionsResult.data || []).map((entry) => entry.referred_person_id));
+    unassignedReferrals = (candidatesResult.data || []).filter((person) => !assignedIds.has(person.id));
+
+    const connectorIds = new Set((connectorsResult.data || []).map((entry) => entry.person_id));
+    const coordinatorIds = new Set((coordinatorsResult.data || []).map((entry) => entry.person_id));
+    const eligibleIds = Array.from(new Set([...connectorIds, ...coordinatorIds]));
+    const referrersResult = eligibleIds.length
+      ? await supabase.from("people").select("id, display_name").in("id", eligibleIds).order("display_name")
+      : { data: [], error: null };
+    if (referrersResult.error) return NextResponse.json({ error: referrersResult.error.message }, { status: 500 });
+    referrerOptions = (referrersResult.data || []).map((person) => ({
+      ...person,
+      role: connectorIds.has(person.id) && coordinatorIds.has(person.id)
+        ? "Connector · coordinator"
+        : coordinatorIds.has(person.id)
+          ? "Coordinator"
+          : "Connector",
+    }));
+  }
+
   return NextResponse.json({
     actor: { id: actor.person.id, displayName: actor.person.display_name },
     connector: actor.connector,
     people,
     needs: needsResult.data || [],
+    referralIntake: {
+      canAssign: Boolean(coordinatorResult.data),
+      unassigned: unassignedReferrals,
+      referrerOptions,
+    },
   });
 }
 
@@ -226,6 +281,47 @@ export async function POST(request: Request) {
     const body = (await request.json()) as Record<string, unknown>;
     const action = text(body.action, 50);
     const supabase = getSupabaseAdmin();
+
+    if (action === "assign-referrer") {
+      if (!(await isReferralCoordinator(actor.person.id))) {
+        return NextResponse.json({ error: "Referral coordination access is required." }, { status: 403 });
+      }
+
+      const referredPersonId = text(body.referredPersonId, 80);
+      const referrerPersonId = text(body.referrerPersonId, 80);
+      if (!referredPersonId || !referrerPersonId) throw new Error("Choose a person and a referrer.");
+
+      const [referredResult, connectorResult, coordinatorResult] = await Promise.all([
+        supabase.from("people").select("id").eq("id", referredPersonId).maybeSingle(),
+        supabase
+          .from("connector_profiles")
+          .select("person_id")
+          .eq("person_id", referrerPersonId)
+          .eq("active", true)
+          .maybeSingle(),
+        supabase
+          .from("referral_coordinators")
+          .select("person_id")
+          .eq("person_id", referrerPersonId)
+          .eq("active", true)
+          .maybeSingle(),
+      ]);
+      const assignmentError = referredResult.error || connectorResult.error || coordinatorResult.error;
+      if (assignmentError) throw new Error(assignmentError.message);
+      if (!referredResult.data) throw new Error("This person is no longer available.");
+      if (!connectorResult.data && !coordinatorResult.data) {
+        throw new Error("Choose an active Connector or referral coordinator.");
+      }
+
+      await assignReferral({
+        referredPersonId,
+        referrerPersonId,
+        sourceType: "manual_assignment",
+        sourceReference: `coordinator:${actor.person.id}`,
+        metadata: { assigned_by_person_id: actor.person.id, entry_method: "referral_intake_queue" },
+      });
+      return NextResponse.json({ ok: true });
+    }
 
     if (action === "add-person") {
       const displayName = text(body.displayName, 120);
@@ -285,6 +381,14 @@ export async function POST(request: Request) {
         });
         if (result.error) throw new Error(result.error.message);
       }
+
+      await captureReferral({
+        referredPersonId: personId,
+        referrerPersonId: actor.person.id,
+        sourceType: "connector_introduction",
+        sourceReference: `connector:${actor.person.id}`,
+        metadata: { entry_method: "connector_dashboard" },
+      });
 
       const workTitle = text(body.workTitle, 160);
       if (workTitle) {
