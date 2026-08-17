@@ -15,6 +15,24 @@ function email(value: unknown) {
   return next;
 }
 
+export function personStartDetails(body: Record<string, unknown>) {
+  const firstName = cleanText(body.firstName, 80);
+  const lastName = cleanText(body.lastName, 120);
+  const primaryEmail = email(body.email);
+  const phone = optionalText(body.phone, 60);
+
+  if (!firstName && !lastName) throw new Error("Add at least a first name or last name.");
+  if (!primaryEmail && !phone) throw new Error("Add at least a phone number or email address.");
+
+  return {
+    displayName: cleanText(body.displayName, 120) || [firstName, lastName].filter(Boolean).join(" "),
+    firstName,
+    lastName,
+    email: primaryEmail,
+    phone,
+  };
+}
+
 function url(value: unknown) {
   const next = cleanText(value, 1000);
   if (!next) return null;
@@ -76,8 +94,8 @@ export function personProfilePayload(
   { includePrimaryEmail = true, includePrivacy = false }: ProfilePayloadOptions = {},
 ) {
   const state = cleanText(body.state, 2).toUpperCase();
-  const countryCode = cleanText(body.countryCode, 2).toUpperCase() || "US";
-  if (!/^[A-Z]{2}$/.test(countryCode)) throw new Error("Use a two-letter country code.");
+  const countryCode = cleanText(body.countryCode, 2).toUpperCase();
+  if (countryCode && !/^[A-Z]{2}$/.test(countryCode)) throw new Error("Use a two-letter country code.");
 
   const payload: Record<string, unknown> = {
     first_name: optionalText(body.firstName, 80),
@@ -101,7 +119,7 @@ export function personProfilePayload(
     state: state || null,
     postal_code: optionalText(body.postalCode, 20),
     county: optionalText(body.county, 120),
-    country_code: countryCode,
+    country_code: countryCode || null,
     timezone: optionalText(body.timezone, 100),
     service_radius_miles: optionalInteger(body.serviceRadiusMiles, 0, 500),
     headline: optionalText(body.headline, 180),

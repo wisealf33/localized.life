@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson } from "@/lib/connectionAccess";
-import { personProfilePayload } from "@/lib/personProfile";
+import { personProfilePayload, personStartDetails } from "@/lib/personProfile";
 import { captureReferral } from "@/lib/referrals";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
@@ -14,13 +14,6 @@ function text(value: unknown, max = 4000) {
 }
 function nullable(value: unknown, max = 4000) {
   return text(value, max) || null;
-}
-
-function email(value: unknown) {
-  const next = text(value, 320).toLowerCase();
-  if (!next) return null;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) throw new Error("Add a valid email address.");
-  return next;
 }
 
 function timestamp(value: unknown, label: string) {
@@ -238,9 +231,7 @@ export async function POST(request: Request) {
     const supabase = getSupabaseAdmin();
 
     if (action === "create-person") {
-      const displayName = text(body.displayName, 120);
-      const personEmail = email(body.email);
-      const phone = nullable(body.phone, 60);
+      const { displayName, email: personEmail, phone } = personStartDetails(body);
       const profile = personProfilePayload(
         {
           ...body,
@@ -251,7 +242,6 @@ export async function POST(request: Request) {
         },
         { includePrimaryEmail: true },
       );
-      if (!displayName) throw new Error("Add the person's name.");
 
       let existing: { id: string; claim_status: string; created_by_person_id: string | null } | null = null;
       if (personEmail) {
@@ -285,7 +275,6 @@ export async function POST(request: Request) {
           .insert({
             display_name: displayName,
             ...profile,
-            state: profile.state || actor.person.state || "IL",
             created_by_person_id: actor.person.id,
             claim_status: "unclaimed",
           })

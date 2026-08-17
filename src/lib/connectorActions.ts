@@ -97,6 +97,8 @@ async function sendInvite({
 async function connectPerson({
   connectorSlug,
   displayName,
+  firstName = "",
+  lastName = "",
   email,
   phone,
   town,
@@ -108,6 +110,8 @@ async function connectPerson({
 }: {
   connectorSlug: string;
   displayName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string;
   town: string;
@@ -132,11 +136,23 @@ async function connectPerson({
     personId = data?.id || "";
   }
 
+  if (!personId && phone) {
+    const { data, error } = await supabase
+      .from("people")
+      .select("id")
+      .eq("phone", phone)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    personId = data?.id || "";
+  }
+
   if (!personId) {
     const { data, error } = await supabase
       .from("people")
       .insert({
         display_name: displayName,
+        first_name: firstName || null,
+        last_name: lastName || null,
         email: email || null,
         phone: phone || null,
         town: town || null,
@@ -155,6 +171,8 @@ async function connectPerson({
     const { error } = await supabase
       .from("people")
       .update({
+        first_name: firstName || undefined,
+        last_name: lastName || undefined,
         phone: phone || undefined,
         town: town || undefined,
         state: state ? state.toUpperCase() : undefined,
@@ -231,13 +249,20 @@ export async function startConnectorRelationship(formData: FormData) {
   if (value(formData, "website")) redirect(`${nextPath}?connected=1`);
 
   try {
-    const displayName = required(formData, "display_name");
-    const email = normalizedEmail(formData, "email", true);
+    const firstName = value(formData, "first_name");
+    const lastName = value(formData, "last_name");
+    const email = normalizedEmail(formData, "email");
+    const phone = value(formData, "phone");
+    if (!firstName && !lastName) throw new Error("Add at least a first name or last name.");
+    if (!email && !phone) throw new Error("Add at least a phone number or email address.");
+    const displayName = [firstName, lastName].filter(Boolean).join(" ");
     const result = await connectPerson({
       connectorSlug,
       displayName,
+      firstName,
+      lastName,
       email,
-      phone: value(formData, "phone"),
+      phone,
       town: value(formData, "town"),
       state: value(formData, "state"),
       howMet: value(formData, "how_met"),

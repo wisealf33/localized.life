@@ -169,7 +169,7 @@ export function MyConnections({ personId }: { personId?: string }) {
       if (result.invitation?.url) {
         setInvitationUrl(result.invitation.url);
         setInvitationPersonId(result.personId || personId || "");
-        setInvitationPersonName(String(values.displayName || "This Person"));
+        setInvitationPersonName(String(values.displayName || [values.firstName, values.lastName].filter(Boolean).join(" ") || "This Person"));
       }
       if (action === "add-person") {
         setMessage("Person saved, connected to you, and ready to invite now.");
@@ -385,9 +385,9 @@ export function MyConnections({ personId }: { personId?: string }) {
         </article>)}</div> : <div className="empty connector-empty"><h3>No unassigned referrals</h3><p>Everyone in the system has a direct referrer recorded.</p></div>}
       </section> : null}
       <section className="panel connector-add-person" id="add-person">
-        <div className="section-heading"><div><p className="eyebrow">Person intake</p><h2>Add a Person</h2><p className="muted">Start with a profile name and add every detail they have shared. Everything stays on the same Person record when they claim it.</p></div></div>
+        <div className="section-heading"><div><p className="eyebrow">Person intake</p><h2>Add a Person</h2><p className="muted">Start with one name and one way to reach them. Everything stays on the same Person record when they claim it.</p></div></div>
         <form className="form connector-quick-add-form" onSubmit={(event) => submit(event, "add-person")}>
-          <PersonProfileFields intro="Only the profile name is required. The structured optional details prepare this Person for future maps, relevant introductions, and account use." />
+          <PersonProfileFields intake intro="Required to start: a first or last name, plus a phone number or email. Every other detail is optional." />
           <label>How we met<input name="howMet" placeholder="Storm cleanup, word of mouth, local work…" /></label>
           <label>Private note<textarea name="privateNote" rows={2} /></label>
           <fieldset className="connector-quick-work"><legend>First Need or work, optional</legend><p className="muted connector-small-copy">Add this before work begins, while it is underway, when it is scheduled, or after it is completed.</p><label>What do they need, or what work is involved?<input name="workTitle" placeholder="Storm / tree / yard cleanup" /></label><div className="grid two"><label>Current status<select name="workStatus" defaultValue="new"><option value="new">New — just learned about it</option><option value="working">Working on it</option><option value="scheduled">Scheduled</option><option value="completed">Completed</option></select></label><label>Amount, if known<input name="workAmount" type="number" min="0" step="0.01" placeholder="150.00" /></label></div><label>Scheduled time, optional<input name="workScheduledFor" type="datetime-local" /></label><label>Short detail<textarea name="workDetails" rows={2} /></label></fieldset>

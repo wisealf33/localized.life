@@ -237,7 +237,7 @@ export function ClaimedPersonDashboard() {
     event.preventDefault();
     const form = event.currentTarget;
     const values = new FormData(form);
-    const name = String(values.get("displayName") || "").trim();
+    const name = String(values.get("displayName") || [values.get("firstName"), values.get("lastName")].filter(Boolean).join(" ")).trim();
     setBusy(true);
     setMessage("");
     setInvitation(null);
@@ -426,14 +426,15 @@ export function ClaimedPersonDashboard() {
         <aside className="account-sidebar" aria-label="People and account tools">
           <section className="account-people-section">
             <div className="account-sidebar-heading"><h2>People</h2><button className="account-link-button account-add-person-button" type="button" onClick={() => setAddPersonOpen((open) => !open)}><UserPlus /> Add someone</button></div>
-            <p className="account-sidebar-intro">Start one shared Person profile with a name. Contact and other details can be added whenever they are available.</p>
+            <p className="account-sidebar-intro">Start one shared Person profile with a first or last name and a phone number or email.</p>
 
             {addPersonOpen ? (
               <form className="form account-add-person-form" onSubmit={addPerson}>
                 <div className="account-inline-heading"><strong>Add someone</strong><button className="icon-button" type="button" aria-label="Close add person form" onClick={() => setAddPersonOpen(false)}><X /></button></div>
-                <label>Profile name<input name="displayName" required autoComplete="name" /><span className="field-note">The only required field.</span></label>
                 <div className="grid two"><label>First name<input name="firstName" autoComplete="given-name" /></label><label>Last name<input name="lastName" autoComplete="family-name" /></label></div>
+                <label>Profile name <span className="muted">Optional</span><input name="displayName" autoComplete="name" /><span className="field-note">Created from the first or last name when blank.</span></label>
                 <div className="grid two"><label>Phone<input name="phone" type="tel" autoComplete="tel" /></label><label>Email<input name="email" type="email" autoComplete="email" /></label></div>
+                <p className="field-note">Required: at least one name above and either phone or email.</p>
                 <label>Street address<input name="addressLine1" autoComplete="address-line1" /></label>
                 <label>Apartment, suite, or unit<input name="addressLine2" autoComplete="address-line2" /></label>
                 <div className="grid two"><label>City or town<input name="town" autoComplete="address-level2" /></label><label>State<input name="state" maxLength={2} autoComplete="address-level1" /></label></div>

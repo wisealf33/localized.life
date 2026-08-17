@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson } from "@/lib/connectionAccess";
-import { personProfilePayload } from "@/lib/personProfile";
+import { personProfilePayload, personStartDetails } from "@/lib/personProfile";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashSecret, invitationToken } from "@/lib/tokens";
 
@@ -23,13 +23,6 @@ function text(value: unknown, max = 4000) {
 
 function nullable(value: unknown, max = 4000) {
   return text(value, max) || null;
-}
-
-function email(value: unknown) {
-  const next = text(value, 320).toLowerCase();
-  if (!next) return null;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) throw new Error("Add a valid email address.");
-  return next;
 }
 
 function publicUrl(value: unknown) {
@@ -357,11 +350,8 @@ export async function POST(request: Request) {
     }
 
     if (action === "add-person") {
-      const displayName = text(body.displayName, 120);
-      const personEmail = email(body.email);
-      const phone = nullable(body.phone, 60);
+      const { displayName, email: personEmail, phone } = personStartDetails(body);
       const profile = personProfilePayload(body, { includePrimaryEmail: true });
-      if (!displayName) throw new Error("Add the person's name.");
 
       let existingPerson: {
         id: string;
@@ -392,13 +382,11 @@ export async function POST(request: Request) {
       let personId = existingPerson?.id || "";
       let created = false;
       if (!personId) {
-        const state = text(body.state, 2).toUpperCase() || actor.person.state || "IL";
         const result = await supabase
           .from("people")
           .insert({
             display_name: displayName,
             ...profile,
-            state: profile.state || state,
             how_met: nullable(body.howMet, 500),
             private_notes: nullable(body.privateNote, 2000),
             created_by_person_id: actor.person.id,

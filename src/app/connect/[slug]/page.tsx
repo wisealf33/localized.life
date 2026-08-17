@@ -72,27 +72,37 @@ export default async function PublicConnectorPage({ params, searchParams }: Prop
               Website
               <input name="website" tabIndex={-1} autoComplete="off" />
             </label>
+            <p className="muted">Add at least a first name or last name, plus a phone number or email.</p>
             <div className="grid two">
               <label>
-                Your name
-                <input name="display_name" required autoComplete="name" placeholder="First name or the name you use" />
+                First name
+                <input name="first_name" autoComplete="given-name" />
               </label>
               <label>
-                Email
-                <input name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
+                Last name
+                <input name="last_name" autoComplete="family-name" />
               </label>
             </div>
             <div className="grid two">
               <label>
-                Phone, optional
+                Phone
                 <input name="phone" type="tel" autoComplete="tel" placeholder="Best number for a call or text" />
               </label>
+              <label>
+                Email
+                <input name="email" type="email" autoComplete="email" placeholder="you@example.com" />
+              </label>
+            </div>
+            <div className="grid two">
               <label>
                 Town, optional
                 <input name="town" autoComplete="address-level2" placeholder="Peotone" />
               </label>
+              <label>
+                State, optional
+                <input name="state" maxLength={2} autoComplete="address-level1" placeholder="IL" />
+              </label>
             </div>
-            <input type="hidden" name="state" value="IL" />
             <label>
               How do we know each other? <span className="muted">Optional</span>
               <input name="how_met" placeholder="Met during storm cleanup, Facebook, local work..." />
