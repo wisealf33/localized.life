@@ -19,21 +19,38 @@ import {
 import { AccountSignIn } from "@/components/AccountSignIn";
 import { getSupabaseBrowser, isSupabaseBrowserConfigured } from "@/lib/supabase-browser";
 
-type Customer = {
+type CalendarDetails = {
   id: string;
-  display_name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  notes: string | null;
+  person_id: string;
+  service_address_line1: string | null;
+  service_address_line2: string | null;
+  service_city: string | null;
+  service_state: string | null;
+  service_postal_code: string | null;
+  service_country_code: string;
+  private_notes: string | null;
   status: "active" | "archived";
   created_at: string;
   updated_at: string;
 };
 
+type CalendarPerson = {
+  id: string;
+  display_name: string;
+  email: string | null;
+  phone: string | null;
+  town: string | null;
+  state: string | null;
+  claim_status: "claimed" | "unclaimed";
+  created_at: string;
+  updated_at: string;
+  calendar: CalendarDetails | null;
+};
+
 type Appointment = {
   id: string;
-  customer_id: string;
+  calendar_person_id: string;
+  person_id: string;
   title: string;
   starts_at: string;
   ends_at: string;
@@ -46,7 +63,7 @@ type Appointment = {
 
 type CalendarData = {
   person: { id: string; display_name: string };
-  customers: Customer[];
+  people: CalendarPerson[];
   appointments: Appointment[];
 };
 
@@ -122,6 +139,19 @@ function longDate(value: string) {
   );
 }
 
+function serviceAddress(person: CalendarPerson | undefined) {
+  if (!person?.calendar) return "";
+  const details = person.calendar;
+  const cityLine = [details.service_city, details.service_state].filter(Boolean).join(", ");
+  const cityPostal = [cityLine, details.service_postal_code].filter(Boolean).join(" ");
+  return [
+    details.service_address_line1,
+    details.service_address_line2,
+    cityPostal,
+    details.service_country_code !== "US" ? details.service_country_code : null,
+  ].filter(Boolean).join(", ");
+}
+
 export function AccountCalendar() {
   const today = useMemo(() => dayKey(new Date()), []);
   const [cursor, setCursor] = useState(() => monthCursor(new Date()));
@@ -129,9 +159,12 @@ export function AccountCalendar() {
   const [view, setView] = useState<ViewState>(() =>
     isSupabaseBrowserConfigured() ? { status: "loading" } : { status: "config" },
   );
-  const [customerFormOpen, setCustomerFormOpen] = useState(false);
+  const [personFormOpen, setPersonFormOpen] = useState(false);
+  const [editingPerson, setEditingPerson] = useState<CalendarPerson | null>(null);
   const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [appointmentPersonId, setAppointmentPersonId] = useState("");
+  const [appointmentLocation, setAppointmentLocation] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -190,10 +223,10 @@ export function AccountCalendar() {
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "That calendar change could not be saved.");
-    return payload as { customerId?: string; appointmentId?: string };
+    return payload as { personId?: string; appointmentId?: string };
   }
 
-  async function addCustomer(event: FormEvent<HTMLFormElement>) {
+  async function addPerson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const values = new FormData(form);
@@ -201,20 +234,53 @@ export function AccountCalendar() {
     setMessage("");
     try {
       await calendarPost({
-        action: "create-customer",
+        action: "create-person",
         displayName: values.get("displayName"),
         email: values.get("email"),
         phone: values.get("phone"),
-        address: values.get("address"),
-        notes: values.get("notes"),
+        serviceAddressLine1: values.get("serviceAddressLine1"),
+        serviceAddressLine2: values.get("serviceAddressLine2"),
+        serviceCity: values.get("serviceCity"),
+        serviceState: values.get("serviceState"),
+        servicePostalCode: values.get("servicePostalCode"),
+        serviceCountryCode: "US",
+        privateNotes: values.get("privateNotes"),
       });
       form.reset();
-      setCustomerFormOpen(false);
-      setMessage("Customer added. You can schedule their first appointment now.");
+      setPersonFormOpen(false);
+      setMessage("Person added. You can schedule an appointment with them now.");
       await loadCalendar();
-      setAppointmentFormOpen(true);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "This customer could not be saved.");
+      setMessage(error instanceof Error ? error.message : "This person could not be saved.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function savePersonDetails(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingPerson) return;
+    const values = new FormData(event.currentTarget);
+    setBusy(true);
+    setMessage("");
+    try {
+      await calendarPost({
+        action: "save-person-details",
+        personId: editingPerson.id,
+        serviceAddressLine1: values.get("serviceAddressLine1"),
+        serviceAddressLine2: values.get("serviceAddressLine2"),
+        serviceCity: values.get("serviceCity"),
+        serviceState: values.get("serviceState"),
+        servicePostalCode: values.get("servicePostalCode"),
+        serviceCountryCode: "US",
+        privateNotes: values.get("privateNotes"),
+        status: "active",
+      });
+      setEditingPerson(null);
+      setMessage("Service details saved.");
+      await loadCalendar();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "These service details could not be saved.");
     } finally {
       setBusy(false);
     }
@@ -229,12 +295,12 @@ export function AccountCalendar() {
       await calendarPost({
         action: editingAppointment ? "update-appointment" : "create-appointment",
         appointmentId: editingAppointment?.id,
-        customerId: values.get("customerId"),
+        personId: values.get("personId"),
         title: values.get("title"),
         startsAt: new Date(String(values.get("startsAt"))).toISOString(),
         endsAt: new Date(String(values.get("endsAt"))).toISOString(),
         status: editingAppointment?.status || "scheduled",
-        location: values.get("location"),
+        location: appointmentLocation,
         notes: values.get("notes"),
       });
       setMessage(editingAppointment ? "Appointment updated." : "Appointment added to your calendar.");
@@ -277,6 +343,14 @@ export function AccountCalendar() {
     setSelectedDay(dayKey(now));
   }
 
+  function openAppointment(appointment: Appointment | null, people: CalendarPerson[]) {
+    const personId = appointment?.person_id || people[0]?.id || "";
+    setEditingAppointment(appointment);
+    setAppointmentPersonId(personId);
+    setAppointmentLocation(appointment?.location || serviceAddress(people.find((person) => person.id === personId)));
+    setAppointmentFormOpen(true);
+  }
+
   if (view.status === "loading") {
     return <section className="account-loading" aria-live="polite">Opening your calendar…</section>;
   }
@@ -284,7 +358,7 @@ export function AccountCalendar() {
     return <section className="notice bad"><h2>Calendar access is not configured</h2><p>Add the Supabase browser settings for this environment.</p></section>;
   }
   if (view.status === "signed-out") {
-    return <AccountSignIn title="Open your customer calendar" returnTo="/account/calendar" />;
+    return <AccountSignIn title="Open your appointment calendar" returnTo="/account/calendar" />;
   }
   if (view.status === "missing") {
     return <section className="notice stack"><h2>This sign-in is not attached to a claimed profile.</h2><p>Open your private invitation first, then return to the calendar.</p></section>;
@@ -294,8 +368,8 @@ export function AccountCalendar() {
   const { data } = view;
   const days = visibleDays(cursor);
   const currentMonth = cursorDate(cursor).getMonth();
-  const activeCustomers = data.customers.filter((customer) => customer.status === "active");
-  const customersById = new Map(data.customers.map((customer) => [customer.id, customer]));
+  const activePeople = data.people.filter((person) => person.calendar?.status !== "archived");
+  const peopleById = new Map(data.people.map((person) => [person.id, person]));
   const appointmentsByDay = new Map<string, Appointment[]>();
   for (const appointment of data.appointments) {
     const key = dayKey(new Date(appointment.starts_at));
@@ -310,25 +384,37 @@ export function AccountCalendar() {
         <div>
           <Link className="account-back-link" href="/account"><ArrowLeft /> Back to account</Link>
           <p className="eyebrow">Private workspace</p>
-          <h1>Customer calendar</h1>
-          <p>Keep customer details and appointments together. Only you can see this information.</p>
+          <h1>Appointment calendar</h1>
+          <p>Schedule any person you are connected with. Service details and appointments stay private to you.</p>
         </div>
         <div className="calendar-header-actions">
-          <button className="button" type="button" onClick={() => setCustomerFormOpen((open) => !open)}><UserPlus /> Add customer</button>
-          <button className="button primary" type="button" disabled={!activeCustomers.length} onClick={() => { setEditingAppointment(null); setAppointmentFormOpen(true); }}><Plus /> New appointment</button>
+          <button className="button" type="button" onClick={() => { setPersonFormOpen((open) => !open); setEditingPerson(null); }}><UserPlus /> Add person</button>
+          <button className="button primary" type="button" disabled={!activePeople.length} onClick={() => openAppointment(null, activePeople)}><Plus /> New appointment</button>
         </div>
       </header>
 
       {message ? <p className="notice good account-message" aria-live="polite">{message}</p> : null}
 
-      {customerFormOpen ? (
-        <section className="calendar-inline-form" aria-labelledby="add-customer-title">
-          <div className="account-inline-heading"><div><p className="eyebrow">Customer details</p><h2 id="add-customer-title">Add an established customer</h2></div><button className="icon-button" type="button" aria-label="Close customer form" onClick={() => setCustomerFormOpen(false)}><XCircle /></button></div>
-          <form className="form" onSubmit={addCustomer}>
+      {personFormOpen ? (
+        <section className="calendar-inline-form" aria-labelledby="add-person-title">
+          <div className="account-inline-heading"><div><p className="eyebrow">One shared Person record</p><h2 id="add-person-title">Add a new person</h2><p className="muted">People already connected to you are listed below and can be scheduled immediately.</p></div><button className="icon-button" type="button" aria-label="Close person form" onClick={() => setPersonFormOpen(false)}><XCircle /></button></div>
+          <form className="form" onSubmit={addPerson}>
             <div className="grid two"><label>Name<input name="displayName" required autoComplete="name" /></label><label>Phone<input name="phone" type="tel" autoComplete="tel" /></label></div>
-            <div className="grid two"><label>Email<input name="email" type="email" autoComplete="email" /></label><label>Service address<input name="address" autoComplete="street-address" /></label></div>
-            <label>Private notes<textarea name="notes" rows={3} placeholder="Preferences, access details, or anything helpful before a visit" /></label>
-            <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save customer"}</button>
+            <label>Email<input name="email" type="email" autoComplete="email" /></label>
+            <fieldset className="calendar-address-fields"><legend>Service address</legend><label>Street address<input name="serviceAddressLine1" autoComplete="address-line1" /></label><label>Apartment, suite, or unit<input name="serviceAddressLine2" autoComplete="address-line2" /></label><div className="calendar-address-locality"><label>City<input name="serviceCity" autoComplete="address-level2" /></label><label>State<input name="serviceState" maxLength={2} defaultValue="IL" autoComplete="address-level1" /></label><label>ZIP code<input name="servicePostalCode" inputMode="numeric" autoComplete="postal-code" /></label></div></fieldset>
+            <label>Private notes<textarea name="privateNotes" rows={3} placeholder="Preferences, access details, or anything helpful before a visit" /></label>
+            <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save person"}</button>
+          </form>
+        </section>
+      ) : null}
+
+      {editingPerson ? (
+        <section className="calendar-inline-form" aria-labelledby="person-details-title">
+          <div className="account-inline-heading"><div><p className="eyebrow">Private service details</p><h2 id="person-details-title">{editingPerson.display_name}</h2><p className="muted">Their Person identity stays shared; this address and these notes are private to your calendar.</p></div><button className="icon-button" type="button" aria-label="Close service details" onClick={() => setEditingPerson(null)}><XCircle /></button></div>
+          <form className="form" onSubmit={savePersonDetails}>
+            <fieldset className="calendar-address-fields"><legend>Service address</legend><label>Street address<input name="serviceAddressLine1" defaultValue={editingPerson.calendar?.service_address_line1 || ""} autoComplete="address-line1" /></label><label>Apartment, suite, or unit<input name="serviceAddressLine2" defaultValue={editingPerson.calendar?.service_address_line2 || ""} autoComplete="address-line2" /></label><div className="calendar-address-locality"><label>City<input name="serviceCity" defaultValue={editingPerson.calendar?.service_city || editingPerson.town || ""} autoComplete="address-level2" /></label><label>State<input name="serviceState" maxLength={2} defaultValue={editingPerson.calendar?.service_state || editingPerson.state || "IL"} autoComplete="address-level1" /></label><label>ZIP code<input name="servicePostalCode" inputMode="numeric" defaultValue={editingPerson.calendar?.service_postal_code || ""} autoComplete="postal-code" /></label></div></fieldset>
+            <label>Private notes<textarea name="privateNotes" rows={3} defaultValue={editingPerson.calendar?.private_notes || ""} placeholder="Preferences, access details, or anything helpful before a visit" /></label>
+            <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save service details"}</button>
           </form>
         </section>
       ) : null}
@@ -338,11 +424,11 @@ export function AccountCalendar() {
           <div className="account-inline-heading"><div><p className="eyebrow">{editingAppointment ? "Update schedule" : longDate(selectedDay)}</p><h2 id="appointment-form-title">{editingAppointment ? "Edit appointment" : "New appointment"}</h2></div><button className="icon-button" type="button" aria-label="Close appointment form" onClick={() => { setAppointmentFormOpen(false); setEditingAppointment(null); }}><XCircle /></button></div>
           <form className="form" key={`${editingAppointment?.id || "new"}-${selectedDay}`} onSubmit={saveAppointment}>
             <div className="grid two">
-              <label>Customer<select name="customerId" required defaultValue={editingAppointment?.customer_id || activeCustomers[0]?.id || ""}><option value="" disabled>Choose a customer</option>{activeCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.display_name}</option>)}</select></label>
+              <label>Person<select name="personId" required value={appointmentPersonId} onChange={(event) => { const personId = event.target.value; setAppointmentPersonId(personId); setAppointmentLocation(serviceAddress(peopleById.get(personId))); }}><option value="" disabled>Choose a person</option>{activePeople.map((person) => <option key={person.id} value={person.id}>{person.display_name}</option>)}</select></label>
               <label>Appointment title<input name="title" required defaultValue={editingAppointment?.title || ""} placeholder="Cleaning, lawn visit, consultation…" /></label>
             </div>
             <div className="grid two"><label>Starts<input name="startsAt" type="datetime-local" required defaultValue={defaults.startsAt} /></label><label>Ends<input name="endsAt" type="datetime-local" required defaultValue={defaults.endsAt} /></label></div>
-            <div className="grid two"><label>Location<input name="location" defaultValue={editingAppointment?.location || customersById.get(editingAppointment?.customer_id || activeCustomers[0]?.id)?.address || ""} /></label><label>Private notes<input name="notes" defaultValue={editingAppointment?.notes || ""} /></label></div>
+            <div className="grid two"><label>Location<input name="location" value={appointmentLocation} onChange={(event) => setAppointmentLocation(event.target.value)} /></label><label>Private notes<input name="notes" defaultValue={editingAppointment?.notes || ""} /></label></div>
             <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : editingAppointment ? "Save changes" : "Add to calendar"}</button>
           </form>
         </section>
@@ -363,7 +449,7 @@ export function AccountCalendar() {
                 <button className={["calendar-day", date.getMonth() !== currentMonth ? "outside" : "", key === selectedDay ? "selected" : "", key === today ? "today" : ""].filter(Boolean).join(" ")} type="button" key={key} onClick={() => setSelectedDay(key)}>
                   <span className="calendar-day-number">{date.getDate()}</span>
                   <span className="calendar-day-appointments">
-                    {appointments.slice(0, 3).map((appointment) => <span className={`calendar-appointment-pill ${appointment.status}`} key={appointment.id}>{new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(new Date(appointment.starts_at))} {customersById.get(appointment.customer_id)?.display_name || appointment.title}</span>)}
+                    {appointments.slice(0, 3).map((appointment) => <span className={`calendar-appointment-pill ${appointment.status}`} key={appointment.id}>{new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(new Date(appointment.starts_at))} {peopleById.get(appointment.person_id)?.display_name || appointment.title}</span>)}
                     {appointments.length > 3 ? <small>+{appointments.length - 3} more</small> : null}
                   </span>
                 </button>
@@ -373,19 +459,19 @@ export function AccountCalendar() {
         </section>
 
         <aside className="calendar-day-panel" aria-labelledby="selected-day-title">
-          <div className="account-sidebar-heading"><div><p className="eyebrow">Selected day</p><h2 id="selected-day-title">{longDate(selectedDay)}</h2></div><button className="icon-button" type="button" aria-label="Add appointment on selected day" disabled={!activeCustomers.length} onClick={() => { setEditingAppointment(null); setAppointmentFormOpen(true); }}><Plus /></button></div>
+          <div className="account-sidebar-heading"><div><p className="eyebrow">Selected day</p><h2 id="selected-day-title">{longDate(selectedDay)}</h2></div><button className="icon-button" type="button" aria-label="Add appointment on selected day" disabled={!activePeople.length} onClick={() => openAppointment(null, activePeople)}><Plus /></button></div>
           {selectedAppointments.length ? (
             <div className="calendar-agenda-list">
               {selectedAppointments.map((appointment) => {
-                const customer = customersById.get(appointment.customer_id);
+                const person = peopleById.get(appointment.person_id);
                 return (
                   <article className={`calendar-agenda-card ${appointment.status}`} key={appointment.id}>
                     <div className="calendar-agenda-heading"><div><span>{appointmentTime(appointment)}</span><h3>{appointment.title}</h3></div><span className="account-activity-status">{appointment.status}</span></div>
-                    <p><UsersThree /> {customer?.display_name || "Customer"}</p>
+                    <p><UsersThree /> {person?.display_name || "Person"}</p>
                     {appointment.location ? <p><MapPin /> {appointment.location}</p> : null}
                     {appointment.notes ? <p><NotePencil /> {appointment.notes}</p> : null}
                     <div className="calendar-agenda-actions">
-                      <button className="account-link-button" type="button" disabled={busy} onClick={() => { setEditingAppointment(appointment); setAppointmentFormOpen(true); }}>Edit</button>
+                      <button className="account-link-button" type="button" disabled={busy} onClick={() => openAppointment(appointment, activePeople)}>Edit</button>
                       {appointment.status === "scheduled" ? <><button className="account-link-button" type="button" disabled={busy} onClick={() => setAppointmentStatus(appointment, "completed")}><CheckCircle /> Complete</button><button className="account-link-button danger-link" type="button" disabled={busy} onClick={() => setAppointmentStatus(appointment, "cancelled")}><XCircle /> Cancel</button></> : null}
                     </div>
                   </article>
@@ -398,19 +484,19 @@ export function AccountCalendar() {
         </aside>
       </div>
 
-      <section className="calendar-customer-directory" aria-labelledby="customer-directory-title">
-        <div className="account-section-heading"><div><p className="eyebrow">Private directory</p><h2 id="customer-directory-title">Customers</h2></div><span>{activeCustomers.length} active</span></div>
-        {activeCustomers.length ? (
+      <section className="calendar-customer-directory" aria-labelledby="calendar-people-title">
+        <div className="account-section-heading"><div><p className="eyebrow">Your connections</p><h2 id="calendar-people-title">People available for appointments</h2></div><span>{activePeople.length} people</span></div>
+        {activePeople.length ? (
           <div className="calendar-customer-list">
-            {activeCustomers.map((customer) => (
-              <article className="calendar-customer-card" key={customer.id}>
+            {activePeople.map((person) => (
+              <article className="calendar-customer-card" key={person.id}>
                 <div className="account-small-avatar" aria-hidden="true"><UsersThree weight="duotone" /></div>
-                <div><h3>{customer.display_name}</h3><p>{customer.phone || customer.email || "Contact details not added"}</p>{customer.address ? <small>{customer.address}</small> : null}</div>
+                <div><h3>{person.display_name}</h3><p>{person.phone || person.email || "Contact details not added"}</p>{serviceAddress(person) ? <small>{serviceAddress(person)}</small> : <small>Service address not added</small>}<button className="account-link-button calendar-person-edit" type="button" onClick={() => { setEditingPerson(person); setPersonFormOpen(false); }}> {person.calendar ? "Edit service details" : "Add service details"}</button></div>
               </article>
             ))}
           </div>
         ) : (
-          <div className="account-empty-list"><CalendarBlank weight="duotone" /><div><h3>Add your first customer</h3><p>Their details stay private and can be used when scheduling appointments.</p></div><button className="button primary compact-button" type="button" onClick={() => setCustomerFormOpen(true)}>Add customer</button></div>
+          <div className="account-empty-list"><CalendarBlank weight="duotone" /><div><h3>Add your first person</h3><p>Anyone you connect with can be a provider, a customer, or both.</p></div><button className="button primary compact-button" type="button" onClick={() => setPersonFormOpen(true)}>Add person</button></div>
         )}
       </section>
     </div>

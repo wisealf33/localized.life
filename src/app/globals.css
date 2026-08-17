@@ -5866,6 +5866,27 @@ code {
   width: fit-content;
 }
 
+.calendar-address-fields {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #d8e1da;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fbfdfb;
+}
+
+.calendar-address-fields legend {
+  padding: 0 8px;
+  color: var(--account-green-dark);
+  font-weight: 850;
+}
+
+.calendar-address-locality {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px 150px;
+  gap: 14px;
+}
+
 .calendar-account-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.36fr);
@@ -6140,6 +6161,11 @@ code {
   font-size: 0.8rem;
 }
 
+.calendar-person-edit {
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
+
 @media (max-width: 1120px) {
   .account-composer-top {
     grid-template-columns: auto minmax(0, 1fr) 160px;
@@ -6243,6 +6269,10 @@ code {
 
   .calendar-inline-form {
     padding: 18px;
+  }
+
+  .calendar-address-locality {
+    grid-template-columns: 1fr;
   }
 
   .calendar-customer-list {

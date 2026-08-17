@@ -394,7 +394,7 @@ export function ClaimedPersonDashboard() {
 
           <Link className="account-calendar-launch" href="/account/calendar">
             <span className="account-calendar-launch-icon" aria-hidden="true"><CalendarBlank weight="duotone" /></span>
-            <span><strong>Customer calendar</strong><small>Manage private customer details, appointments, and your daily schedule</small></span>
+            <span><strong>Appointment calendar</strong><small>Schedule people you know and keep private service details together</small></span>
             <CaretRight />
           </Link>
 
