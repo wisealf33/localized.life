@@ -1,4 +1,4 @@
-export const personProfileColumns = "id, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, pronouns, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, headline, bio, occupation, organization, website_url, avatar_url, facebook_url, instagram_url, linkedin_url, abilities, languages, skills, interests, community_roles, certifications, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
+export const personProfileColumns = "id, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, headline, bio, occupation, organization, website_url, avatar_url, facebook_url, instagram_url, linkedin_url, abilities, languages, skills, interests, community_roles, certifications, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
 
 function cleanText(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -102,7 +102,6 @@ export function personProfilePayload(
     middle_name: optionalText(body.middleName, 80),
     last_name: optionalText(body.lastName, 120),
     preferred_name: optionalText(body.preferredName, 120),
-    pronouns: optionalText(body.pronouns, 60),
     birth_date: date(body.birthDate),
     secondary_email: email(body.secondaryEmail),
     phone: optionalText(body.phone, 60),

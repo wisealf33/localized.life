@@ -4,7 +4,6 @@ export type PersonProfileValue = {
   middle_name?: string | null;
   last_name?: string | null;
   preferred_name?: string | null;
-  pronouns?: string | null;
   birth_date?: string | null;
   email?: string | null;
   secondary_email?: string | null;
@@ -83,10 +82,7 @@ export function PersonProfileFields({
           <label>Profile name<input name="displayName" required={!intake} maxLength={120} defaultValue={person.display_name || ""} autoComplete="name" /><span className="field-note">{intake ? "Optional. If blank, it is created from the first or last name." : "The name shown around Localized.life."}</span></label>
           <label>Preferred name<input name="preferredName" maxLength={120} defaultValue={person.preferred_name || ""} /><span className="field-note">What friends and coordinators should call you.</span></label>
         </div>
-        <div className="grid two">
-          <label>Pronouns<input name="pronouns" maxLength={60} defaultValue={person.pronouns || ""} placeholder="Optional" /></label>
-          <label>Date of birth<input name="birthDate" type="date" defaultValue={person.birth_date || ""} /><span className="field-note">Private and optional.</span></label>
-        </div>
+        <label>Date of birth<input name="birthDate" type="date" defaultValue={person.birth_date || ""} /><span className="field-note">Private and optional.</span></label>
       </fieldset>
 
       <fieldset className="person-profile-section">
