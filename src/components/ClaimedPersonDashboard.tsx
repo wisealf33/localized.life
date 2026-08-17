@@ -304,6 +304,22 @@ export function ClaimedPersonDashboard() {
     await copyInvitation(url);
   }
 
+  async function createPersonInvitation(person: ConnectionPerson) {
+    setBusy(true);
+    setMessage("");
+    try {
+      const result = await accountPost({ action: "regenerate-invite", personId: person.id });
+      if (!result.invitation?.url) throw new Error("The private link could not be created.");
+      setInvitation({ name: person.display_name, url: result.invitation.url });
+      setMessage(`${person.display_name}'s private link is ready to send.`);
+      await loadAccount();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The private link could not be created.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function signOut() {
     await getSupabaseBrowser()?.auth.signOut();
     setView({ status: "signed-out" });
@@ -376,6 +392,12 @@ export function ClaimedPersonDashboard() {
             </div>
           </section>
 
+          <Link className="account-calendar-launch" href="/account/calendar">
+            <span className="account-calendar-launch-icon" aria-hidden="true"><CalendarBlank weight="duotone" /></span>
+            <span><strong>Customer calendar</strong><small>Manage private customer details, appointments, and your daily schedule</small></span>
+            <CaretRight />
+          </Link>
+
           <section className="account-activity" aria-labelledby="account-activity-title">
             <div className="account-section-heading"><h2 id="account-activity-title">Today and next</h2></div>
             {data.activity.length ? (
@@ -436,7 +458,7 @@ export function ClaimedPersonDashboard() {
                   <article className="account-person-row" key={person.id}>
                     <div className={`account-small-avatar account-small-avatar-${(index % 3) + 1}`} aria-hidden="true"><UserCircle weight="duotone" /></div>
                     <div><h3>{person.display_name}</h3><p>{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p><small>{person.claim_status === "claimed" ? `Connected ${shortDate(person.connected_at)}` : "Profile not claimed"}</small></div>
-                    {person.invitation_url ? <button className="icon-button" type="button" aria-label={`Copy private link for ${person.display_name}`} title="Copy private link" onClick={() => copyInvitation(person.invitation_url!)}><LinkSimple /></button> : person.email ? <a className="icon-button" href={`mailto:${person.email}`} aria-label={`Email ${person.display_name}`}><EnvelopeSimple /></a> : null}
+                    {person.invitation_url ? <button className="icon-button" type="button" aria-label={`Copy private link for ${person.display_name}`} title="Copy private link" onClick={() => copyInvitation(person.invitation_url!)}><LinkSimple /></button> : person.claim_status === "unclaimed" ? <button className="icon-button" type="button" disabled={busy} aria-label={`Create private link for ${person.display_name}`} title="Create private link" onClick={() => createPersonInvitation(person)}><LinkSimple /></button> : person.email ? <a className="icon-button" href={`mailto:${person.email}`} aria-label={`Email ${person.display_name}`}><EnvelopeSimple /></a> : null}
                   </article>
                 ))}
               </div>
