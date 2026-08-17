@@ -4555,11 +4555,6 @@ code {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .site-global-nav .site-provider-link {
-    grid-column: 1 / -1;
-    margin-left: 0;
-  }
-
   .site-product-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -7963,19 +7958,6 @@ body {
 .site-nav-link.active {
   background: #eef4ff;
   color: #145fc9;
-}
-
-.site-provider-link {
-  margin-left: 5px;
-  border: 1px solid #cbd8e6;
-  background: #ffffff;
-  color: #365169;
-}
-
-.site-provider-link:hover {
-  border-color: #9eb8d2;
-  background: #f4f8fc;
-  color: #174f82;
 }
 
 .site-footer {

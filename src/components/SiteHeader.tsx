@@ -52,9 +52,6 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
           <Link className={saleTrailActive ? "site-nav-link active" : "site-nav-link"} href="/saletrail">
             SaleTrail
           </Link>
-          <Link className="site-nav-link site-provider-link" href="/account">
-            Provider sign in
-          </Link>
         </nav>
       </div>
       {showSaleTrailNav ? (
