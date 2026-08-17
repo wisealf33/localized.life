@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getSupabaseAdmin } from "./supabase";
+import { personProfileColumns } from "./personProfile";
 
 export async function authenticatePerson(request: Request, requireConnector = false) {
   const authorization = request.headers.get("authorization") || "";
@@ -13,7 +14,7 @@ export async function authenticatePerson(request: Request, requireConnector = fa
 
   const { data: person, error: personError } = await supabase
     .from("people")
-    .select("id, auth_user_id, display_name, email, phone, town, state, abilities, created_by_person_id, claim_status, claimed_at")
+    .select(personProfileColumns)
     .eq("auth_user_id", userData.user.id)
     .maybeSingle();
   if (personError || !person) return null;

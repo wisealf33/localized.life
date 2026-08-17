@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson, isConnectedPerson } from "@/lib/connectionAccess";
+import { personProfileColumns, personProfilePayload } from "@/lib/personProfile";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { assignReferral, captureReferral, isReferralCoordinator } from "@/lib/referrals";
 import { hashSecret, invitationToken } from "@/lib/tokens";
@@ -104,7 +105,7 @@ export async function GET(request: Request) {
       await Promise.all([
         supabase
           .from("people")
-          .select("id, display_name, email, phone, town, state, how_met, private_notes, abilities, created_at, updated_at, created_by_person_id, claim_status, claimed_at")
+          .select(personProfileColumns)
           .eq("id", personId)
           .single(),
         supabase
@@ -328,6 +329,7 @@ export async function POST(request: Request) {
       if (!displayName) throw new Error("Name is required.");
       const personEmail = email(body.email);
       const phone = nullable(body.phone, 60);
+      const profile = personProfilePayload(body, { includePrimaryEmail: true });
       let existing: { id: string } | null = null;
       if (personEmail) {
         const result = await supabase.from("people").select("id").ilike("email", personEmail).maybeSingle();
@@ -346,10 +348,8 @@ export async function POST(request: Request) {
           .from("people")
           .insert({
             display_name: displayName,
-            email: personEmail,
-            phone,
-            town: nullable(body.town, 120),
-            state: text(body.state, 2).toUpperCase() || "IL",
+            ...profile,
+            state: profile.state || "IL",
             how_met: nullable(body.howMet, 500),
             private_notes: nullable(body.privateNote, 4000),
             created_by_person_id: actor.person.id,
@@ -435,17 +435,18 @@ export async function POST(request: Request) {
     if (action === "update-person") {
       const displayName = text(body.displayName, 120);
       if (!displayName) throw new Error("Name is required.");
+      const profile = personProfilePayload(body, { includePrimaryEmail: true });
       const { error } = await supabase
         .from("people")
         .update({
           display_name: displayName,
-          email: email(body.email),
-          phone: nullable(body.phone, 60),
-          town: nullable(body.town, 120),
-          state: text(body.state, 2).toUpperCase() || null,
+          ...profile,
           how_met: nullable(body.howMet, 500),
           private_notes: nullable(body.privateNote, 4000),
-          abilities: nullable(body.abilities, 1000),
+          latitude: null,
+          longitude: null,
+          location_precision: "none",
+          geocoded_at: null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", personId);

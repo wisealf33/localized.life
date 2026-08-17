@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson } from "@/lib/connectionAccess";
+import { personProfilePayload } from "@/lib/personProfile";
 import { captureReferral } from "@/lib/referrals";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
@@ -240,6 +241,16 @@ export async function POST(request: Request) {
       const displayName = text(body.displayName, 120);
       const personEmail = email(body.email);
       const phone = nullable(body.phone, 60);
+      const profile = personProfilePayload(
+        {
+          ...body,
+          town: body.serviceCity,
+          state: body.serviceState,
+          postalCode: body.servicePostalCode,
+          countryCode: body.serviceCountryCode,
+        },
+        { includePrimaryEmail: true },
+      );
       if (!displayName) throw new Error("Add the person's name.");
       if (!personEmail && !phone) throw new Error("Add a phone number or email for this person.");
 
@@ -274,10 +285,8 @@ export async function POST(request: Request) {
           .from("people")
           .insert({
             display_name: displayName,
-            email: personEmail,
-            phone,
-            town: nullable(body.serviceCity, 120),
-            state: text(body.serviceState, 2).toUpperCase() || actor.person.state || "IL",
+            ...profile,
+            state: profile.state || actor.person.state || "IL",
             created_by_person_id: actor.person.id,
             claim_status: "unclaimed",
           })

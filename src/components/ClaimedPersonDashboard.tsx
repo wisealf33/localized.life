@@ -26,9 +26,10 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { AccountSignIn } from "@/components/AccountSignIn";
+import { PersonProfileFields, type PersonProfileValue } from "@/components/PersonProfileFields";
 import { getSupabaseBrowser, isSupabaseBrowserConfigured } from "@/lib/supabase-browser";
 
-type AccountPerson = {
+type AccountPerson = PersonProfileValue & {
   id: string;
   display_name: string;
   email: string | null;
@@ -243,12 +244,7 @@ export function ClaimedPersonDashboard() {
     try {
       const result = await accountPost({
         action: "add-person",
-        displayName: name,
-        phone: values.get("phone"),
-        email: values.get("email"),
-        town: values.get("town"),
-        state: values.get("state"),
-        howMet: values.get("howMet"),
+        ...Object.fromEntries(values),
       });
       form.reset();
       if (result.invitation?.url) {
@@ -275,11 +271,9 @@ export function ClaimedPersonDashboard() {
     try {
       await accountPost({
         action: "update-profile",
-        displayName: values.get("displayName"),
-        phone: values.get("phone"),
-        town: values.get("town"),
-        state: values.get("state"),
-        abilities: values.get("abilities"),
+        ...Object.fromEntries(values),
+        directoryOptIn: values.has("directoryOptIn"),
+        matchingOptIn: values.has("matchingOptIn"),
       });
       setMessage("Your profile was updated.");
       setProfileOpen(false);
@@ -365,9 +359,11 @@ export function ClaimedPersonDashboard() {
         <section className="account-inline-panel" aria-labelledby="edit-profile-title">
           <div className="account-inline-heading"><div><p className="eyebrow">Your profile</p><h2 id="edit-profile-title">Profile details</h2></div><button className="icon-button" type="button" aria-label="Close profile editor" onClick={() => setProfileOpen(false)}><X /></button></div>
           <form className="form account-profile-form" onSubmit={updateProfile}>
-            <div className="grid two"><label>Name<input name="displayName" required defaultValue={data.person.display_name} /></label><label>Phone<input name="phone" type="tel" defaultValue={data.person.phone || ""} /></label></div>
-            <div className="grid two"><label>Town<input name="town" defaultValue={data.person.town || ""} /></label><label>State<input name="state" maxLength={2} defaultValue={data.person.state || "IL"} /></label></div>
-            <label>What can people know you for?<textarea name="abilities" rows={3} defaultValue={data.person.abilities || ""} placeholder="Practical skills, local goods, lessons, or ways you help" /></label>
+            <PersonProfileFields
+              person={data.person}
+              showPrivacy
+              intro="Fill in what is useful now and leave anything else blank. Private contact, birth date, exact address, transportation, and accommodation details are never public by default."
+            />
             <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile"}</button>
           </form>
         </section>
@@ -435,9 +431,14 @@ export function ClaimedPersonDashboard() {
             {addPersonOpen ? (
               <form className="form account-add-person-form" onSubmit={addPerson}>
                 <div className="account-inline-heading"><strong>Add someone</strong><button className="icon-button" type="button" aria-label="Close add person form" onClick={() => setAddPersonOpen(false)}><X /></button></div>
-                <label>Name<input name="displayName" required autoComplete="name" /></label>
+                <label>Profile name<input name="displayName" required autoComplete="name" /></label>
+                <div className="grid two"><label>First name<input name="firstName" autoComplete="given-name" /></label><label>Last name<input name="lastName" autoComplete="family-name" /></label></div>
                 <div className="grid two"><label>Phone<input name="phone" type="tel" autoComplete="tel" /></label><label>Email<input name="email" type="email" autoComplete="email" /></label></div>
-                <div className="grid two"><label>Town<input name="town" defaultValue={data.person.town || ""} /></label><label>State<input name="state" maxLength={2} defaultValue={data.person.state || "IL"} /></label></div>
+                <label>Street address<input name="addressLine1" autoComplete="address-line1" /></label>
+                <label>Apartment, suite, or unit<input name="addressLine2" autoComplete="address-line2" /></label>
+                <div className="grid two"><label>City or town<input name="town" defaultValue={data.person.town || ""} autoComplete="address-level2" /></label><label>State<input name="state" maxLength={2} defaultValue={data.person.state || "IL"} autoComplete="address-level1" /></label></div>
+                <div className="grid two"><label>ZIP code<input name="postalCode" autoComplete="postal-code" /></label><label>County<input name="county" /></label></div>
+                <input type="hidden" name="countryCode" value="US" />
                 <label>How do you know them?<input name="howMet" placeholder="Neighbor, local work, introduction…" /></label>
                 <button className="button primary" type="submit" disabled={busy}>{busy ? "Adding…" : "Add person"}</button>
               </form>

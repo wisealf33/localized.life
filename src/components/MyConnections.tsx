@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AccountSignIn } from "./AccountSignIn";
+import { PersonProfileFields, type PersonProfileValue } from "./PersonProfileFields";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
-type PersonSummary = {
+type PersonSummary = PersonProfileValue & {
   id: string;
   display_name: string;
   email: string | null;
@@ -300,21 +301,12 @@ export function MyConnections({ personId }: { personId?: string }) {
             ) : <p className="notice good">This Person now uses their own normal Localized.life account.</p>}
           </article>
 
-          <article className="panel">
+          <article className="panel connector-person-profile-panel">
             <p className="eyebrow">Private Connector record</p>
-            <h2>Basic details</h2>
+            <h2>Complete Person profile</h2>
             <form className="form" onSubmit={(event) => submit(event, "update-person")}>
-              <label>Name<input name="displayName" required defaultValue={person.display_name} /></label>
-              <div className="grid two">
-                <label>Phone<input name="phone" type="tel" defaultValue={person.phone || ""} /></label>
-                <label>Email<input name="email" type="email" defaultValue={person.email || ""} /></label>
-              </div>
-              <div className="grid two">
-                <label>Town<input name="town" defaultValue={person.town || ""} /></label>
-                <label>State<input name="state" maxLength={2} defaultValue={person.state || "IL"} /></label>
-              </div>
+              <PersonProfileFields person={person} intro="Record only information this person has shared with you. These details remain part of the same Person identity if they later claim their account." />
               <label>How we met<input name="howMet" defaultValue={person.how_met || ""} /></label>
-              <label>Abilities<input name="abilities" defaultValue={person.abilities || ""} placeholder="Skills they may choose to share later" /></label>
               <label>Private Connector Notes<textarea name="privateNote" rows={4} defaultValue={person.private_notes || ""} /></label>
               <button className="button" type="submit" disabled={busy}>Save Person</button>
             </form>
@@ -393,11 +385,9 @@ export function MyConnections({ personId }: { personId?: string }) {
         </article>)}</div> : <div className="empty connector-empty"><h3>No unassigned referrals</h3><p>Everyone in the system has a direct referrer recorded.</p></div>}
       </section> : null}
       <section className="panel connector-add-person" id="add-person">
-        <div className="section-heading"><div><p className="eyebrow">Fast phone entry</p><h2>Add a Person</h2><p className="muted">Start the record as soon as you learn about the Person or their Need. Only a name is required, and you can invite them immediately.</p></div></div>
+        <div className="section-heading"><div><p className="eyebrow">Person intake</p><h2>Add a Person</h2><p className="muted">Start with a profile name and add every detail they have shared. Everything stays on the same Person record when they claim it.</p></div></div>
         <form className="form connector-quick-add-form" onSubmit={(event) => submit(event, "add-person")}>
-          <div className="grid two"><label>Name<input name="displayName" required autoComplete="name" /></label><label>Phone<input name="phone" type="tel" autoComplete="tel" /></label></div>
-          <div className="grid two"><label>Email<input name="email" type="email" autoComplete="email" /></label><label>Town<input name="town" defaultValue="Monee" autoComplete="address-level2" /></label></div>
-          <input type="hidden" name="state" value="IL" />
+          <PersonProfileFields intro="Only the profile name is required. The structured optional details prepare this Person for future maps, relevant introductions, and account use." />
           <label>How we met<input name="howMet" placeholder="Storm cleanup, word of mouth, local work…" /></label>
           <label>Private note<textarea name="privateNote" rows={2} /></label>
           <fieldset className="connector-quick-work"><legend>First Need or work, optional</legend><p className="muted connector-small-copy">Add this before work begins, while it is underway, when it is scheduled, or after it is completed.</p><label>What do they need, or what work is involved?<input name="workTitle" placeholder="Storm / tree / yard cleanup" /></label><div className="grid two"><label>Current status<select name="workStatus" defaultValue="new"><option value="new">New — just learned about it</option><option value="working">Working on it</option><option value="scheduled">Scheduled</option><option value="completed">Completed</option></select></label><label>Amount, if known<input name="workAmount" type="number" min="0" step="0.01" placeholder="150.00" /></label></div><label>Scheduled time, optional<input name="workScheduledFor" type="datetime-local" /></label><label>Short detail<textarea name="workDetails" rows={2} /></label></fieldset>

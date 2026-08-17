@@ -1,0 +1,147 @@
+export const personProfileColumns = "id, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, pronouns, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, headline, bio, occupation, organization, website_url, avatar_url, facebook_url, instagram_url, linkedin_url, abilities, languages, skills, interests, community_roles, certifications, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
+
+function cleanText(value: unknown, max: number) {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function optionalText(value: unknown, max: number) {
+  return cleanText(value, max) || null;
+}
+
+function email(value: unknown) {
+  const next = cleanText(value, 320).toLowerCase();
+  if (!next) return null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) throw new Error("Add a valid email address.");
+  return next;
+}
+
+function url(value: unknown) {
+  const next = cleanText(value, 1000);
+  if (!next) return null;
+  try {
+    const parsed = new URL(next);
+    if (!new Set(["http:", "https:"]).has(parsed.protocol)) throw new Error();
+    return parsed.toString();
+  } catch {
+    throw new Error("Add a complete website address beginning with http:// or https://.");
+  }
+}
+
+function date(value: unknown) {
+  const next = cleanText(value, 10);
+  if (!next) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(next) || Number.isNaN(Date.parse(`${next}T00:00:00Z`))) {
+    throw new Error("Add a valid date of birth.");
+  }
+  if (next > new Date().toISOString().slice(0, 10)) throw new Error("Date of birth cannot be in the future.");
+  return next;
+}
+
+function list(value: unknown) {
+  const source = Array.isArray(value) ? value.map(String) : cleanText(value, 3000).split(/[\n,;]+/);
+  const result: string[] = [];
+  const seen = new Set<string>();
+  for (const item of source) {
+    const next = item.trim().slice(0, 100);
+    const key = next.toLocaleLowerCase();
+    if (!next || seen.has(key)) continue;
+    seen.add(key);
+    result.push(next);
+    if (result.length === 40) break;
+  }
+  return result;
+}
+
+function choice<T extends string>(value: unknown, allowed: readonly T[], fallback: T) {
+  const next = cleanText(value, 40) as T;
+  return allowed.includes(next) ? next : fallback;
+}
+
+function optionalInteger(value: unknown, minimum: number, maximum: number) {
+  if (value === null || value === undefined || value === "") return null;
+  const next = Number(value);
+  if (!Number.isInteger(next) || next < minimum || next > maximum) {
+    throw new Error(`Add a whole number between ${minimum} and ${maximum}.`);
+  }
+  return next;
+}
+
+type ProfilePayloadOptions = {
+  includePrimaryEmail?: boolean;
+  includePrivacy?: boolean;
+};
+
+export function personProfilePayload(
+  body: Record<string, unknown>,
+  { includePrimaryEmail = true, includePrivacy = false }: ProfilePayloadOptions = {},
+) {
+  const state = cleanText(body.state, 2).toUpperCase();
+  const countryCode = cleanText(body.countryCode, 2).toUpperCase() || "US";
+  if (!/^[A-Z]{2}$/.test(countryCode)) throw new Error("Use a two-letter country code.");
+
+  const payload: Record<string, unknown> = {
+    first_name: optionalText(body.firstName, 80),
+    middle_name: optionalText(body.middleName, 80),
+    last_name: optionalText(body.lastName, 120),
+    preferred_name: optionalText(body.preferredName, 120),
+    pronouns: optionalText(body.pronouns, 60),
+    birth_date: date(body.birthDate),
+    secondary_email: email(body.secondaryEmail),
+    phone: optionalText(body.phone, 60),
+    secondary_phone: optionalText(body.secondaryPhone, 60),
+    preferred_contact_method: choice(
+      body.preferredContactMethod,
+      ["no_preference", "email", "phone", "text"] as const,
+      "no_preference",
+    ),
+    contact_time_preferences: optionalText(body.contactTimePreferences, 500),
+    address_line1: optionalText(body.addressLine1, 240),
+    address_line2: optionalText(body.addressLine2, 240),
+    town: optionalText(body.town, 120),
+    state: state || null,
+    postal_code: optionalText(body.postalCode, 20),
+    county: optionalText(body.county, 120),
+    country_code: countryCode,
+    timezone: optionalText(body.timezone, 100),
+    service_radius_miles: optionalInteger(body.serviceRadiusMiles, 0, 500),
+    headline: optionalText(body.headline, 180),
+    bio: optionalText(body.bio, 4000),
+    occupation: optionalText(body.occupation, 180),
+    organization: optionalText(body.organization, 180),
+    website_url: url(body.websiteUrl),
+    avatar_url: url(body.avatarUrl),
+    facebook_url: url(body.facebookUrl),
+    instagram_url: url(body.instagramUrl),
+    linkedin_url: url(body.linkedinUrl),
+    abilities: optionalText(body.abilities, 1000),
+    languages: list(body.languages),
+    skills: list(body.skills),
+    interests: list(body.interests),
+    community_roles: list(body.communityRoles),
+    certifications: list(body.certifications),
+    services_offered: optionalText(body.servicesOffered, 4000),
+    help_wanted: optionalText(body.helpWanted, 4000),
+    availability_notes: optionalText(body.availabilityNotes, 2000),
+    transportation_notes: optionalText(body.transportationNotes, 2000),
+    accessibility_notes: optionalText(body.accessibilityNotes, 2000),
+  };
+
+  if (includePrimaryEmail) payload.email = email(body.email);
+  if (includePrivacy) {
+    payload.profile_visibility = choice(
+      body.profileVisibility,
+      ["private", "connections", "public"] as const,
+      "connections",
+    );
+    payload.contact_visibility = choice(body.contactVisibility, ["private", "connections"] as const, "private");
+    payload.location_visibility = choice(
+      body.locationVisibility,
+      ["hidden", "town_state", "postal_code", "exact"] as const,
+      "town_state",
+    );
+    payload.directory_opt_in = body.directoryOptIn === true || body.directoryOptIn === "on";
+    payload.matching_opt_in = body.matchingOptIn === true || body.matchingOptIn === "on";
+  }
+
+  return payload;
+}

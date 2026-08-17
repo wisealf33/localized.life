@@ -235,16 +235,8 @@ export function AccountCalendar() {
     try {
       await calendarPost({
         action: "create-person",
-        displayName: values.get("displayName"),
-        email: values.get("email"),
-        phone: values.get("phone"),
-        serviceAddressLine1: values.get("serviceAddressLine1"),
-        serviceAddressLine2: values.get("serviceAddressLine2"),
-        serviceCity: values.get("serviceCity"),
-        serviceState: values.get("serviceState"),
-        servicePostalCode: values.get("servicePostalCode"),
+        ...Object.fromEntries(values),
         serviceCountryCode: "US",
-        privateNotes: values.get("privateNotes"),
       });
       form.reset();
       setPersonFormOpen(false);
@@ -399,8 +391,7 @@ export function AccountCalendar() {
         <section className="calendar-inline-form" aria-labelledby="add-person-title">
           <div className="account-inline-heading"><div><p className="eyebrow">One shared Person record</p><h2 id="add-person-title">Add a new person</h2><p className="muted">People already connected to you are listed below and can be scheduled immediately.</p></div><button className="icon-button" type="button" aria-label="Close person form" onClick={() => setPersonFormOpen(false)}><XCircle /></button></div>
           <form className="form" onSubmit={addPerson}>
-            <div className="grid two"><label>Name<input name="displayName" required autoComplete="name" /></label><label>Phone<input name="phone" type="tel" autoComplete="tel" /></label></div>
-            <label>Email<input name="email" type="email" autoComplete="email" /></label>
+            <fieldset className="calendar-address-fields"><legend>Person identity and contact</legend><label>Profile name<input name="displayName" required autoComplete="name" /></label><div className="person-profile-grid person-profile-name-grid"><label>First name<input name="firstName" autoComplete="given-name" /></label><label>Middle name<input name="middleName" autoComplete="additional-name" /></label><label>Last name<input name="lastName" autoComplete="family-name" /></label></div><div className="grid two"><label>Preferred name<input name="preferredName" /></label><label>Phone<input name="phone" type="tel" autoComplete="tel" /></label><label>Email<input name="email" type="email" autoComplete="email" /></label><label>Secondary phone<input name="secondaryPhone" type="tel" /></label></div></fieldset>
             <fieldset className="calendar-address-fields"><legend>Service address</legend><label>Street address<input name="serviceAddressLine1" autoComplete="address-line1" /></label><label>Apartment, suite, or unit<input name="serviceAddressLine2" autoComplete="address-line2" /></label><div className="calendar-address-locality"><label>City<input name="serviceCity" autoComplete="address-level2" /></label><label>State<input name="serviceState" maxLength={2} defaultValue="IL" autoComplete="address-level1" /></label><label>ZIP code<input name="servicePostalCode" inputMode="numeric" autoComplete="postal-code" /></label></div></fieldset>
             <label>Private notes<textarea name="privateNotes" rows={3} placeholder="Preferences, access details, or anything helpful before a visit" /></label>
             <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save person"}</button>

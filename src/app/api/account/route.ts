@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson } from "@/lib/connectionAccess";
+import { personProfilePayload } from "@/lib/personProfile";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashSecret, invitationToken } from "@/lib/tokens";
 
@@ -255,15 +256,18 @@ export async function POST(request: Request) {
     if (action === "update-profile") {
       const displayName = text(body.displayName, 120);
       if (!displayName) throw new Error("Add your name.");
-      const state = text(body.state, 2).toUpperCase();
+      const profile = personProfilePayload(body, { includePrimaryEmail: true, includePrivacy: true });
+      const locationChanged = ["address_line1", "address_line2", "town", "state", "postal_code", "country_code"].some(
+        (key) => profile[key] !== (actor.person as Record<string, unknown>)[key],
+      );
       const { error } = await supabase
         .from("people")
         .update({
           display_name: displayName,
-          phone: nullable(body.phone, 60),
-          town: nullable(body.town, 120),
-          state: state || null,
-          abilities: nullable(body.abilities, 1000),
+          ...profile,
+          ...(locationChanged
+            ? { latitude: null, longitude: null, location_precision: "none", geocoded_at: null }
+            : {}),
           updated_at: new Date().toISOString(),
         })
         .eq("id", actor.person.id)
@@ -356,6 +360,7 @@ export async function POST(request: Request) {
       const displayName = text(body.displayName, 120);
       const personEmail = email(body.email);
       const phone = nullable(body.phone, 60);
+      const profile = personProfilePayload(body, { includePrimaryEmail: true });
       if (!displayName) throw new Error("Add the person's name.");
       if (!personEmail && !phone) throw new Error("Add a phone number or email so you can send the private link.");
 
@@ -393,10 +398,8 @@ export async function POST(request: Request) {
           .from("people")
           .insert({
             display_name: displayName,
-            email: personEmail,
-            phone,
-            town: nullable(body.town, 120),
-            state,
+            ...profile,
+            state: profile.state || state,
             how_met: nullable(body.howMet, 500),
             private_notes: nullable(body.privateNote, 2000),
             created_by_person_id: actor.person.id,

@@ -5676,12 +5676,99 @@ code {
 }
 
 .account-profile-form {
-  max-width: 760px;
+  max-width: 1080px;
   margin-top: 18px;
 }
 
 .account-profile-form .button {
   width: fit-content;
+}
+
+.person-profile-fields {
+  display: grid;
+  gap: 18px;
+}
+
+.person-profile-intro,
+.person-profile-section-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.person-profile-section {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #d8e1da;
+  border-radius: 10px;
+  padding: 18px;
+  background: #fbfdfb;
+}
+
+.person-profile-section legend {
+  padding: 0 8px;
+  color: var(--account-green-dark);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.person-profile-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.person-profile-name-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr);
+}
+
+.person-profile-location-grid {
+  grid-template-columns: minmax(0, 1fr) 120px minmax(150px, 0.5fr);
+}
+
+.field-note {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.person-profile-privacy {
+  border-color: #c7d9cc;
+  background: #f4faf5;
+}
+
+.person-profile-checkbox {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-template-columns: none;
+  gap: 10px;
+  align-items: flex-start;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.person-profile-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  padding: 0;
+}
+
+.person-profile-checkbox span {
+  display: grid;
+  gap: 3px;
+}
+
+.person-profile-checkbox small {
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.connector-person-profile-panel {
+  grid-column: 1 / -1;
 }
 
 .account-add-person-form,
@@ -8347,6 +8434,15 @@ body {
 
   .saletrail-public-page .sales-type-card:last-child {
     border-bottom: 0;
+  }
+
+  .person-profile-name-grid,
+  .person-profile-location-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .person-profile-section {
+    padding: 15px;
   }
 }
 
