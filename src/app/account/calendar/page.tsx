@@ -3,8 +3,8 @@ import { AccountCalendar } from "@/components/AccountCalendar";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "Customer calendar",
-  description: "Your private Localized.life customer and appointment calendar.",
+  title: "Appointment calendar",
+  description: "Your private Localized.life appointment calendar and service details.",
   robots: { index: false, follow: false },
 };
 
