@@ -362,7 +362,6 @@ export async function POST(request: Request) {
       const phone = nullable(body.phone, 60);
       const profile = personProfilePayload(body, { includePrimaryEmail: true });
       if (!displayName) throw new Error("Add the person's name.");
-      if (!personEmail && !phone) throw new Error("Add a phone number or email so you can send the private link.");
 
       let existingPerson: {
         id: string;

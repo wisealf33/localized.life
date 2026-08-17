@@ -426,19 +426,18 @@ export function ClaimedPersonDashboard() {
         <aside className="account-sidebar" aria-label="People and account tools">
           <section className="account-people-section">
             <div className="account-sidebar-heading"><h2>People</h2><button className="account-link-button account-add-person-button" type="button" onClick={() => setAddPersonOpen((open) => !open)}><UserPlus /> Add someone</button></div>
-            <p className="account-sidebar-intro">Add the person&apos;s contact first, then send their private link so they can claim and continue from the same profile.</p>
+            <p className="account-sidebar-intro">Start one shared Person profile with a name. Contact and other details can be added whenever they are available.</p>
 
             {addPersonOpen ? (
               <form className="form account-add-person-form" onSubmit={addPerson}>
                 <div className="account-inline-heading"><strong>Add someone</strong><button className="icon-button" type="button" aria-label="Close add person form" onClick={() => setAddPersonOpen(false)}><X /></button></div>
-                <label>Profile name<input name="displayName" required autoComplete="name" /></label>
+                <label>Profile name<input name="displayName" required autoComplete="name" /><span className="field-note">The only required field.</span></label>
                 <div className="grid two"><label>First name<input name="firstName" autoComplete="given-name" /></label><label>Last name<input name="lastName" autoComplete="family-name" /></label></div>
                 <div className="grid two"><label>Phone<input name="phone" type="tel" autoComplete="tel" /></label><label>Email<input name="email" type="email" autoComplete="email" /></label></div>
                 <label>Street address<input name="addressLine1" autoComplete="address-line1" /></label>
                 <label>Apartment, suite, or unit<input name="addressLine2" autoComplete="address-line2" /></label>
-                <div className="grid two"><label>City or town<input name="town" defaultValue={data.person.town || ""} autoComplete="address-level2" /></label><label>State<input name="state" maxLength={2} defaultValue={data.person.state || "IL"} autoComplete="address-level1" /></label></div>
+                <div className="grid two"><label>City or town<input name="town" autoComplete="address-level2" /></label><label>State<input name="state" maxLength={2} autoComplete="address-level1" /></label></div>
                 <div className="grid two"><label>ZIP code<input name="postalCode" autoComplete="postal-code" /></label><label>County<input name="county" /></label></div>
-                <input type="hidden" name="countryCode" value="US" />
                 <label>How do you know them?<input name="howMet" placeholder="Neighbor, local work, introduction…" /></label>
                 <button className="button primary" type="submit" disabled={busy}>{busy ? "Adding…" : "Add person"}</button>
               </form>

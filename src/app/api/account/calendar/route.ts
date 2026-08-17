@@ -252,7 +252,6 @@ export async function POST(request: Request) {
         { includePrimaryEmail: true },
       );
       if (!displayName) throw new Error("Add the person's name.");
-      if (!personEmail && !phone) throw new Error("Add a phone number or email for this person.");
 
       let existing: { id: string; claim_status: string; created_by_person_id: string | null } | null = null;
       if (personEmail) {

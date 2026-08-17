@@ -78,7 +78,7 @@ export function PersonProfileFields({
           <label>Last name<input name="lastName" maxLength={120} defaultValue={person.last_name || ""} autoComplete="family-name" /></label>
         </div>
         <div className="grid two">
-          <label>Profile name<input name="displayName" required maxLength={120} defaultValue={person.display_name || ""} autoComplete="name" /><span className="field-note">The name shown around Localized.life.</span></label>
+          <label>Profile name<input name="displayName" required maxLength={120} defaultValue={person.display_name || ""} autoComplete="name" /><span className="field-note">The only required field. This is the name shown around Localized.life.</span></label>
           <label>Preferred name<input name="preferredName" maxLength={120} defaultValue={person.preferred_name || ""} /><span className="field-note">What friends and coordinators should call you.</span></label>
         </div>
         <div className="grid two">
@@ -109,13 +109,13 @@ export function PersonProfileFields({
         <label>Apartment, suite, or unit<input name="addressLine2" maxLength={240} defaultValue={person.address_line2 || ""} autoComplete="address-line2" /></label>
         <div className="person-profile-grid person-profile-location-grid">
           <label>City or town<input name="town" maxLength={120} defaultValue={person.town || ""} autoComplete="address-level2" /></label>
-          <label>State<input name="state" maxLength={2} defaultValue={person.state || "IL"} autoComplete="address-level1" /></label>
+          <label>State<input name="state" maxLength={2} defaultValue={person.state || ""} autoComplete="address-level1" /></label>
           <label>ZIP or postal code<input name="postalCode" maxLength={20} defaultValue={person.postal_code || ""} autoComplete="postal-code" /></label>
         </div>
         <div className="person-profile-grid person-profile-location-grid">
           <label>County<input name="county" maxLength={120} defaultValue={person.county || ""} /></label>
-          <label>Country code<input name="countryCode" maxLength={2} defaultValue={person.country_code || "US"} autoComplete="country" /></label>
-          <label>Time zone<input name="timezone" maxLength={100} defaultValue={person.timezone || "America/Chicago"} placeholder="America/Chicago" /></label>
+          <label>Country code<input name="countryCode" maxLength={2} defaultValue={person.country_code || ""} autoComplete="country" placeholder="US" /></label>
+          <label>Time zone<input name="timezone" maxLength={100} defaultValue={person.timezone || ""} placeholder="America/Chicago" /></label>
         </div>
       </fieldset>
 
