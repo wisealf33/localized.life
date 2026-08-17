@@ -18,6 +18,7 @@ export function SiteFooter() {
           <Link href="/harvest">Harvest</Link>
           <Link href="/saletrail">SaleTrail</Link>
           <Link href="/saletrail/feedback">Feature requests</Link>
+          <Link href="/account">Provider sign in</Link>
         </nav>
       </div>
     </footer>
