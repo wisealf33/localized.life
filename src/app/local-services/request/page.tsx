@@ -8,6 +8,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 type Props = {
   searchParams: Promise<{
     service?: string;
+    need?: string;
+    city?: string;
+    timeline?: string;
     requested?: string;
     email?: string;
     manage?: string;
@@ -17,7 +20,7 @@ type Props = {
 
 export const metadata: Metadata = pageMetadata({
   title: "Request a Local Service",
-  description: "Request cleaning, yard help, repairs, hauling, pet care, assembly, mounting, and other practical local services.",
+  description: "Ask for cleaning, yard help, small repairs, pet care, assembly, tech help, and other practical local services.",
   path: "/local-services/request",
 });
 
@@ -27,23 +30,20 @@ export default async function LocalServiceRequestPage({ searchParams }: Props) {
   const managePath = params.manage ? `/manage/${params.manage}` : "";
 
   return (
-    <main className="page local-page local-page-services">
+    <main className="page local-page local-page-services local-service-request-page">
       <SiteHeader active="services" product="Project hub" />
       <section className="hero compact-hero local-hero local-hero-services">
-        <p className="eyebrow">Request practical help</p>
-        <h1>Request a local service</h1>
+        <h1>Tell us what you need</h1>
         <p className="lede">
-          Tell Localized.life what kind of help you need. The request goes into review first, then it can be matched
-          into the local services flow as the network grows.
+          Share a few practical details. We will review the request and arrange the right local next step.
         </p>
       </section>
 
       <section className="panel local-submit-panel" id="request">
         <div className="submit-copy">
-          <p className="eyebrow">Service request</p>
           <h2>{selectedService ? selectedService.title : "What do you need help with?"}</h2>
           <p className="muted">
-            Keep this practical: what needs done, where you are, when you need it, and the best way to follow up.
+            Tell us what needs to be done, where you are, when you need it, and the best way to follow up.
           </p>
           <div className="mini-list local-category-list">
             {(selectedService?.requestPrompts || [
@@ -58,13 +58,13 @@ export default async function LocalServiceRequestPage({ searchParams }: Props) {
 
         {params.requested ? (
           <div className="notice good stack">
-            <h3>Request submitted for review</h3>
-            <p>Thanks. The request is saved in the admin queue before anything is published or matched.</p>
+            <h3>We received your request</h3>
+            <p>We will review the details and follow up privately about the next step.</p>
             {params.email === "sent" ? (
               <p>We emailed your private manage link. Save that email so you can update or remove the request later.</p>
             ) : managePath ? (
               <p>
-                Email is not configured yet, so save this private manage link for now:{" "}
+                Keep this private manage link so you can update or remove the request:{" "}
                 <Link className="text-link" href={managePath}>
                   open manage link
                 </Link>
@@ -83,15 +83,19 @@ export default async function LocalServiceRequestPage({ searchParams }: Props) {
               </div>
             ) : null}
             <label>
-              Service needed
-              <select name="service_title" defaultValue={selectedService?.title || ""} required>
-                <option value="">Choose a service</option>
+              What do you need help with?
+              <input
+                defaultValue={selectedService?.title || params.need || ""}
+                list="local-service-options"
+                name="service_title"
+                placeholder="House cleaning, a small repair, dog walking..."
+                required
+              />
+              <datalist id="local-service-options">
                 {localServices.map((service) => (
-                  <option key={service.slug} value={service.title}>
-                    {service.title}
-                  </option>
+                  <option key={service.slug} value={service.title} />
                 ))}
-              </select>
+              </datalist>
             </label>
             <div className="grid two">
               <label>
@@ -106,7 +110,7 @@ export default async function LocalServiceRequestPage({ searchParams }: Props) {
             <div className="grid two">
               <label>
                 City
-                <input name="city" placeholder="Example: Peotone, Joliet, Manteno" />
+                <input defaultValue={params.city || ""} name="city" placeholder="Example: Peotone, Joliet, Manteno" />
               </label>
               <label>
                 State
@@ -126,7 +130,11 @@ export default async function LocalServiceRequestPage({ searchParams }: Props) {
             <div className="grid two">
               <label>
                 When do you need it?
-                <input name="timeline" placeholder="ASAP, this weekend, next week, flexible..." />
+                <input
+                  defaultValue={params.timeline || ""}
+                  name="timeline"
+                  placeholder="ASAP, this weekend, next week, flexible..."
+                />
               </label>
               <label>
                 Budget range, optional
@@ -134,7 +142,7 @@ export default async function LocalServiceRequestPage({ searchParams }: Props) {
               </label>
             </div>
             <label>
-              What needs done?
+              What needs to be done?
               <textarea
                 name="description"
                 rows={7}
@@ -143,7 +151,7 @@ export default async function LocalServiceRequestPage({ searchParams }: Props) {
               />
             </label>
             <button className="button primary" type="submit">
-              Submit service request
+              Send request
             </button>
           </form>
         )}

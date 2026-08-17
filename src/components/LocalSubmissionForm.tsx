@@ -45,7 +45,7 @@ export function LocalSubmissionForm({
   manageToken,
   errorMessage,
   ctaLabel = "Open submission form",
-  summaryNote = "Submit now. Claimed profiles and member tools are being built around this.",
+  summaryNote = "Share the details and we will review them before anything appears publicly.",
   categoryOptions,
   categoryHelper,
   contactLabel = "Public contact method (optional)",
@@ -67,13 +67,13 @@ export function LocalSubmissionForm({
 
       {submitted ? (
         <div className="notice good stack">
-          <h3>Submitted for review</h3>
-          <p>Thanks. This is saved in the admin queue so it can be reviewed before anything is published.</p>
+          <h3>Thanks, we received it</h3>
+          <p>We will review the details before the listing appears publicly.</p>
           {emailStatus === "sent" ? (
             <p>We emailed your private manage link. Save that email so you can edit or remove the submission later.</p>
           ) : managePath ? (
             <p>
-              Email is not configured yet, so save this private manage link for now:{" "}
+              Keep this private manage link so you can update or remove the submission:{" "}
               <Link className="text-link" href={managePath}>
                 open manage link
               </Link>

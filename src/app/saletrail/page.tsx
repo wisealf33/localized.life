@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { MapTrifold } from "@phosphor-icons/react/ssr";
 import { AutoSubmitSearchForm } from "@/components/AutoSubmitSearchForm";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { SaveSaleButton } from "@/components/SaveSaleButton";
@@ -427,22 +428,22 @@ export default async function SaleTrailHome({ searchParams }: Props) {
   const resultEnd = Math.min(safePage * perPage, total);
   const pages = paginationItems(safePage, totalPages);
   return (
-    <main className="page">
+    <main className="page saletrail-public-page">
       <SiteHeader active="find" />
       <ConfigNotice />
-      <section className="hero">
-        <p className="eyebrow">SaleTrail by Localized.life</p>
-        <h1>Find sales and build a simple route.</h1>
+      <section className="hero saletrail-main-hero">
+        <MapTrifold aria-hidden="true" className="saletrail-hero-icon" size={72} weight="duotone" />
+        <p className="eyebrow">Garage sales and estate sales nearby</p>
+        <h1>Find local sales. Build your route.</h1>
         <p>
-          A clean directory for garage sales, community-wide sales, estate sales, and clearly labeled
-          community-added listings.
+          Search garage sales, estate sales, and community-wide sale weekends, then save the stops you want to visit.
         </p>
         <div className="toolbar">
-          <Link className="button primary" href="/saletrail/map">
-            View map
+          <Link className="button primary" href="#saletrail-search">
+            Search nearby sales
           </Link>
-          <Link className="button" href="/saletrail/route">
-            My route
+          <Link className="button" href="/saletrail/map">
+            View map
           </Link>
         </div>
       </section>
@@ -456,7 +457,7 @@ export default async function SaleTrailHome({ searchParams }: Props) {
         ))}
       </section>
 
-      <section className="panel">
+      <section className="panel saletrail-search-panel" id="saletrail-search">
         <form className="search" id="saletrail-search-form">
           <AutoSubmitSearchForm formId="saletrail-search-form" />
           <label>
@@ -721,15 +722,12 @@ export default async function SaleTrailHome({ searchParams }: Props) {
 
       <section className="feedback-panel">
         <div>
-          <p className="eyebrow">New and growing</p>
-          <h2>Help shape SaleTrail</h2>
-          <p>
-            This is a new fast-growing website, and features are being added daily. Request a feature or report a bug so
-            we know what to improve next.
-          </p>
+          <p className="eyebrow">Questions or corrections</p>
+          <h2>Help keep SaleTrail useful.</h2>
+          <p>Tell us if a listing looks wrong or if something made it difficult to find a sale.</p>
         </div>
         <Link className="button primary" href="/saletrail/feedback">
-          Request a feature or report a bug
+          Send feedback
         </Link>
       </section>
     </main>

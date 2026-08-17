@@ -7,7 +7,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Localized.life | Useful Local Life Outside Noisy Feeds",
   description:
-    "Localized.life is a practical local operating system for finding useful real-world community: local goods, events, sales, abundance, services, mentors, and local knowledge.",
+    "Find local services, goods, events, mentors, growing projects, and garage sales without sorting through noisy social feeds.",
   path: "/",
   image: "/og/default-saletrail.jpg",
 });
@@ -26,89 +26,47 @@ export default function Home() {
           sizes="100vw"
         />
         <div className="front-copy">
-          <p className="front-badge">A neighborhood operating system</p>
+          <p className="front-badge">Everything local, in one place</p>
           <h1>Useful local life, pulled out of the noise.</h1>
           <p className="lede">
-            Localized.life is a practical local operating system for finding useful real-world community: local goods,
-            events, sales, abundance, services, mentors, and local knowledge.
+            Find local services, goods, events, mentors, growing projects, and garage sales without sorting through
+            noisy social feeds.
           </p>
           <div className="toolbar">
-            <Link className="button primary" href="/saletrail">
-              Find sales
+            <Link className="button primary" href="/local-services">
+              Ask for local help
             </Link>
-            <Link className="button" href="/local-market">
-              Explore Local Market
+            <Link className="button" href="#explore">
+              Explore everything nearby
             </Link>
-            <Link className="button" href="/membership">
-              Membership
-            </Link>
-          </div>
-          <div className="front-signal-row" aria-label="Localized.life project signals">
-            <span>Local goods</span>
-            <span>Events</span>
-            <span>Sale routes</span>
-            <span>Abundance</span>
-            <span>Mentors</span>
-            <span>Services</span>
           </div>
         </div>
 
       </section>
 
-      <section className="front-product-band front-door-band" aria-label="Localized.life public doors">
+      <section className="front-product-band front-door-band" id="explore" aria-label="Explore Localized.life">
         <div className="front-door-intro">
           <p className="front-badge">Start here</p>
-          <h2>Six clear doors into local life.</h2>
+          <h2>Start with what you need nearby.</h2>
           <p>
-            Choose the area that matches what you are looking for: local goods, things happening nearby, sale routes,
-            food abundance, practical local help, or people who can teach useful skills.
+            Choose practical help first, then browse local goods, events, mentors, growing projects, or weekend sales.
           </p>
         </div>
 
-        <article className="front-product-card front-feature-card">
-          <p className="front-badge">Local sales</p>
-          <h3>SaleTrail</h3>
-          <p>Find garage sales, estate sales, rummage sales, moving sales, and build a useful weekend route.</p>
-          <div className="tag-row">
-            <span>Garage sales</span>
-            <span>Estate sales</span>
-            <span>Rummage sales</span>
-            <span>Routes</span>
-          </div>
-          <Link className="button primary" href="/saletrail">
-            Open SaleTrail
+        <article className="front-product-card front-feature-card front-door-services">
+          <p className="front-badge">Start here</p>
+          <h3>Local Services</h3>
+          <p>Ask for cleaning, yard help, small repairs, pet care, tech help, and other useful local services.</p>
+          <Link className="button primary" href="/local-services">
+            Ask for local help
           </Link>
         </article>
 
-        <article className="front-product-card front-feature-card harvest-teaser-card">
-          <p className="front-badge">Local abundance</p>
-          <h3>Harvest</h3>
-          <p>Map fruit trees, gardens, seed sharing, gleaning opportunities, and local food abundance.</p>
-          <div className="tag-row">
-            <span>Fruit trees</span>
-            <span>Gardens</span>
-            <span>Seeds</span>
-            <span>Gleaning</span>
-            <span>Pawpaws</span>
-          </div>
-          <Link className="button" href="/harvest">
-            Explore Harvest
-          </Link>
-        </article>
-
-        <article className="front-product-card front-door-card front-door-market">
+        <article className="front-product-card front-feature-card front-door-market">
           <p className="front-badge">Local goods</p>
           <h3>Local Market</h3>
           <p>Find local eggs, honey, produce, handmade goods, cottage foods, farmstands, backyard growers, and neighborhood makers.</p>
-          <div className="tag-row">
-            <span>Eggs</span>
-            <span>Honey</span>
-            <span>Produce</span>
-            <span>Handmade</span>
-            <span>Farmstands</span>
-            <span>Cottage Food</span>
-          </div>
-          <Link className="button" href="/local-market">
+          <Link className="button primary" href="/local-market">
             View Local Market
           </Link>
         </article>
@@ -117,13 +75,6 @@ export default function Home() {
           <p className="front-badge">Things happening</p>
           <h3>Local Events</h3>
           <p>Find farmers markets, craft fairs, vendor pop-ups, workshops, festivals, plant swaps, and community gatherings.</p>
-          <div className="tag-row">
-            <span>Farmers markets</span>
-            <span>Craft fairs</span>
-            <span>Pop-ups</span>
-            <span>Workshops</span>
-            <span>Plant swaps</span>
-          </div>
           <Link className="button" href="/local-events">
             View Local Events
           </Link>
@@ -133,31 +84,26 @@ export default function Home() {
           <p className="front-badge">Learn nearby</p>
           <h3>Local Mentors</h3>
           <p>Find music lessons, garden coaching, farming skills, creative practice, tutoring, and hands-on learning nearby.</p>
-          <div className="tag-row">
-            <span>Music lessons</span>
-            <span>Garden skills</span>
-            <span>Farm know-how</span>
-            <span>Tutoring</span>
-            <span>Creative coaching</span>
-          </div>
           <Link className="button" href="/local-mentors">
             View Local Mentors
           </Link>
         </article>
 
-        <article className="front-product-card front-door-card front-door-services">
-          <p className="front-badge">Practical help</p>
-          <h3>Local Services</h3>
-          <p>Find nearby people offering cleaning, yard help, repairs, hauling, garden help, and other useful local services.</p>
-          <div className="tag-row">
-            <span>Cleaning</span>
-            <span>Handyman</span>
-            <span>Yard help</span>
-            <span>Hauling</span>
-            <span>Garden help</span>
-          </div>
-          <Link className="button" href="/local-services">
-            View Local Services
+        <article className="front-product-card front-door-card harvest-teaser-card">
+          <p className="front-badge">Local abundance</p>
+          <h3>Harvest</h3>
+          <p>Map fruit trees, gardens, seed sharing, gleaning opportunities, and local food abundance.</p>
+          <Link className="button" href="/harvest">
+            Explore Harvest
+          </Link>
+        </article>
+
+        <article className="front-product-card front-door-card">
+          <p className="front-badge">Weekend sales</p>
+          <h3>SaleTrail</h3>
+          <p>Find garage sales, estate sales, rummage sales, and build a useful weekend route.</p>
+          <Link className="button" href="/saletrail">
+            Find local sales
           </Link>
         </article>
       </section>
@@ -175,22 +121,21 @@ export default function Home() {
           </p>
           <aside className="front-field-note" aria-label="Localized.life motto">
             <strong>Start with what is nearby.</strong>
-            <span>Find local sales, goods, events, abundance, mentors, and practical help without digging through noisy feeds.</span>
+            <span>Find practical help, local goods, events, mentors, abundance, and sales without digging through noisy feeds.</span>
           </aside>
         </div>
       </section>
 
       <section className="front-membership-callout" aria-labelledby="membershipCallout">
         <div>
-          <p className="front-badge">Trust layer</p>
-          <h2 id="membershipCallout">Membership makes Localized manageable.</h2>
+          <p className="front-badge">Your Localized.life account</p>
+          <h2 id="membershipCallout">Keep your local activity in one place.</h2>
           <p>
-            Claimed profiles, protected pickup details, regional managers, owner updates, saved routes, and paid local
-            tools all work better when Localized is built around members from the start.
+            Claim your listings, protect private details, save useful finds, and update the information people see.
           </p>
         </div>
         <Link className="button primary" href="/membership">
-          View membership model
+          See account benefits
         </Link>
       </section>
     </main>

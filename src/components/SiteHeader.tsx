@@ -34,11 +34,8 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
           <span className="site-wordmark">Localized.life</span>
         </Link>
         <nav className="site-nav site-global-nav" aria-label="Localized.life navigation">
-          <Link className={saleTrailActive ? "site-nav-link active" : "site-nav-link"} href="/saletrail">
-            SaleTrail
-          </Link>
-          <Link className={navClass(active, "harvest")} href="/harvest">
-            Harvest
+          <Link className={navClass(active, "services")} href="/local-services">
+            Local Services
           </Link>
           <Link className={navClass(active, "market")} href="/local-market">
             Local Market
@@ -49,8 +46,11 @@ export function SiteHeader({ active, product = "SaleTrail" }: SiteHeaderProps) {
           <Link className={navClass(active, "mentors")} href="/local-mentors">
             Local Mentors
           </Link>
-          <Link className={navClass(active, "services")} href="/local-services">
-            Local Services
+          <Link className={navClass(active, "harvest")} href="/harvest">
+            Harvest
+          </Link>
+          <Link className={saleTrailActive ? "site-nav-link active" : "site-nav-link"} href="/saletrail">
+            SaleTrail
           </Link>
         </nav>
       </div>

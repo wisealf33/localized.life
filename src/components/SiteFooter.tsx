@@ -11,12 +11,12 @@ export function SiteFooter() {
           <p>Useful local life, pulled out of the noise.</p>
         </div>
         <nav className="site-footer-nav" aria-label="Footer navigation">
-          <Link href="/saletrail">SaleTrail</Link>
-          <Link href="/harvest">Harvest</Link>
+          <Link href="/local-services">Local Services</Link>
           <Link href="/local-market">Local Market</Link>
           <Link href="/local-events">Local Events</Link>
           <Link href="/local-mentors">Local Mentors</Link>
-          <Link href="/local-services">Local Services</Link>
+          <Link href="/harvest">Harvest</Link>
+          <Link href="/saletrail">SaleTrail</Link>
           <Link href="/saletrail/feedback">Feature requests</Link>
         </nav>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, GraduationCap } from "@phosphor-icons/react/ssr";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { cleanDirectorySearch, matchesDirectorySearch } from "@/lib/localDirectory";
@@ -94,7 +95,6 @@ const mentorTypes = [
   "Other hands-on learning",
 ];
 
-const mentorSignals = ["AI classes", "Tutoring", "Music lessons", "Garden skills", "Farm know-how", "Life skills"];
 
 export default async function LocalMentorsPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -105,30 +105,31 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
   const hasFilters = Boolean(searchTerm);
 
   return (
-    <main className="page local-page local-page-mentors">
+    <main className="page local-page local-page-mentors public-directory-page">
       <SiteHeader active="mentors" product="Project hub" />
-      <section className="hero local-hero local-hero-mentors">
+      <section className="hero local-hero local-hero-mentors public-directory-hero">
+        <GraduationCap aria-hidden="true" className="directory-hero-icon" size={72} weight="duotone" />
         <p className="eyebrow">Learn nearby</p>
         <h1>Local Mentors</h1>
         <p className="lede">
-          Find people nearby who teach useful skills one-on-one, in small classes, online, or in practical local
-          settings: AI, tutoring, music, gardening, farming, homestead skills, trades, creative practice, and everyday
-          know-how.
+          Find nearby people who teach useful skills—from tutoring and music to gardening, technology, trades, and
+          everyday know-how.
         </p>
+        <div className="toolbar">
+          <Link className="button primary" href="#mentor-search">
+            Find a mentor
+          </Link>
+          <Link className="button" href="#submit">
+            Share what you teach
+          </Link>
+        </div>
       </section>
 
-      <section className="local-signal-strip" aria-label="Local Mentors highlights">
-        {mentorSignals.map((signal) => (
-          <span key={signal}>{signal}</span>
-        ))}
-      </section>
-
-      <section className="panel event-filter-panel local-directory-filter">
+      <section className="panel event-filter-panel local-directory-filter public-search-panel" id="mentor-search">
         <div>
           <h2>Find Mentors</h2>
           <p className="muted">
-            Search by skill, lesson type, tutoring area, or learning format. Mentors help people learn a skill, not just
-            finish a job.
+            Search by skill, subject, lesson type, or learning format.
           </p>
         </div>
         <form action="/local-mentors" className="event-directory-search local-directory-search" method="get">
@@ -158,61 +159,34 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
         </p>
       </section>
 
-      <section className="panel stack" aria-labelledby="localMentorListings">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Local Mentor listings</p>
-            <h2 id="localMentorListings">Approved mentor listings will appear here.</h2>
-          </div>
-        </div>
-        <p className="muted">
-          Mentor items found from outside sources stay private until the person is contacted, the details are clear, and
-          the listing is ready to show publicly.
-        </p>
-      </section>
-
-      <section className="local-card-grid local-browse-grid" aria-labelledby="mentorCategories">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Mentor map</p>
-            <h2 id="mentorCategories">Browse by the kind of skill people can learn or teach.</h2>
-          </div>
+      <section className="directory-browse-list" aria-labelledby="mentorCategories">
+        <div>
+          <p className="eyebrow">Browse skills</p>
+          <h2 id="mentorCategories">What would you like to learn?</h2>
         </div>
         {visibleMentorCategories.length === 0 ? (
-          <div className="empty local-directory-empty">
-            <h3>No Matching Mentor Categories Yet</h3>
-            <p>Try another search, clear the filter, or submit the kind of mentor listing you want to add.</p>
+          <div className="empty local-directory-empty public-empty-state">
+            <h3>No matching skills yet</h3>
+            <p>Try a broader search, or share a mentor listing if you teach this skill.</p>
             <div className="toolbar">
               <Link className="button" href="/local-mentors">
-                View all mentors
+                View all skills
               </Link>
               <Link className="button primary" href="#submit">
-                Post a mentor listing
+                Share what you teach
               </Link>
             </div>
           </div>
         ) : (
-          visibleMentorCategories.map((category) => (
-            <article className="card local-field-card local-browse-card" key={category.title}>
-              <div>
-                <h3>{category.title}</h3>
-                <p className="muted">{category.description}</p>
-              </div>
-              <div className="tag-row">
-                {category.examples.map((example) => (
-                  <span key={example}>{example}</span>
-                ))}
-              </div>
-              <div className="card-actions">
-                <Link className="button primary compact-button" href={`/local-mentors?q=${encodeURIComponent(category.title)}`}>
-                  Browse this
-                </Link>
-                <Link className="button compact-button" href="#submit">
-                  Post mentor listing
-                </Link>
-              </div>
-            </article>
-          ))
+          <div className="directory-link-list">
+            {visibleMentorCategories.map((category) => (
+              <Link href={`/local-mentors?q=${encodeURIComponent(category.title)}`} key={category.title}>
+                <strong>{category.title}</strong>
+                <span>{category.description}</span>
+                <ArrowRight aria-hidden="true" size={20} weight="bold" />
+              </Link>
+            ))}
+          </div>
         )}
       </section>
 
@@ -220,7 +194,7 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
         area="mentor"
         eyebrow="Submit a mentor listing"
         title="Add yourself to Local Mentors"
-        description="Use this if you teach lessons, mentor practical skills, offer tutoring, run a small class, or help people learn something useful nearby. This can be in your home, their home, a garden, a workshop, a farm, online, or another agreed setting."
+        description="Share the lessons, tutoring, classes, or practical skills you teach nearby. We will contact you before the listing appears publicly."
         categoryLabel="What do you teach?"
         categoryPlaceholder="Choose a mentor category"
         categoryOptions={mentorTypes}
@@ -240,31 +214,6 @@ export default async function LocalMentorsPage({ searchParams }: Props) {
         errorMessage={params.error}
         ctaLabel="Post a mentor listing"
       />
-
-      <section className="grid two local-info-grid">
-        <article className="card">
-          <h2>Learning, not just hiring.</h2>
-          <p className="muted">
-            Local Mentors is different from Local Services. A service solves a job for someone; a mentor helps someone
-            learn a skill they can carry forward. A good listing should say what is taught, who it is for, where it
-            happens, and whether it is one-on-one, a group class, or online.
-          </p>
-          <div className="tag-row">
-            {mentorTypes.slice(0, 12).map((type) => (
-              <span key={type}>{type}</span>
-            ))}
-          </div>
-        </article>
-
-        <article className="card">
-          <h2>AI classes fit here.</h2>
-          <p className="muted">
-            Local AI tutoring can be practical: helping people use AI for writing, planning, business tasks, school
-            support, organization, research, spreadsheets, and everyday computer confidence. The listing should make the
-            skill level, safety boundaries, and class format clear.
-          </p>
-        </article>
-      </section>
     </main>
   );
 }

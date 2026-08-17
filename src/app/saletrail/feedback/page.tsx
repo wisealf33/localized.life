@@ -28,14 +28,13 @@ export default async function FeedbackPage({ searchParams }: Props) {
       <p className="eyebrow">SaleTrail feedback</p>
       <h1>Request a feature or report a bug</h1>
       <p className="lede">
-        SaleTrail is new and moving fast. Send a feature idea, bug report, or general note so it can be reviewed in the
-        admin queue.
+        Send a feature idea, bug report, or general note. We read every submission and use it to improve SaleTrail.
       </p>
 
       {params.submitted ? (
         <section className="notice good stack">
           <h2>Feedback received</h2>
-          <p>Thanks. It is now in the admin review queue.</p>
+          <p>Thanks. Your note has been received for review.</p>
           <Link className="button primary compact-button" href="/saletrail">
             Back to listings
           </Link>

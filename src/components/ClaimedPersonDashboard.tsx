@@ -145,7 +145,7 @@ function designPreviewData(): AccountData {
       { id: "preview-3", display_name: "Megan R.", email: "megan@example.com", phone: null, town: "Monee", state: "IL", claim_status: "claimed", claimed_at: "2026-08-08T12:00:00Z", connected_at: "2026-08-08T12:00:00Z", invitation_url: null },
     ],
     activity: [
-      { id: "activity-1", title: "Reply to Jamie about sofa moving", details: "Jamie asked about help moving a sofa this weekend.", status: "new", scheduled_for: null, completed_at: null, updated_at: "2026-08-14T15:00:00Z", requester_name: "Jamie S.", perspective: "Local request" },
+      { id: "activity-1", title: "Reply to Jamie about shelf assembly", details: "Jamie asked about help assembling shelves this weekend.", status: "new", scheduled_for: null, completed_at: null, updated_at: "2026-08-14T15:00:00Z", requester_name: "Jamie S.", perspective: "Local request" },
       { id: "activity-2", title: "Finish your honey listing", details: "Add photos, details, and price.", status: "working", scheduled_for: null, completed_at: null, updated_at: "2026-08-14T19:00:00Z", requester_name: "Garrett", perspective: "Your request" },
       { id: "activity-3", title: "Check in on bench repair", details: "Follow up with Alex about the parts.", status: "scheduled", scheduled_for: "2026-08-15T14:00:00-05:00", completed_at: null, updated_at: "2026-08-14T12:00:00Z", requester_name: "Alex M.", perspective: "Assigned to you" },
       { id: "activity-4", title: "Peotone Plant Swap", details: "Bring extra tomatoes and herbs.", status: "scheduled", scheduled_for: "2026-08-22T18:00:00-05:00", completed_at: null, updated_at: "2026-08-13T12:00:00Z", requester_name: "Garrett", perspective: "Your request" },

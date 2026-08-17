@@ -12,8 +12,8 @@ export const localServices: LocalService[] = [
     slug: "house-cleaning",
     title: "House Cleaning",
     category: "Cleaning",
-    summary: "General home cleaning, deep cleaning, move-out help, and recurring housekeeping.",
-    examples: ["Standard cleaning", "Deep cleaning", "Move-out cleaning", "Weekly or monthly help"],
+    summary: "General home cleaning, deep cleaning, and recurring housekeeping.",
+    examples: ["Standard cleaning", "Deep cleaning", "Kitchen and bathroom cleaning", "Weekly or monthly help"],
     requestPrompts: ["Rooms that need attention", "One-time or recurring", "Pets, supplies, or access notes"],
   },
   {
@@ -65,14 +65,6 @@ export const localServices: LocalService[] = [
     requestPrompts: ["What needs to be set up", "Tools or parts available", "Photos, measurements, or access notes"],
   },
   {
-    slug: "hauling-moving-help",
-    title: "Hauling & Moving Help",
-    category: "Hauling",
-    summary: "Junk hauling, furniture moving, pickup help, donation runs, and load/unload support.",
-    examples: ["Junk removal", "Furniture moving", "Pickup truck help", "Donation drop-off"],
-    requestPrompts: ["Items and approximate quantity", "Stairs or heavy lifting", "Pickup and drop-off locations"],
-  },
-  {
     slug: "pet-care-dog-walking",
     title: "Pet Care & Dog Walking",
     category: "Pet care",
@@ -92,9 +84,9 @@ export const localServices: LocalService[] = [
     slug: "farm-homestead-help",
     title: "Farm & Homestead Help",
     category: "Farm help",
-    summary: "Chores, garden/farm labor, animal care support, fencing help, cleanup, and seasonal projects.",
-    examples: ["Chores", "Animal care", "Fencing help", "Seasonal projects"],
-    requestPrompts: ["Type of property/project", "Physical labor needed", "Tools, animals, or safety notes"],
+    summary: "Light chores, garden labor, animal care support, cleanup, and seasonal jobs using ordinary tools.",
+    examples: ["Light chores", "Animal care", "Garden labor", "Seasonal cleanup"],
+    requestPrompts: ["Type of property or job", "Physical labor needed", "Ordinary tools, animals, or safety notes"],
   },
   {
     slug: "local-tech-help",

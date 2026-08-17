@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { CalendarDots } from "@phosphor-icons/react/ssr";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { eventPath, eventTypeLabel, eventTypeOptions } from "@/lib/events";
@@ -23,7 +24,9 @@ type Props = {
 };
 
 const eventFilterOptions = eventTypeOptions.filter((option) => option.value !== "city_wide_garage_sale");
-const eventSignals = ["Markets", "Workshops", "Festivals", "Plant swaps", "Community days"];
+const featuredEventFilters = eventFilterOptions.filter((option) =>
+  ["festival", "vendor_market", "farmers_market", "workshop_class", "plant_swap", "community_day"].includes(option.value),
+);
 
 export const metadata: Metadata = pageMetadata({
   title: "Local Events: Markets, Festivals, Workshops & Plant Swaps",
@@ -140,29 +143,30 @@ export default async function LocalEventsPage({ searchParams }: Props) {
   const hasFilters = Boolean(eventType || searchTerm);
 
   return (
-    <main className="page local-page local-page-events">
+    <main className="page local-page local-page-events public-directory-page">
       <SiteHeader active="local-events" product="Project hub" />
-      <section className="hero events-hero local-hero local-hero-events">
+      <section className="hero events-hero local-hero local-hero-events public-directory-hero">
+        <CalendarDots aria-hidden="true" className="directory-hero-icon" size={72} weight="duotone" />
         <p className="eyebrow">Things happening</p>
         <h1>Local Events</h1>
         <p className="lede">
-          Find farmers markets, craft fairs, vendor pop-ups, workshops, festivals, plant swaps, and community gatherings.
-          Sale-focused community-wides, estate sales, and garage sales stay in SaleTrail so shoppers can route them.
+          Find farmers markets, craft fairs, workshops, festivals, plant swaps, and other things happening nearby.
         </p>
+        <div className="toolbar">
+          <Link className="button primary" href="#event-search">
+            Find local events
+          </Link>
+          <Link className="button" href="#submit">
+            Share an event
+          </Link>
+        </div>
       </section>
 
-      <section className="local-signal-strip" aria-label="Local Events highlights">
-        {eventSignals.map((signal) => (
-          <span key={signal}>{signal}</span>
-        ))}
-      </section>
-
-      <section className="panel event-filter-panel local-directory-filter">
+      <section className="panel event-filter-panel local-directory-filter public-search-panel" id="event-search">
         <div>
           <h2>Find Events</h2>
           <p className="muted">
-            Search by event name, town, county, ZIP, date, or type. Vendor markets, craft fairs, workshops, festivals,
-            and plant swaps belong here.
+            Search by event name, town, county, ZIP code, date, or type.
           </p>
         </div>
         <form action="/local-events" className="event-directory-search local-directory-search" method="get">
@@ -196,7 +200,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
           <Link className={!eventType ? "filter-chip active" : "filter-chip"} href={eventsUrl(undefined, searchTerm)}>
             All Events
           </Link>
-          {eventFilterOptions.map((option) => (
+          {featuredEventFilters.map((option) => (
             <Link
               className={eventType === option.value ? "filter-chip active" : "filter-chip"}
               href={eventsUrl(option.value, searchTerm)}
@@ -205,31 +209,21 @@ export default async function LocalEventsPage({ searchParams }: Props) {
               {option.label}
             </Link>
           ))}
-          <Link className="filter-chip estate-filter-chip" href="/saletrail?category=Estate%20sale">
-            Estate Sales
-          </Link>
-          <Link className="filter-chip estate-filter-chip" href="/saletrail?category=City-wide%20sale">
-            Community-Wides
-          </Link>
         </div>
       </section>
 
-      <section className="list">
+      <section className="list public-results-list" id="event-results">
         {events.length === 0 ? (
-          <div className="empty">
-            <h2>No Matching Events Yet</h2>
-            <p>
-              Try another search or event type, or open SaleTrail to see garage sales, community-wides, and estate sales.
-            </p>
+          <div className="empty public-empty-state">
+            <p className="eyebrow">Nothing matched this search</p>
+            <h2>Know about something happening nearby?</h2>
+            <p>Try a broader search, or share an event so other neighbors can find it.</p>
             <div className="toolbar">
               <Link className="button" href="/local-events">
                 View all events
               </Link>
-              <Link className="button primary" href="/saletrail?category=Estate%20sale">
-                View estate sales
-              </Link>
-              <Link className="button" href="/saletrail?category=City-wide%20sale">
-                View community-wides
+              <Link className="button primary" href="#submit">
+                Share an event
               </Link>
             </div>
           </div>
@@ -270,7 +264,7 @@ export default async function LocalEventsPage({ searchParams }: Props) {
         area="event"
         eyebrow="Submit an event"
         title="Add a Local Event"
-        description="Use this for farmers markets, craft fairs, pop-ups, workshops, festivals, plant swaps, community days, classes, or other local happenings. Garage sales and estate sales should still go through SaleTrail."
+        description="Share a farmers market, craft fair, workshop, festival, plant swap, community day, class, or other local happening."
         categoryLabel="Event type"
         categoryPlaceholder="Farmers market, craft fair, workshop, festival..."
         titleLabel="Event name"

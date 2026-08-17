@@ -21,8 +21,7 @@ export default function NewSalePage() {
       <p className="eyebrow">SaleTrail by Localized.life</p>
       <h1>Create a garage sale listing</h1>
       <p className="lede">
-        SaleTrail uses a private manage link instead of accounts. We email that link to you so you can edit, cancel, or
-        remove the listing later.
+        We will email you a private link you can use to edit, cancel, or remove the listing whenever you need it.
       </p>
       <SaleForm action={createSellerSale} />
     </main>

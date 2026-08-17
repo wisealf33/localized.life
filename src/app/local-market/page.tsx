@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowRight, Storefront } from "@phosphor-icons/react/ssr";
 import { LocalSubmissionForm } from "@/components/LocalSubmissionForm";
 import { SiteHeader } from "@/components/SiteHeader";
 import { backlogLeads } from "@/data/backlog-leads";
@@ -42,8 +43,6 @@ const categories = [
   },
 ];
 
-const examples = ["Eggs", "Honey", "Produce", "Plants", "Flowers", "Baked goods", "Soap", "Candles", "Crafts"];
-const marketSignals = ["Farmstand finds", "Backyard abundance", "Cottage food", "Local makers"];
 const marketLeadTypes = new Set<BacklogLead["lead_type"]>(["local_goods", "food", "gardens"]);
 const profileSourceLeadIds = new Set(localMarketProfiles.map((profile) => profile.sourceLeadId));
 const hiddenMarketLeadIds = new Set([
@@ -104,29 +103,30 @@ export default async function LocalMarketPage({ searchParams }: Props) {
   const hasFilters = Boolean(searchTerm);
 
   return (
-    <main className="page local-page local-page-market">
+    <main className="page local-page local-page-market public-directory-page">
       <SiteHeader active="market" product="Project hub" />
-      <section className="hero local-hero local-hero-market">
+      <section className="hero local-hero local-hero-market public-directory-hero">
+        <Storefront aria-hidden="true" className="directory-hero-icon" size={72} weight="duotone" />
         <p className="eyebrow">Local goods</p>
         <h1>Local Market</h1>
         <p className="lede">
-          A directory for useful local goods and abundance: things people grow, raise, bake, make, gather, repair, or
-          offer nearby.
+          Find eggs, produce, baked goods, plants, handmade items, and other useful things made or grown nearby.
         </p>
+        <div className="toolbar">
+          <Link className="button primary" href="#market-search">
+            Find local goods
+          </Link>
+          <Link className="button" href="#submit">
+            Offer local goods
+          </Link>
+        </div>
       </section>
 
-      <section className="local-signal-strip" aria-label="Local Market highlights">
-        {marketSignals.map((signal) => (
-          <span key={signal}>{signal}</span>
-        ))}
-      </section>
-
-      <section className="panel event-filter-panel local-directory-filter">
+      <section className="panel event-filter-panel local-directory-filter public-search-panel" id="market-search">
         <div>
           <h2>Find Local Goods</h2>
           <p className="muted">
-            Search by product, town, county, seller profile, or kind of local good. Local Market is for useful local
-            goods and abundance, not random resale posts.
+            Search by item, town, county, or seller name.
           </p>
         </div>
         <form action="/local-market" className="event-directory-search local-directory-search" method="get">
@@ -156,11 +156,27 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         </p>
       </section>
 
-      <section className="panel stack" aria-labelledby="localMarketListings">
+      <section className="directory-browse-list" aria-labelledby="marketCategories">
+        <div>
+          <p className="eyebrow">Browse local goods</p>
+          <h2 id="marketCategories">What are you looking for?</h2>
+        </div>
+        <div className="directory-link-list">
+          {visibleCategories.map((category) => (
+            <Link href={`/local-market?q=${encodeURIComponent(category.title)}`} key={category.title}>
+              <strong>{category.title}</strong>
+              <span>{category.description}</span>
+              <ArrowRight aria-hidden="true" size={20} weight="bold" />
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel stack public-results-panel" id="market-results" aria-labelledby="localMarketListings">
         <div className="section-heading">
           <div>
             <p className="eyebrow">Local Market listings</p>
-            <h2 id="localMarketListings">People offering local goods nearby.</h2>
+            <h2 id="localMarketListings">Local goods near you.</h2>
           </div>
         </div>
         {visibleProfiles.length ? (
@@ -234,7 +250,7 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         area="market"
         eyebrow="Submit a local good"
         title="Add yourself to Local Market"
-        description="Use this if you offer local goods, farmstand items, backyard abundance, handmade items, cottage food, plants, or practical farm and garden items. Please do not submit random resale items or small marketplace listings."
+        description="Share goods you grow, raise, bake, make, or regularly offer nearby. We will contact you before the listing appears publicly."
         categoryLabel="What do you sell?"
         categoryPlaceholder="Eggs, honey, produce, candles, baked goods..."
         titleLabel="Listing or profile name"
@@ -248,78 +264,6 @@ export default async function LocalMarketPage({ searchParams }: Props) {
         errorMessage={params.error}
         ctaLabel="Post a local good"
       />
-
-      <section className="grid two local-info-grid">
-        <article className="card">
-          <h2>What belongs here</h2>
-          <p className="muted">
-            Local Market is for local abundance and practical goods: eggs, honey, produce, plants, baked goods,
-            cottage food, handmade items, farmstand goods, garden starts, flowers, firewood, compost, farm and garden
-            tools, and larger local-use items that make sense to find nearby.
-          </p>
-          <div className="tag-row">
-            {examples.map((example) => (
-              <span key={example}>{example}</span>
-            ))}
-          </div>
-        </article>
-
-        <article className="card">
-          <h2>Local Market categories</h2>
-          <p className="muted">
-            These are the main kinds of local goods we want here. Local Market is not a general resale feed, so random
-            small household items should stay in SaleTrail or another resale space unless they connect to growing,
-            making, repairing, farmstands, or practical local use.
-          </p>
-          <div className="mini-list local-category-list">
-            {visibleCategories.map((category) => (
-              <span key={category.title}>{category.title}</span>
-            ))}
-          </div>
-        </article>
-      </section>
-
-      <section className="local-card-grid local-browse-grid" aria-labelledby="marketCategories">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Market map</p>
-            <h2 id="marketCategories">Browse by the kind of local good.</h2>
-          </div>
-        </div>
-        {visibleCategories.length === 0 ? (
-          <div className="empty local-directory-empty">
-            <h3>No Matching Market Categories Yet</h3>
-            <p>Try another search or view all local goods categories.</p>
-            <div className="toolbar">
-              <Link className="button" href="/local-market">
-                View all categories
-              </Link>
-            </div>
-          </div>
-        ) : (
-          visibleCategories.map((category) => (
-            <article className="card local-field-card local-browse-card" key={category.title}>
-              <div>
-                <h3>{category.title}</h3>
-                <p className="muted">{category.description}</p>
-              </div>
-              <div className="tag-row">
-                {category.examples.map((example) => (
-                  <span key={example}>{example}</span>
-                ))}
-              </div>
-              <div className="card-actions">
-                <Link className="button primary compact-button" href={`/local-market?q=${encodeURIComponent(category.title)}`}>
-                  Browse this
-                </Link>
-                <Link className="button compact-button" href="#submit">
-                  Post local good
-                </Link>
-              </div>
-            </article>
-          ))
-        )}
-      </section>
     </main>
   );
 }

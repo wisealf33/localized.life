@@ -113,7 +113,7 @@ export default function HarvestPage() {
             height={506}
             sizes="(max-width: 820px) 100vw, 430px"
           />
-          <figcaption>Pawpaws are the launch tree for the Harvest sponsorship model.</figcaption>
+          <figcaption>Pawpaws are the first tree featured in Harvest.</figcaption>
         </figure>
       </section>
 
@@ -122,9 +122,8 @@ export default function HarvestPage() {
           <p className="harvest-eyebrow">Get involved</p>
           <h2>People make the harvest network real.</h2>
           <p>
-            Harvest needs people who can host growing sites, spot local food abundance, help during harvest windows, and
-            move food back into the community. The registry is the starting point; the local crew turns it into a food
-            network.
+            Harvest welcomes people who can host growing sites, spot local food abundance, help during harvest windows,
+            and share extra food within the community.
           </p>
         </div>
         <div className="harvest-involvement-options">

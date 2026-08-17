@@ -148,7 +148,7 @@ type HarvestRegistryProps = {
 
 export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
   const [plants, setPlants] = useState<HarvestPlant[]>([...starterPlants]);
-  const [leadCount, setLeadCount] = useState(0);
+  const [, setLeadCount] = useState(0);
   const [activeFilter, setActiveFilter] = useState<PlantType | "All">("All");
   const [confirmation, setConfirmation] = useState("");
   const [leadConfirmation, setLeadConfirmation] = useState("");
@@ -169,8 +169,6 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
   }, [activeFilter, plants]);
 
   const previewPlants = plants.slice(0, 4);
-  const registryTypes = new Set(plants.map((plant) => plant.plantType)).size;
-
   function savePlants(customPlants: HarvestPlant[]) {
     const cleaned = cleanCustomPlants(customPlants);
     setPlants([...starterPlants, ...cleaned]);
@@ -235,18 +233,18 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
 
   return (
     <>
-      <section className="harvest-stats" aria-label="Registry totals">
+      <section className="harvest-stats" aria-label="How Harvest protects local information">
         <div>
-          <strong>{plants.length}</strong>
-          <span>owner registered plants</span>
+          <strong>Permission first</strong>
+          <span>Owners decide whether and how a harvest site participates.</span>
         </div>
         <div>
-          <strong>{leadCount}</strong>
-          <span>private harvest leads</span>
+          <strong>General locations</strong>
+          <span>Public listings use a broad area instead of a private address.</span>
         </div>
         <div>
-          <strong>{registryTypes}</strong>
-          <span>plant categories</span>
+          <strong>Shared locally</strong>
+          <span>Extra food can stay useful within nearby communities.</span>
         </div>
       </section>
 
@@ -255,8 +253,8 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
           <p className="harvest-eyebrow">Harvest registry</p>
           <h2>Start by mapping the food already growing nearby.</h2>
           <p>
-            The core Localized.life Harvest idea is simple: owners can register their own trees, and neighbors can
-            separately share harvest leads that still need owner permission.
+            Register a tree or perennial food plant you own, or privately tell us about a possible harvest site that
+            still needs the owner&apos;s permission.
           </p>
         </div>
 
@@ -264,7 +262,7 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
           <p className="harvest-eyebrow">Owner path</p>
           <h3>Own a tree or perennial food plant?</h3>
           <p>
-            Open a short form to add your plant to the registry. You can close it any time and come back later.
+            Add a fruit tree, nut tree, berry bush, or other perennial food plant and choose how people may contact you.
           </p>
           <button className="button harvest-primary" type="button" onClick={() => setOwnerFormOpen(true)}>
             Register my plant
@@ -329,8 +327,8 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
                 <span className="harvest-type">Register a tree</span>
                 <h3>Add your harvest site.</h3>
                 <p>
-                  Owners can register fruit trees, nut trees, berry bushes, or other perennial food plants for future
-                  harvest coordination.
+                  Owners can register fruit trees, nut trees, berry bushes, or other perennial food plants so harvest
+                  timing and permission stay clear.
                 </p>
                 <button className="button harvest-primary" type="button" onClick={() => setOwnerFormOpen(true)}>
                   Register a plant
@@ -453,7 +451,7 @@ export function HarvestRegistry({ mode = "preview" }: HarvestRegistryProps) {
                   <option value="Owner registered - contact before harvest">Contact me before any harvest</option>
                   <option value="Owner registered - interested in sharing surplus">Interested in sharing surplus</option>
                   <option value="Owner registered - needs harvest help">I may need harvest help</option>
-                  <option value="Owner registered - registry only for now">Registry only for now</option>
+                  <option value="Owner registered - registry only for now">Keep this as a registry record</option>
                 </select>
               </label>
               <label>

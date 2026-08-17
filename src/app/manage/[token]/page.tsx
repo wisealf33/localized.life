@@ -48,15 +48,15 @@ export default async function ManageLocalizedSubmissionPage({ params, searchPara
       <p className="eyebrow">Private manage link</p>
       <h1>Manage your {areaLabels[submission.submission_area]} submission</h1>
       <p className="lede">
-        Anyone with this private link can edit or remove this submission. There is no account login yet, so keep this
-        link private.
+        This private link lets you edit or remove the submission. Keep it private because anyone with the link can make
+        changes.
       </p>
 
-      {query.updated ? <p className="notice good">Saved. Your submission is back in the review queue.</p> : null}
+      {query.updated ? <p className="notice good">Saved. Your updated submission has been received for review.</p> : null}
       {isRemoved ? (
         <section className="panel">
           <h2>Submission removed</h2>
-          <p className="muted">This submission has been removed from the active review queue.</p>
+          <p className="muted">This submission is no longer active or publicly available.</p>
         </section>
       ) : (
         <section className="panel">

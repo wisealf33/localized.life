@@ -2,6 +2,36 @@
 
 final result: passed
 
+## Public-site visual system and navigation — 2026-08-16
+
+### Scope and direction
+
+- Re-audited the home page and every primary public product page: Local Services, Local Market, Local Events, Local Mentors, Harvest, and SaleTrail.
+- Reordered global navigation everywhere to Local Services, Local Market, Local Events, Local Mentors, Harvest, then SaleTrail.
+- Kept the SaleTrail name unchanged because the replacement name is still undecided.
+- Used the selected blended Local Services page as the visual benchmark for clarity, public-facing language, and reduced interface clutter.
+
+### Public experience changes
+
+- Home now prioritizes asking for local help and presents the products in the same order as the navigation.
+- Market and Mentors use compact link lists instead of repeated card grids.
+- Events exposes only the most useful filters and has a simpler public empty state.
+- Mentors and Connector describe privately arranged introductions; neither asks visitors to choose from a public list of people.
+- Harvest leads with public trust principles instead of operational totals.
+- SaleTrail has a larger consumer hero, clearer search hierarchy, and no future-feature language.
+- Public copy was checked for AI instructions, implementation notes, internal review language, and roadmap text; none remains visible on the audited routes.
+
+### Verification
+
+- Desktop routes were visually inspected at a 1440-pixel viewport; primary mobile routes were inspected at 390 × 844.
+- Every audited primary route has one `h1`, no missing image alt text, no empty interactive controls, and no horizontal overflow.
+- Secondary flows inspected: service request, membership, Connector, SaleTrail listing, and Paw Paw Revival.
+- Evidence and page-by-page findings: `audit-artifacts/site-redesign-2026-08-16/site-redesign-audit.md`.
+- Final primary screenshots: `audit-artifacts/site-redesign-2026-08-16/08-home-after.png` through `21-saletrail-mobile.png`.
+- Final secondary screenshots: `audit-artifacts/site-redesign-2026-08-16/22-service-request-after.png` through `26-pawpaw-after.png`.
+
+final result: passed
+
 ## Visual truth and tested state
 
 - Reference: `/Users/aiassistant/.codex/generated_images/019ff983-84f3-7232-bb30-c95b0c3387c5/exec-f3b41165-c9f4-4776-92fa-0b84bfd85f34.png`
@@ -53,3 +83,36 @@ final result: passed
 - Content model: Services, Goods, Events, Mentoring, and Requests share one owner-controlled history. Owner lifecycle (`active`, `paused`, `closed`, `removed`) remains separate from review status (`pending`, `reviewed`, `approved`, `rejected`).
 - Accessibility and resilience: headings, regions, field labels, buttons, mobile tap targets, horizontal filter overflow, and wrapped descriptions were checked without overlap or clipped controls.
 - Final extension result: passed.
+
+## Local Services redesign — 2026-08-16
+
+### Target and implementation comparison
+
+- Compared the user's selected 1093 × 775 blended-background reference and the implemented Local Services page side by side at the same viewport.
+- Final comparison: `audit-artifacts/local-services/local-services-reference-vs-final.png`.
+- The implementation preserves the selected information hierarchy: consumer question, guided request form, contextual image, privacy promise, and six simple service rows.
+- The final replacement image shows ordinary shelf assembly with every black bracket physically below its shelf and no vehicle, trailer, tractor, or heavy equipment.
+- The image is blended into the white hero so the headline, form, and photo read as one continuous section.
+- The privacy note has been moved out of the gap between the hero and categories and placed at the bottom of the page.
+- The public experience contains no worker cards, helper picker, provider chooser, or nearby-person list.
+
+### Responsive and visual checks
+
+- Desktop checked at 1440 × 1000 and against the 1093 × 775 reference.
+- Mobile checked at 390 × 844.
+- No horizontal overflow was detected at the mobile breakpoint.
+- Mobile order keeps the request form before the supporting image.
+- A mobile implicit-grid-column regression that squeezed the form beside the headline was found, fixed, and recaptured.
+- Heading scale, form controls, focus treatment, row targets, borders, and spacing were checked visually.
+
+### Content and interaction checks
+
+- Popular services are limited to house cleaning, yard cleanup, small repairs, furniture assembly, pet care, and tech help.
+- Hauling, moving, delivery, junk removal, trucks, trailers, tractors, and heavy equipment are excluded in the public scope statement.
+- Consumer-facing copy replaces internal phrases such as review queue, admin queue, and network growth.
+- The guided form successfully carries the requested job, city, and timing into the request page.
+- Service rows link to the corresponding request flow.
+- `npm run lint` passed.
+- `npm run build` passed.
+
+final result: passed

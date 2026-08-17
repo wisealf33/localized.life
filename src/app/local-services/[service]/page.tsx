@@ -30,10 +30,9 @@ export default async function LocalServiceDetailPage({ params }: Props) {
   if (!service) notFound();
 
   return (
-    <main className="page local-page local-page-services">
+    <main className="page local-page local-page-services local-service-detail-page">
       <SiteHeader active="services" product="Project hub" />
       <section className="hero compact-hero local-hero local-hero-services">
-        <p className="eyebrow">{service.category}</p>
         <h1>{service.title}</h1>
         <p className="lede">{service.summary}</p>
         <div className="toolbar">
@@ -59,8 +58,7 @@ export default async function LocalServiceDetailPage({ params }: Props) {
         <article className="card">
           <h2>What to include</h2>
           <p className="muted">
-            A clear request helps local providers decide whether they can help before anyone wastes time messaging back
-            and forth.
+            A clear request helps us understand the job and arrange the right local next step.
           </p>
           <div className="mini-list local-category-list">
             {service.requestPrompts.map((prompt) => (
@@ -72,10 +70,10 @@ export default async function LocalServiceDetailPage({ params }: Props) {
 
       <section className="panel services-flow-panel">
         <div>
-          <h2>Start as a reviewed request.</h2>
+          <h2>Tell us what needs doing.</h2>
           <p className="muted">
-            Localized.life is not promising instant booking yet. The request is saved for review first, then this lane
-            can grow into matching, scheduling, payments, and provider profiles when the local network is ready.
+            We review each request privately and decide who is appropriate to contact. The public page does not ask you
+            to choose from a list of people.
           </p>
         </div>
         <div className="card-actions">
