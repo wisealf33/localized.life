@@ -55,7 +55,6 @@ type PersonDetail = Overview & {
   person: PersonSummary & {
     how_met: string | null;
     private_notes: string | null;
-    abilities: string | null;
     created_at: string;
     claimed_at: string | null;
   };

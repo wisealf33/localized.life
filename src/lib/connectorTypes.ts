@@ -8,7 +8,6 @@ export type Person = {
   state: string | null;
   how_met: string | null;
   private_notes: string | null;
-  abilities: string | null;
   created_by_person_id: string | null;
   claim_status: "unclaimed" | "claimed";
   claimed_at: string | null;

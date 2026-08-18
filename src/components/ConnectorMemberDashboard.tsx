@@ -22,7 +22,6 @@ type MemberPerson = {
   phone: string | null;
   town: string | null;
   state: string | null;
-  abilities: string | null;
 };
 
 type DashboardData = {
@@ -44,7 +43,7 @@ type ViewState =
   | { status: "error"; message: string }
   | { status: "ready"; data: DashboardData };
 
-const personFields = "id, auth_user_id, display_name, email, phone, town, state, abilities";
+const personFields = "id, auth_user_id, display_name, email, phone, town, state";
 const relationshipFields =
   "id, connector_person_id, person_id, household_id, is_primary, status, started_at";
 const needFields =

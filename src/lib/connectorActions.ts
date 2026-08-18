@@ -460,7 +460,6 @@ export async function updateConnectorPerson(formData: FormData) {
       state: value(formData, "state").toUpperCase() || null,
       how_met: value(formData, "how_met") || null,
       private_notes: value(formData, "private_notes") || null,
-      abilities: value(formData, "abilities") || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", personId);

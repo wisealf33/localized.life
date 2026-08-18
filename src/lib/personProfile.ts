@@ -1,4 +1,4 @@
-export const personProfileColumns = "id, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, headline, bio, occupation, organization, website_url, avatar_url, facebook_url, instagram_url, linkedin_url, abilities, languages, skills, interests, community_roles, certifications, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
+export const personProfileColumns = "id, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, skills, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
 
 function cleanText(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -31,18 +31,6 @@ export function personStartDetails(body: Record<string, unknown>) {
     email: primaryEmail,
     phone,
   };
-}
-
-function url(value: unknown) {
-  const next = cleanText(value, 1000);
-  if (!next) return null;
-  try {
-    const parsed = new URL(next);
-    if (!new Set(["http:", "https:"]).has(parsed.protocol)) throw new Error();
-    return parsed.toString();
-  } catch {
-    throw new Error("Add a complete website address beginning with http:// or https://.");
-  }
 }
 
 function date(value: unknown) {
@@ -121,21 +109,7 @@ export function personProfilePayload(
     country_code: countryCode || null,
     timezone: optionalText(body.timezone, 100),
     service_radius_miles: optionalInteger(body.serviceRadiusMiles, 0, 500),
-    headline: optionalText(body.headline, 180),
-    bio: optionalText(body.bio, 4000),
-    occupation: optionalText(body.occupation, 180),
-    organization: optionalText(body.organization, 180),
-    website_url: url(body.websiteUrl),
-    avatar_url: url(body.avatarUrl),
-    facebook_url: url(body.facebookUrl),
-    instagram_url: url(body.instagramUrl),
-    linkedin_url: url(body.linkedinUrl),
-    abilities: optionalText(body.abilities, 1000),
-    languages: list(body.languages),
     skills: list(body.skills),
-    interests: list(body.interests),
-    community_roles: list(body.communityRoles),
-    certifications: list(body.certifications),
     services_offered: optionalText(body.servicesOffered, 4000),
     help_wanted: optionalText(body.helpWanted, 4000),
     availability_notes: optionalText(body.availabilityNotes, 2000),

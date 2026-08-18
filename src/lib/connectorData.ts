@@ -14,7 +14,7 @@ import type {
 
 const connectorProfileFields = "person_id, slug, display_name, headline, intro, active";
 const personFields =
-  "id, auth_user_id, display_name, email, phone, town, state, how_met, private_notes, abilities, created_at, updated_at";
+  "id, auth_user_id, display_name, email, phone, town, state, how_met, private_notes, created_at, updated_at";
 const relationshipFields =
   "id, connector_person_id, person_id, household_id, is_primary, status, started_at";
 const needFields =

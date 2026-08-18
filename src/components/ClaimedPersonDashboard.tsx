@@ -36,7 +36,6 @@ type AccountPerson = PersonProfileValue & {
   phone: string | null;
   town: string | null;
   state: string | null;
-  abilities: string | null;
   claim_status: "claimed" | "unclaimed";
 };
 
@@ -136,7 +135,6 @@ function designPreviewData(): AccountData {
       phone: "",
       town: "Peotone",
       state: "IL",
-      abilities: "Local coordination, practical help, and trusted introductions",
       claim_status: "claimed",
     },
     connector: { person_id: "preview-garrett", slug: "garrett", display_name: "Garrett", headline: "Local Connector" },
