@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { localServices, serviceOptionField, serviceRadiusOptions } from "@/lib/localServices";
+import { localServices, serviceOptionField, serviceRadiusOptions, serviceWantedOptionField } from "@/lib/localServices";
 
 export type PersonProfileValue = {
   display_name?: string | null;
@@ -24,6 +24,7 @@ export type PersonProfileValue = {
   timezone?: string | null;
   service_radius_miles?: number | null;
   skills?: string[] | null;
+  services_wanted?: string[] | null;
   services_offered?: string | null;
   help_wanted?: string | null;
   availability_notes?: string | null;
@@ -48,6 +49,9 @@ export function PersonProfileFields({
 }: Props) {
   const selectedServices = new Set(
     (person.skills || []).map((value) => value.trim().toLocaleLowerCase()),
+  );
+  const selectedServicesWanted = new Set(
+    (person.services_wanted || []).map((value) => value.trim().toLocaleLowerCase()),
   );
 
   return (
@@ -120,8 +124,24 @@ export function PersonProfileFields({
           </div>
           <span className="field-note">Choose every service this person is available to provide.</span>
         </div>
+        <div>
+          <span className="person-profile-control-label">Services or help wanted</span>
+          <div className="person-service-options">
+            {localServices.map((service) => (
+              <label className="person-service-option" key={service.slug}>
+                <input
+                  name={serviceWantedOptionField(service.slug)}
+                  type="checkbox"
+                  defaultChecked={selectedServicesWanted.has(service.slug) || selectedServicesWanted.has(service.title.toLocaleLowerCase())}
+                />
+                <span>{service.title}</span>
+              </label>
+            ))}
+          </div>
+          <span className="field-note">Choose every service this person may want help with.</span>
+        </div>
         <div className="grid two">
-          <label>Help, services, or connections wanted<textarea name="helpWanted" rows={4} maxLength={4000} defaultValue={person.help_wanted || ""} placeholder="Things this person may want help finding" /></label>
+          <label>Other help or connection details<textarea name="helpWanted" rows={4} maxLength={4000} defaultValue={person.help_wanted || ""} placeholder="Add anything not covered above or details that would help with a good introduction" /></label>
           <label>Travel or service radius<select name="serviceRadiusMiles" defaultValue={person.service_radius_miles ?? ""}><option value="">Not selected</option>{serviceRadiusOptions.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}</select></label>
         </div>
         {manageOwnCalendar ? <div className="person-availability-link"><div><strong>Availability is managed on the calendar</strong><span>Open days, closed days, and scheduled appointments stay together.</span></div><Link href="/account/calendar">Open calendar</Link></div> : null}

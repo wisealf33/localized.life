@@ -96,6 +96,14 @@ export const localServices: LocalService[] = [
     examples: ["Printer setup", "Wi-Fi help", "Phone help", "Smart TV setup"],
     requestPrompts: ["Device or software involved", "Error message or goal", "In-home or remote help"],
   },
+  {
+    slug: "cooking-meal-sharing",
+    title: "Cooking & Meal Sharing",
+    category: "Meals",
+    summary: "Home-cooked meals, meal prep, neighbor meal exchanges, and practical cooking help.",
+    examples: ["Meal preparation", "Shared meals", "Meal swaps or trades", "Cooking for a household"],
+    requestPrompts: ["Number of people and meal type", "Allergies or dietary needs", "Cooking, delivery, pickup, or meal exchange"],
+  },
 ];
 
 export const serviceRadiusOptions = [
@@ -112,9 +120,20 @@ export function serviceOptionField(slug: string) {
   return `serviceOption_${slug}`;
 }
 
+export function serviceWantedOptionField(slug: string) {
+  return `serviceWantedOption_${slug}`;
+}
+
 export function selectedServiceSlugs(body: Record<string, unknown>) {
   return localServices.flatMap((service) => {
     const value = body[serviceOptionField(service.slug)];
+    return value === true || value === "on" ? [service.slug] : [];
+  });
+}
+
+export function selectedServiceWantedSlugs(body: Record<string, unknown>) {
+  return localServices.flatMap((service) => {
+    const value = body[serviceWantedOptionField(service.slug)];
     return value === true || value === "on" ? [service.slug] : [];
   });
 }

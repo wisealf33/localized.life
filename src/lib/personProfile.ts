@@ -1,7 +1,7 @@
-import { selectedServiceSlugs, serviceRadiusOptions } from "./localServices";
+import { selectedServiceSlugs, selectedServiceWantedSlugs, serviceRadiusOptions } from "./localServices";
 import { normalizePhone } from "./phone";
 
-export const personProfileColumns = "id, personal_number, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, skills, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
+export const personProfileColumns = "id, personal_number, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, skills, services_wanted, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
 
 function cleanText(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -108,6 +108,7 @@ export function personProfilePayload(
     timezone: optionalText(body.timezone, 100),
     service_radius_miles: serviceRadius(body.serviceRadiusMiles),
     skills: selectedServiceSlugs(body),
+    services_wanted: selectedServiceWantedSlugs(body),
     help_wanted: optionalText(body.helpWanted, 4000),
     transportation_notes: optionalText(body.transportationNotes, 2000),
     accessibility_notes: optionalText(body.accessibilityNotes, 2000),
