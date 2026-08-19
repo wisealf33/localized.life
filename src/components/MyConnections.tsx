@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AccountSignIn } from "./AccountSignIn";
-import { PersonProfileFields, type PersonProfileValue } from "./PersonProfileFields";
+import { PersonProfileFields } from "./PersonProfileFields";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { formatPersonNumber } from "@/lib/phone";
 
-type PersonSummary = PersonProfileValue & {
+type PersonSummary = {
   id: string;
   personal_number: number;
   display_name: string;
@@ -272,7 +272,7 @@ export function MyConnections({ personId }: { personId?: string }) {
         <Link className="back-link" href="/connections">← My Connections</Link>
         <section className="connector-record-heading">
           <div>
-            <p className="eyebrow">Person record</p>
+            <p className="eyebrow">Connection page</p>
             <h1>{person.display_name}</h1>
             <p className="lede">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p>
           </div>
@@ -283,10 +283,10 @@ export function MyConnections({ personId }: { personId?: string }) {
         </section>
         {message ? <p className="notice good">{message}</p> : null}
 
-        <section className="grid two connector-record-grid">
+        <section className="connector-record-grid">
           <article className="panel">
             <p className="eyebrow">Identity and invitation</p>
-            <h2>{person.claim_status === "claimed" ? "Profile claimed" : "Unclaimed Person"}</h2>
+            <h2>{person.claim_status === "claimed" ? "Profile claimed" : "Private claim link"}</h2>
             <dl className="connector-details-list">
               <div><dt>Created</dt><dd>{date(person.created_at)}</dd></div>
               <div><dt>Person number</dt><dd>{formatPersonNumber(person.personal_number) || "Pending"}</dd></div>
@@ -298,12 +298,12 @@ export function MyConnections({ personId }: { personId?: string }) {
               <div className="stack">
                 {activeInvitationUrl ? (
                   <div className="connector-invite-result" id="person-invitation">
-                    <label>Unclaimed Person link<input value={activeInvitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label>
+                    <label>Private profile claim link<input value={activeInvitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label>
                     <div className="toolbar">
                       <button className="button primary" type="button" onClick={() => copyInvitation(activeInvitationUrl)}>Copy link</button>
                       <button className="button" type="button" onClick={() => shareInvitation(person.display_name, activeInvitationUrl)}>Text or share</button>
                     </div>
-                    <p className="muted connector-small-copy">Use this same private link whenever you message them. It stays active until they claim the profile or you deliberately disable it.</p>
+                    <p className="muted connector-small-copy">Send this link to {person.display_name}. It opens their existing profile, asks them to create only a password, and then signs them in so they can complete their own information.</p>
                     <div className="connector-invite-security-actions">
                       <button className="text-button" type="button" disabled={busy} onClick={() => replaceInvitation(person.id, person.display_name)}>Replace compromised link</button>
                       <button className="text-button" type="button" disabled={busy} onClick={() => revokeInvitation(person.id, person.display_name)}>Revoke link</button>
@@ -311,18 +311,7 @@ export function MyConnections({ personId }: { personId?: string }) {
                   </div>
                 ) : <button className="button primary compact-button" type="button" disabled={busy} onClick={() => invitationAction("generate-invite")}>Create private invitation link</button>}
               </div>
-            ) : <p className="notice good">This Person now uses their own normal Localized.life account.</p>}
-          </article>
-
-          <article className="panel connector-person-profile-panel">
-            <p className="eyebrow">Private Connector record</p>
-            <h2>Complete Person profile</h2>
-            <form className="form" onSubmit={(event) => submit(event, "update-person")}>
-              <PersonProfileFields person={person} intro="Record only information this person has shared with you. These details remain part of the same Person identity if they later claim their account." />
-              <label>How we met<input name="howMet" defaultValue={person.how_met || ""} /></label>
-              <label>Private Connector Notes<textarea name="privateNote" rows={4} defaultValue={person.private_notes || ""} /></label>
-              <button className="button" type="submit" disabled={busy}>Save Person</button>
-            </form>
+            ) : <p className="notice good">This Person claimed the profile and now manages their own account information.</p>}
           </article>
         </section>
 
@@ -407,9 +396,9 @@ export function MyConnections({ personId }: { personId?: string }) {
           <fieldset className="connector-quick-work"><legend>First Need or work, optional</legend><p className="muted connector-small-copy">Add this before work begins, while it is underway, when it is scheduled, or after it is completed.</p><label>What do they need, or what work is involved?<input name="workTitle" placeholder="Storm / tree / yard cleanup" /></label><div className="grid two"><label>Current status<select name="workStatus" defaultValue="new"><option value="new">New — just learned about it</option><option value="working">Working on it</option><option value="scheduled">Scheduled</option><option value="completed">Completed</option></select></label><label>Amount, if known<input name="workAmount" type="number" min="0" step="0.01" placeholder="150.00" /></label></div><label>Scheduled time, optional<input name="workScheduledFor" type="datetime-local" /></label><label>Short detail<textarea name="workDetails" rows={2} /></label></fieldset>
           <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Add Person and show invitation"}</button>
         </form>
-        {invitationUrl && invitationPersonId ? <section className="notice good stack connector-invite-result connector-ready-invitation" id="ready-invitation"><p className="eyebrow">Ready to send now</p><strong>{invitationPersonName || "This Person"} is connected. Their private invitation is below.</strong><label>Secure personalized claim link<input value={invitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label><div className="toolbar"><button className="button primary" type="button" onClick={() => copyInvitation()}>Copy private link</button><button className="button" type="button" onClick={() => shareInvitation(invitationPersonName || "Your connection")}>Text or share now</button><Link className="button" href={`/connections/${invitationPersonId}`}>Open Person</Link></div><p className="muted connector-small-copy">Keep this link private. It lets this Person claim the exact profile and history you started for them.</p></section> : null}
+        {invitationUrl && invitationPersonId ? <section className="notice good stack connector-invite-result connector-ready-invitation" id="ready-invitation"><p className="eyebrow">Ready to send now</p><strong>{invitationPersonName || "This Person"} is connected. Their private invitation is below.</strong><label>Secure personalized claim link<input value={invitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label><div className="toolbar"><button className="button primary" type="button" onClick={() => copyInvitation()}>Copy private link</button><button className="button" type="button" onClick={() => shareInvitation(invitationPersonName || "Your connection")}>Text or share now</button><Link className="button" href={`/connections/${invitationPersonId}`}>Open connection</Link></div><p className="muted connector-small-copy">Keep this link private. It lets this Person create a password, claim this exact profile, and complete their own information.</p></section> : null}
       </section>
-      <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">{overview.accessScope === "system" ? "System access" : "Relationships"}</p><h2>{overview.accessScope === "system" ? "People in the network" : "People you are connected with"}</h2></div></div>{overview.people.length ? <div className="connector-people-grid">{overview.people.map((person) => <article className="card connector-person-card" key={person.id}><div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p></div><div className="connector-person-summary"><span>{person.openNeeds} open {person.openNeeds === 1 ? "Need" : "Needs"}</span><span>{person.phone || person.email || "Contact details not added"}</span></div><Link className="button primary compact-button" href={`/connections/${person.id}`}>{person.claim_status === "unclaimed" && overview.accessScope !== "system" ? "Open Person and invitation" : "Open Person"}</Link></article>)}</div> : <div className="empty connector-empty"><h3>No connections yet</h3><p>Add the first Person above as soon as you learn about them or their Need.</p></div>}</section>
+      <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">{overview.accessScope === "system" ? "System access" : "Relationships"}</p><h2>{overview.accessScope === "system" ? "People in the network" : "People you are connected with"}</h2></div></div>{overview.people.length ? <div className="connector-people-grid">{overview.people.map((person) => <article className="card connector-person-card" key={person.id}><div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p></div><div className="connector-person-summary"><span>{person.openNeeds} open {person.openNeeds === 1 ? "Need" : "Needs"}</span><span>{person.phone || person.email || "Contact details not added"}</span></div><Link className="button primary compact-button" href={`/connections/${person.id}`}>{person.claim_status === "unclaimed" && overview.accessScope !== "system" ? "Open connection and claim link" : "Open connection"}</Link></article>)}</div> : <div className="empty connector-empty"><h3>No connections yet</h3><p>Add the first Person above as soon as you learn about them or their Need.</p></div>}</section>
       <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">Work queue</p><h2>Open Needs</h2></div></div>{openNeeds.length ? <div className="connector-need-list">{openNeeds.map((need) => { const person = overview.people.find((entry) => entry.id === need.requester_person_id); return <article className="card connector-need-card" key={need.id}><div className="connector-need-card-top"><div><p className="eyebrow">{person?.display_name || "Connected Person"}</p><h3>{need.title}</h3></div><span className={`connector-status connector-status-${need.status}`}>{need.status}</span></div>{person ? <Link className="button compact-button" href={`/connections/${person.id}#needs`}>Open Person</Link> : null}</article>; })}</div> : <p className="muted">No open Needs right now.</p>}</section>
     </div>
   );

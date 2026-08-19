@@ -50,7 +50,7 @@ export default async function PersonClaimPage({ params }: { params: Promise<{ to
           <ClaimPersonProfile
             token={token}
             personName={invitation.person.displayName}
-            emailHint={invitation.person.emailHint}
+            contactHint={invitation.person.contactHint}
             returnTo="/account"
           />
         </>
@@ -62,6 +62,7 @@ export default async function PersonClaimPage({ params }: { params: Promise<{ to
               ? "This profile already has an account. Sign in to continue."
               : `Ask ${invitation.referrer.displayName} for a new link.`}
           </p>
+          {invitation.state === "claimed" ? <a className="button primary compact-button" href="/account">Account sign in</a> : null}
         </section>
       )}
     </main>

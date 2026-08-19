@@ -545,14 +545,14 @@ export function AccountCalendar() {
                 <Link
                   className="calendar-person-profile-link"
                   href={`/connections/${person.id}`}
-                  aria-label={`Open ${person.display_name}'s profile`}
+                  aria-label={`Open ${person.display_name}'s connection page`}
                 >
                   <div className="account-small-avatar" aria-hidden="true"><UsersThree weight="duotone" /></div>
                   <div>
                     <h3>{person.display_name}</h3>
                     <p>{person.phone || person.email || "Contact details not added"}</p>
                     {serviceAddress(person) ? <small>{serviceAddress(person)}</small> : <small>Service address not added</small>}
-                    <span className="calendar-person-open-profile">Open profile <CaretRight aria-hidden="true" /></span>
+                    <span className="calendar-person-open-profile">Open connection <CaretRight aria-hidden="true" /></span>
                   </div>
                 </Link>
                 <button className="account-link-button calendar-person-edit" type="button" onClick={() => { setEditingPerson(person); setPersonFormOpen(false); }}> {person.calendar ? "Edit service details" : "Add service details"}</button>

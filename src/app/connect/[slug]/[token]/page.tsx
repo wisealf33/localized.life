@@ -28,16 +28,10 @@ export default async function PersonalizedConnectorPage({ params }: { params: Pr
       </section>
       {invitation.state === "active" ? (
         <>
+          <ClaimPersonProfile token={token} personName={invitation.person.displayName} contactHint={invitation.person.contactHint} />
           <InvitationPersonPortal token={token} />
-          <details className="panel connector-claim-later">
-            <summary><span><small>Account access</small><strong>Set up your account</strong></span><span aria-hidden="true">+</span></summary>
-            <div className="connector-claim-later-body">
-              <p>Create or connect a Localized.life account so you can open this page from any device.</p>
-              <ClaimPersonProfile token={token} personName={invitation.person.displayName} emailHint={invitation.person.emailHint} />
-            </div>
-          </details>
         </>
-      ) : <section className="notice bad stack"><h2>This private link is no longer active.</h2><p>{invitation.state === "claimed" ? "This profile already has an account. Sign in to continue." : `Ask ${invitation.connector.display_name} for a new link.`}</p></section>}
+      ) : <section className="notice bad stack"><h2>This private link is no longer active.</h2><p>{invitation.state === "claimed" ? "This profile already has an account. Sign in to continue." : `Ask ${invitation.connector.display_name} for a new link.`}</p>{invitation.state === "claimed" ? <a className="button primary compact-button" href="/account">Account sign in</a> : null}</section>}
     </main>
   );
 }

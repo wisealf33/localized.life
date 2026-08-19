@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { authLoginFromInput, passwordAuthEmail } from "@/lib/authIdentity";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 export function AccountSignIn({
@@ -17,27 +18,37 @@ export function AccountSignIn({
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    const email = String(data.get("email") || "").trim();
+    const login = authLoginFromInput(String(data.get("login") || ""));
     const password = String(data.get("password") || "");
     const supabase = getSupabaseBrowser();
-    if (!supabase || !email || !password) return;
+    if (!supabase || !login || !password) {
+      setMessage("Enter a valid email address or phone number and your password.");
+      return;
+    }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: passwordAuthEmail(login),
+      password,
+    });
     setBusy(false);
     setMessage(error ? error.message : "Signed in. Opening your account…");
   }
 
   async function sendMagicLink() {
     const form = document.querySelector<HTMLFormElement>("[data-account-sign-in]");
-    const email = form ? String(new FormData(form).get("email") || "").trim() : "";
+    const login = form ? authLoginFromInput(String(new FormData(form).get("login") || "")) : null;
     const supabase = getSupabaseBrowser();
-    if (!supabase || !email) {
+    if (!supabase || !login) {
       setMessage("Add your email address first.");
+      return;
+    }
+    if (login.type !== "email") {
+      setMessage("Phone-based accounts sign in with their phone number and password.");
       return;
     }
     setBusy(true);
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: login.value,
       options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}${returnTo}` },
     });
     setBusy(false);
@@ -48,11 +59,11 @@ export function AccountSignIn({
     <section className="panel connector-login-panel">
       <p className="eyebrow">Account access</p>
       <h2>{title}</h2>
-      <p className="muted">Use your email and password. A private email link is also available.</p>
+      <p className="muted">Use the email address or phone number connected to your profile and your password.</p>
       <form className="form connector-login-form" onSubmit={signIn} data-account-sign-in>
         <label>
-          Email address
-          <input name="email" type="email" autoComplete="email" required />
+          Email address or phone number
+          <input name="login" type="text" inputMode="email" autoComplete="username" required />
         </label>
         <label>
           Password

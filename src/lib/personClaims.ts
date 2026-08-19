@@ -1,5 +1,6 @@
 import "server-only";
 
+import { authLoginFromContact, maskAuthLogin } from "./authIdentity";
 import { getSupabaseAdmin } from "./supabase";
 import { hashSecret } from "./tokens";
 
@@ -17,7 +18,7 @@ export async function getPersonClaimInvitation(token: string) {
   const [{ data: person }, { data: referrer }] = await Promise.all([
     supabase
       .from("people")
-      .select("id, display_name, email, town, state, claim_status, claimed_at")
+      .select("id, display_name, email, phone, town, state, claim_status, claimed_at")
       .eq("id", invitation.person_id)
       .maybeSingle(),
     supabase
@@ -44,7 +45,7 @@ export async function getPersonClaimInvitation(token: string) {
       displayName: person.display_name,
       town: person.town,
       state: person.state,
-      emailHint: person.email ? person.email.replace(/^(.).+(@.+)$/, "$1•••$2") : null,
+      contactHint: maskAuthLogin(authLoginFromContact(person.email, person.phone)),
     },
     referrer: {
       id: referrer.id,
