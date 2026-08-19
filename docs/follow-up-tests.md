@@ -4,6 +4,11 @@ Use this file for things that should not get lost between Codex threads.
 
 ## Needs Attention
 
+- [ ] Apply the Localized.life Person/referral/Connector foundation migration to the live database before deploying the matching application code.
+  - File: `supabase/migrations/20260819140656_person_referral_connector_foundation.sql`
+  - Why: the account and referral APIs now use Personal Numbers, normalized phones, private Connector profiles, and the internal SR/AR fields introduced by this migration.
+  - Test after applying: create one sponsored referral and one founder-approved assigned referral; confirm their internal numbers advance independently and the assigned Person sees only their private Connector inside the account.
+
 - [ ] Apply the Local Mentors Supabase migration to the live submissions database.
   - File: `supabase/add-local-mentors-submissions.sql`
   - Why: mentor submissions use `submission_area = 'mentor'`, and the live database must allow that value.

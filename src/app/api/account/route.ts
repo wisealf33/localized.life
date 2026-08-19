@@ -3,6 +3,7 @@ import { authenticatePerson } from "@/lib/connectionAccess";
 import { personProfilePayload, personStartDetails } from "@/lib/personProfile";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashSecret, invitationToken } from "@/lib/tokens";
+import { normalizePhone } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,7 @@ async function captureReferral(actorPersonId: string, referredPersonId: string) 
   const { error } = await supabase.from("person_referral_attributions").insert({
     referred_person_id: referredPersonId,
     referrer_person_id: actorPersonId,
+    referral_type: "sponsored",
     source_type: "personal_introduction",
     source_reference: `person:${actorPersonId}`,
     status: "captured",
@@ -138,7 +140,7 @@ export async function GET(request: Request) {
 
   const supabase = getSupabaseAdmin();
   const actorPersonId = actor.person.id;
-  const [connectorResult, connectionsResult, needsResult, postsResult] = await Promise.all([
+  const [connectorResult, connectionsResult, needsResult, postsResult, membershipsResult] = await Promise.all([
     supabase
       .from("connector_profiles")
       .select("person_id, slug, display_name, headline, intro, active")
@@ -163,10 +165,85 @@ export async function GET(request: Request) {
       .eq("owner_person_id", actorPersonId)
       .order("updated_at", { ascending: false })
       .limit(100),
+    supabase
+      .from("household_memberships")
+      .select("household_id, role")
+      .eq("person_id", actorPersonId),
   ]);
 
-  const firstError = connectorResult.error || connectionsResult.error || needsResult.error || postsResult.error;
+  const firstError =
+    connectorResult.error ||
+    connectionsResult.error ||
+    needsResult.error ||
+    postsResult.error ||
+    membershipsResult.error;
   if (firstError) return NextResponse.json({ error: firstError.message }, { status: 500 });
+
+  const householdIds = (membershipsResult.data || []).map((membership) => membership.household_id);
+  const [directConnectorResult, householdConnectorResult] = await Promise.all([
+    supabase
+      .from("connector_relationships")
+      .select("id, connector_person_id, person_id, household_id, started_at")
+      .eq("person_id", actorPersonId)
+      .eq("status", "active")
+      .eq("is_primary", true)
+      .maybeSingle(),
+    householdIds.length
+      ? supabase
+          .from("connector_relationships")
+          .select("id, connector_person_id, person_id, household_id, started_at")
+          .in("household_id", householdIds)
+          .eq("status", "active")
+          .eq("is_primary", true)
+          .order("started_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  const assignedRelationship = directConnectorResult.data || householdConnectorResult.data;
+  const connectorRelationshipError = directConnectorResult.error || householdConnectorResult.error;
+  if (connectorRelationshipError) {
+    return NextResponse.json({ error: connectorRelationshipError.message }, { status: 500 });
+  }
+
+  let assignedConnector: {
+    person_id: string;
+    display_name: string;
+    headline: string;
+    intro: string;
+    phone: string | null;
+    email: string | null;
+    assignment_scope: "person" | "household";
+    household_id: string | null;
+  } | null = null;
+  if (assignedRelationship) {
+    const [profileResult, personResult] = await Promise.all([
+      supabase
+        .from("connector_profiles")
+        .select("person_id, display_name, headline, intro")
+        .eq("person_id", assignedRelationship.connector_person_id)
+        .eq("active", true)
+        .maybeSingle(),
+      supabase
+        .from("people")
+        .select("id, phone, email")
+        .eq("id", assignedRelationship.connector_person_id)
+        .maybeSingle(),
+    ]);
+    const assignedConnectorError = profileResult.error || personResult.error;
+    if (assignedConnectorError) {
+      return NextResponse.json({ error: assignedConnectorError.message }, { status: 500 });
+    }
+    if (profileResult.data && personResult.data) {
+      assignedConnector = {
+        ...profileResult.data,
+        phone: personResult.data.phone,
+        email: personResult.data.email,
+        assignment_scope: assignedRelationship.household_id ? "household" : "person",
+        household_id: assignedRelationship.household_id,
+      };
+    }
+  }
 
   const connections = connectionsResult.data || [];
   const connectedPersonIds = connections.map((connection) =>
@@ -231,6 +308,7 @@ export async function GET(request: Request) {
     user: { email: actor.user.email || null },
     person: actor.person,
     connector: connectorResult.data || null,
+    assignedConnector,
     people,
     activity,
     posts: postsResult.data || [],
@@ -371,7 +449,7 @@ export async function POST(request: Request) {
         const result = await supabase
           .from("people")
           .select("id, claim_status, created_by_person_id")
-          .eq("phone", phone)
+          .eq("phone_normalized", normalizePhone(phone))
           .limit(1)
           .maybeSingle();
         if (result.error) throw new Error(result.error.message);

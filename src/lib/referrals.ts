@@ -7,13 +7,16 @@ type ReferralInput = {
   referrerPersonId: string;
   sourceType: string;
   sourceReference: string;
+  referralType?: "sponsored" | "assigned";
+  assignedByPersonId?: string | null;
+  assignmentReason?: string | null;
   metadata?: Record<string, unknown>;
 };
 
 async function currentReferral(referredPersonId: string) {
   const { data, error } = await getSupabaseAdmin()
     .from("person_referral_attributions")
-    .select("id, referrer_person_id")
+    .select("id, referrer_person_id, referral_type, internal_sequence_number")
     .eq("referred_person_id", referredPersonId)
     .in("status", ["captured", "confirmed"])
     .maybeSingle();
@@ -27,16 +30,23 @@ export async function captureReferral(input: ReferralInput) {
   const current = await currentReferral(input.referredPersonId);
   if (current) return { captured: false, current };
 
-  const { error } = await getSupabaseAdmin().from("person_referral_attributions").insert({
-    referred_person_id: input.referredPersonId,
-    referrer_person_id: input.referrerPersonId,
-    source_type: input.sourceType,
-    source_reference: input.sourceReference,
-    status: "captured",
-    metadata: input.metadata || {},
-  });
-  if (error) throw new Error(error.message);
-  return { captured: true };
+  const { data, error } = await getSupabaseAdmin()
+    .from("person_referral_attributions")
+    .insert({
+      referred_person_id: input.referredPersonId,
+      referrer_person_id: input.referrerPersonId,
+      referral_type: input.referralType || "sponsored",
+      assigned_by_person_id: input.assignedByPersonId || null,
+      assignment_reason: input.assignmentReason || null,
+      source_type: input.sourceType,
+      source_reference: input.sourceReference,
+      status: "captured",
+      metadata: input.metadata || {},
+    })
+    .select("id, referral_type, internal_sequence_number")
+    .single();
+  if (error || !data) throw new Error(error?.message || "Referral could not be recorded.");
+  return { captured: true, attribution: data };
 }
 
 export async function assignReferral(input: ReferralInput) {
@@ -48,8 +58,11 @@ export async function assignReferral(input: ReferralInput) {
   if (current?.referrer_person_id === input.referrerPersonId) return { assigned: false };
   if (current) throw new Error("This person already has a referrer.");
 
-  const result = await captureReferral(input);
-  return { assigned: result.captured };
+  const result = await captureReferral({
+    ...input,
+    referralType: "assigned",
+  });
+  return { assigned: result.captured, attribution: "attribution" in result ? result.attribution : null };
 }
 
 export async function isReferralCoordinator(personId: string) {

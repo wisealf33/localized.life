@@ -1,6 +1,5 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
 import type {
   ConnectorInteraction,
@@ -20,17 +19,9 @@ const relationshipFields =
 const needFields =
   "id, requester_person_id, household_id, connector_person_id, title, details, status, scheduled_for, completed_at, assigned_person_id, connector_notes, created_at, updated_at";
 
-function getSupabasePublic() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
 export async function getConnectorProfileBySlug(slug: string) {
-  const supabase = getSupabasePublic();
-  if (!supabase) return null;
+  if (!isSupabaseConfigured) return null;
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("connector_profiles")
     .select(connectorProfileFields)
@@ -45,8 +36,8 @@ export async function getConnectorProfileBySlug(slug: string) {
 }
 
 export async function getActiveConnectorProfiles() {
-  const supabase = getSupabasePublic();
-  if (!supabase) return [];
+  if (!isSupabaseConfigured) return [];
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("connector_profiles")
     .select(connectorProfileFields)

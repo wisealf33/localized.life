@@ -5515,12 +5515,14 @@ code {
 }
 
 .account-people-section,
+.account-assigned-connector-section,
 .account-connector-section,
 .account-settings-section {
   display: grid;
   gap: 14px;
 }
 
+.account-assigned-connector-section,
 .account-connector-section,
 .account-settings-section {
   border-top: 1px solid #cedbd2;
@@ -5537,6 +5539,7 @@ code {
 }
 
 .account-sidebar-intro,
+.account-assigned-connector-section > p,
 .account-connector-section > p {
   margin-bottom: 0;
   color: var(--muted);
@@ -5622,6 +5625,34 @@ code {
   color: var(--accent);
   font-size: 0.68rem;
   font-weight: 850;
+}
+
+.account-assigned-connector-copy {
+  display: grid;
+  gap: 5px;
+  border-left: 3px solid #9fc5ab;
+  padding-left: 13px;
+}
+
+.account-assigned-connector-copy strong {
+  color: var(--account-ink);
+  font-size: 1.02rem;
+}
+
+.account-assigned-connector-copy p,
+.account-assigned-connector-copy small {
+  margin: 0;
+  color: var(--muted);
+}
+
+.account-assigned-connector-copy p {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.account-assigned-connector-copy small {
+  font-size: 0.76rem;
+  font-weight: 750;
 }
 
 .account-tool-link {
@@ -6451,6 +6482,7 @@ code {
     grid-row: span 2;
   }
 
+  .account-assigned-connector-section,
   .account-connector-section,
   .account-settings-section {
     border-top: 0;
@@ -6698,6 +6730,7 @@ code {
     grid-row: auto;
   }
 
+  .account-assigned-connector-section,
   .account-connector-section,
   .account-settings-section {
     border-top: 1px solid #cedbd2;

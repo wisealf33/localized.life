@@ -28,9 +28,11 @@ import {
 import { AccountSignIn } from "@/components/AccountSignIn";
 import { PersonProfileFields, type PersonProfileValue } from "@/components/PersonProfileFields";
 import { getSupabaseBrowser, isSupabaseBrowserConfigured } from "@/lib/supabase-browser";
+import { formatPersonNumber } from "@/lib/phone";
 
 type AccountPerson = PersonProfileValue & {
   id: string;
+  personal_number: number;
   display_name: string;
   email: string | null;
   phone: string | null;
@@ -68,6 +70,16 @@ type AccountData = {
   user: { email: string | null };
   person: AccountPerson;
   connector: { person_id: string; slug: string; display_name: string; headline: string } | null;
+  assignedConnector: {
+    person_id: string;
+    display_name: string;
+    headline: string;
+    intro: string;
+    phone: string | null;
+    email: string | null;
+    assignment_scope: "person" | "household";
+    household_id: string | null;
+  } | null;
   people: ConnectionPerson[];
   activity: ActivityItem[];
   posts: Array<{ id: string }>;
@@ -130,6 +142,7 @@ function designPreviewData(): AccountData {
     user: { email: "garrett@example.com" },
     person: {
       id: "preview-garrett",
+      personal_number: 1,
       display_name: "Garrett",
       email: "garrett@example.com",
       phone: "",
@@ -138,6 +151,16 @@ function designPreviewData(): AccountData {
       claim_status: "claimed",
     },
     connector: { person_id: "preview-garrett", slug: "garrett", display_name: "Garrett", headline: "Local Connector" },
+    assignedConnector: {
+      person_id: "preview-maya",
+      display_name: "Maya R.",
+      headline: "Household Connector",
+      intro: "Your private point of contact for household needs and local service relationships.",
+      phone: "708-555-0106",
+      email: null,
+      assignment_scope: "household",
+      household_id: "preview-household",
+    },
     people: [
       { id: "preview-1", display_name: "Jamie S.", email: "jamie@example.com", phone: null, town: "Peotone", state: "IL", claim_status: "claimed", claimed_at: "2026-08-12T12:00:00Z", connected_at: "2026-08-12T12:00:00Z", invitation_url: null },
       { id: "preview-2", display_name: "Alex M.", email: null, phone: "555-0102", town: "Peotone", state: "IL", claim_status: "unclaimed", claimed_at: null, connected_at: "2026-08-10T12:00:00Z", invitation_url: "https://www.localized.life/claim/preview" },
@@ -342,6 +365,7 @@ export function ClaimedPersonDashboard() {
           <p>Your place for local work, posts, and people.</p>
           <div className="account-person-meta">
             <span><MapPin weight="fill" /> {[data.person.town, data.person.state].filter(Boolean).join(", ") || "Add your location"}</span>
+            {formatPersonNumber(data.person.personal_number) ? <span>{formatPersonNumber(data.person.personal_number)}</span> : null}
             <button className="account-link-button" type="button" onClick={() => { setProfileOpen((open) => !open); setSettingsOpen(false); }}>
               View or edit profile
             </button>
@@ -464,9 +488,21 @@ export function ClaimedPersonDashboard() {
             {data.people.length > 4 ? <button className="account-link-button account-view-all" type="button" onClick={() => setPeopleExpanded((expanded) => !expanded)}>{peopleExpanded ? "Show fewer people" : "View all people"}<CaretRight /></button> : null}
           </section>
 
+          {data.assignedConnector ? (
+            <section className="account-assigned-connector-section">
+              <div className="account-connector-title"><h2>Your Connector</h2><span>Private</span></div>
+              <div className="account-assigned-connector-copy">
+                <strong>{data.assignedConnector.display_name}</strong>
+                <p>{data.assignedConnector.headline || data.assignedConnector.intro}</p>
+                <small>{data.assignedConnector.assignment_scope === "household" ? "Assigned to your household" : "Assigned to you"}</small>
+              </div>
+              {data.assignedConnector.phone ? <a className="account-tool-link" href={`tel:${data.assignedConnector.phone}`}><ChatCircle weight="duotone" /><span>Contact {data.assignedConnector.display_name}</span><CaretRight /></a> : data.assignedConnector.email ? <a className="account-tool-link" href={`mailto:${data.assignedConnector.email}`}><EnvelopeSimple weight="duotone" /><span>Contact {data.assignedConnector.display_name}</span><CaretRight /></a> : <p>Contact details will appear when they are available.</p>}
+            </section>
+          ) : null}
+
           {data.connector ? (
             <section className="account-connector-section">
-              <div className="account-connector-title"><h2>Connector</h2><span>Visible to you</span></div>
+              <div className="account-connector-title"><h2>Connector tools</h2><span>Your role</span></div>
               <p>Tools for the people and requests you help coordinate.</p>
               <Link className="account-tool-link" href="/connections"><UsersThree weight="duotone" /><span>People you manage</span><CaretRight /></Link>
               <Link className="account-tool-link" href="/connections#needs"><Question weight="duotone" /><span>Local requests</span><CaretRight /></Link>

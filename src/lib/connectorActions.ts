@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from "./supabase";
 import { captureReferral } from "./referrals";
 import type { NeedStatus } from "./connectorTypes";
 import { hashSecret, invitationToken } from "./tokens";
+import { normalizePhone } from "./phone";
 
 const needStatuses = new Set<NeedStatus>(["new", "working", "scheduled", "completed", "closed"]);
 
@@ -140,7 +141,7 @@ async function connectPerson({
     const { data, error } = await supabase
       .from("people")
       .select("id")
-      .eq("phone", phone)
+      .eq("phone_normalized", normalizePhone(phone))
       .maybeSingle();
     if (error) throw new Error(error.message);
     personId = data?.id || "";

@@ -260,8 +260,8 @@ export function ConnectorMemberDashboard() {
       <div className="notice stack">
         <h2>This account is not connected yet</h2>
         <p>We found {view.email}, but it is not attached to a Connector relationship.</p>
-        <Link className="button primary compact-button" href="/connect/garrett">
-          Connect with Garrett
+        <Link className="button primary compact-button" href="/local-services/request">
+          Request local help
         </Link>
         <button className="button compact-button" type="button" onClick={signOut}>
           Sign out

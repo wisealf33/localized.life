@@ -24,6 +24,17 @@ When a proposed feature conflicts with this document, stop and confirm the direc
 - A Person should schedule or coordinate work with people in their actual network relationship, not arbitrary profiles across the system.
 - Unassigned incoming referrals are reviewed and assigned manually by Garrett at the current stage.
 - Automated rotation, priority, or assignment rules should not be invented until the referral and Connector model is explicitly defined.
+- A direct sponsored referral and a Connector assignment are separate relationships. Changing a household's Connector does not change the Person's original referral sponsor.
+- A Person entering through public intake may receive a system-assigned referral sponsor and a separately assigned Connector.
+- During the founder-led phase, the system may rank or rotate eligible assigned-referral sponsors, but Garrett makes the final decision and the decision is recorded.
+
+### Internal Identity and Referral Sequences
+
+- Every Person receives one permanent sequential Personal Number regardless of how they enter.
+- Sponsored referrals use a separate internal `SR` sequence.
+- System-assigned referrals use a separate internal `AR` sequence.
+- `SR` and `AR` are private operational references used to distinguish entry paths and audit fair AR distribution. They are not public or ordinary member-facing identifiers.
+- Database UUIDs remain the actual permanent keys. No sequential number may be used as a password, claim token, or authorization secret.
 
 ### Minimum Person Intake
 
@@ -35,6 +46,13 @@ Starting a Person record requires both:
 First and last name together are preferred when available. A separate profile name is optional and may be generated from the available name.
 
 All other fields are optional and should exist only when they support a known network operation.
+
+### Phone-First Recognition and Claims
+
+- A verified phone number is the primary human-facing lookup and duplicate-detection identifier.
+- The Person UUID and Personal Number remain permanent because phone numbers may change, be shared, or be reassigned.
+- When several provisional records describe the same Person, the first successfully completed private claim link establishes the initial referral relationship. Other provisional records are merged or linked without creating additional People.
+- Invitation, claim, merge, and correction history is preserved for audit rather than overwritten.
 
 ### Profiles Are Operational, Not Social
 
@@ -67,6 +85,9 @@ Future usefulness alone is not enough reason to collect personal information.
 - A service address belongs with the service relationship or calendar context when it is not the Person's general address.
 - Account access is available to people who have been onboarded; it is findable in the footer without becoming a primary public call to action.
 - Public Local Services requests remain the general entry path for people seeking help.
+- Connector profiles and Connector selection are not public browsing experiences. A Person sees their assigned Connector only inside a claimed account or other authorized private flow.
+- Household collaboration begins broadly for the designated owner, owner-authorized household People, and the assigned Connector. Providers receive only the approved work context they need.
+- Meaningful household actions should be recorded so real problems can guide later permission restrictions.
 
 ### Practical Product Priorities
 

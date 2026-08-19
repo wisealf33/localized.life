@@ -3,6 +3,7 @@ import { authenticatePerson, isConnectedPerson } from "@/lib/connectionAccess";
 import { personProfileColumns, personProfilePayload, personStartDetails } from "@/lib/personProfile";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { assignReferral, captureReferral, isReferralCoordinator } from "@/lib/referrals";
+import { formatReferralNumber, normalizePhone } from "@/lib/phone";
 import { hasSystemManagementAccess } from "@/lib/systemAccess";
 import { hashSecret, invitationToken } from "@/lib/tokens";
 
@@ -203,12 +204,12 @@ export async function GET(request: Request) {
   const peopleResult = systemManagementAccess
     ? await supabase
         .from("people")
-        .select("id, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
+        .select("id, personal_number, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
         .neq("id", actor.person.id)
     : ids.length
     ? await supabase
         .from("people")
-        .select("id, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
+        .select("id, personal_number, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
         .in("id", ids)
     : { data: [], error: null };
   if (peopleResult.error) return NextResponse.json({ error: peopleResult.error.message }, { status: 500 });
@@ -224,17 +225,24 @@ export async function GET(request: Request) {
     .sort((a, b) => a.display_name.localeCompare(b.display_name));
 
   let unassignedReferrals: Array<Record<string, unknown>> = [];
-  let referrerOptions: Array<{ id: string; display_name: string; role: string }> = [];
+  let referrerOptions: Array<{
+    id: string;
+    display_name: string;
+    role: string;
+    assignedReferralCount: number;
+    lastAssignedAt: string | null;
+    suggested: boolean;
+  }> = [];
   if (coordinatorResult.data) {
     const [candidatesResult, attributionsResult, connectorsResult, coordinatorsResult] = await Promise.all([
       supabase
         .from("people")
-        .select("id, display_name, email, phone, town, state, claim_status, created_at")
+        .select("id, personal_number, display_name, email, phone, town, state, claim_status, created_at")
         .neq("id", actor.person.id)
         .order("created_at", { ascending: true }),
       supabase
         .from("person_referral_attributions")
-        .select("referred_person_id")
+        .select("referred_person_id, referrer_person_id, referral_type, internal_sequence_number, captured_at")
         .in("status", ["captured", "confirmed"]),
       supabase.from("connector_profiles").select("person_id").eq("active", true),
       supabase.from("referral_coordinators").select("person_id").eq("active", true),
@@ -253,14 +261,36 @@ export async function GET(request: Request) {
       ? await supabase.from("people").select("id, display_name").in("id", eligibleIds).order("display_name")
       : { data: [], error: null };
     if (referrersResult.error) return NextResponse.json({ error: referrersResult.error.message }, { status: 500 });
-    referrerOptions = (referrersResult.data || []).map((person) => ({
-      ...person,
-      role: connectorIds.has(person.id) && coordinatorIds.has(person.id)
-        ? "Connector · coordinator"
-        : coordinatorIds.has(person.id)
-          ? "Coordinator"
-          : "Connector",
-    }));
+    const assignedAttributions = (attributionsResult.data || []).filter(
+      (attribution) => attribution.referral_type === "assigned",
+    );
+    referrerOptions = (referrersResult.data || [])
+      .map((person) => {
+        const assignments = assignedAttributions.filter(
+          (attribution) => attribution.referrer_person_id === person.id,
+        );
+        const lastAssignedAt = assignments.reduce<string | null>(
+          (latest, attribution) => !latest || attribution.captured_at > latest ? attribution.captured_at : latest,
+          null,
+        );
+        return {
+          ...person,
+          role: connectorIds.has(person.id) && coordinatorIds.has(person.id)
+            ? "Connector · coordinator"
+            : coordinatorIds.has(person.id)
+              ? "Coordinator"
+              : "Connector",
+          assignedReferralCount: assignments.length,
+          lastAssignedAt,
+          suggested: false,
+        };
+      })
+      .sort((first, second) =>
+        first.assignedReferralCount - second.assignedReferralCount ||
+        (first.lastAssignedAt || "").localeCompare(second.lastAssignedAt || "") ||
+        first.display_name.localeCompare(second.display_name),
+      )
+      .map((person, index) => ({ ...person, suggested: index === 0 }));
   }
 
   return NextResponse.json({
@@ -319,14 +349,21 @@ export async function POST(request: Request) {
         throw new Error("Choose an active Connector or referral coordinator.");
       }
 
-      await assignReferral({
+      const assignment = await assignReferral({
         referredPersonId,
         referrerPersonId,
         sourceType: "manual_assignment",
         sourceReference: `coordinator:${actor.person.id}`,
+        assignedByPersonId: actor.person.id,
+        assignmentReason: nullable(body.assignmentReason, 1000),
         metadata: { assigned_by_person_id: actor.person.id, entry_method: "referral_intake_queue" },
       });
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({
+        ok: true,
+        referralNumber: assignment.attribution
+          ? formatReferralNumber("assigned", assignment.attribution.internal_sequence_number)
+          : null,
+      });
     }
 
     if (action === "add-person") {
@@ -339,7 +376,11 @@ export async function POST(request: Request) {
         existing = result.data;
       }
       if (!existing && phone) {
-        const result = await supabase.from("people").select("id").eq("phone", phone).maybeSingle();
+        const result = await supabase
+          .from("people")
+          .select("id")
+          .eq("phone_normalized", normalizePhone(phone))
+          .maybeSingle();
         if (result.error) throw new Error(result.error.message);
         existing = result.data;
       }
