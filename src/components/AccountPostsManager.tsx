@@ -15,6 +15,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { AccountSignIn } from "@/components/AccountSignIn";
+import { localServices } from "@/lib/localServices";
 import { getSupabaseBrowser, isSupabaseBrowserConfigured } from "@/lib/supabase-browser";
 
 type PostType = "service" | "goods" | "event" | "mentoring" | "request";
@@ -101,11 +102,10 @@ function postStatus(post: AccountPost) {
   return { label: "In review", tone: "review" };
 }
 
-export function AccountPostsManager({ initialPostType }: { initialPostType?: PostType }) {
+export function AccountPostsManager({ openNewRequest = false, initialCategory = "" }: { openNewRequest?: boolean; initialCategory?: string }) {
   const [view, setView] = useState<ViewState>(() => isSupabaseBrowserConfigured() ? { status: "loading" } : { status: "config" });
-  const [postFilter, setPostFilter] = useState<"all" | PostType>(initialPostType || "all");
-  const [newPostType, setNewPostType] = useState<PostType>(initialPostType || "service");
-  const [postEditor, setPostEditor] = useState<"new" | string | null>(initialPostType ? "new" : null);
+  const [postFilter, setPostFilter] = useState<"all" | PostType>(openNewRequest ? "request" : "all");
+  const [postEditor, setPostEditor] = useState<"new" | string | null>(openNewRequest ? "new" : null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -159,7 +159,7 @@ export function AccountPostsManager({ initialPostType }: { initialPostType?: Pos
     if (view.status !== "ready") return;
     const values = new FormData(event.currentTarget);
     const editingId = postEditor && postEditor !== "new" ? postEditor : null;
-    const selectedPostType = String(values.get("postType") || newPostType) as PostType;
+    const selectedPostType = String(values.get("postType") || "request") as PostType;
     const payload = {
       action: editingId ? "update-post" : "create-post",
       postId: editingId,
@@ -211,7 +211,7 @@ export function AccountPostsManager({ initialPostType }: { initialPostType?: Pos
         await accountPost(payload);
         await loadPosts();
       }
-      setMessage(editingId ? "Your post was updated and returned to review." : "Your post was saved and sent for review.");
+      setMessage(editingId ? "Your post was updated and returned to review." : "Your request was saved and sent for review.");
       setPostEditor(null);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Your post could not be saved.");
@@ -253,7 +253,7 @@ export function AccountPostsManager({ initialPostType }: { initialPostType?: Pos
   const editingPost = data && postEditor && postEditor !== "new"
     ? data.posts.find((post) => post.id === postEditor) || null
     : null;
-  const editorPostType = editingPost?.post_type || newPostType;
+  const editorPostType = editingPost?.post_type || "request";
   const editorDefinition = postTypes.find((type) => type.value === editorPostType) || postTypes[0];
   const filteredPosts = useMemo(() => !data
     ? []
@@ -277,11 +277,11 @@ export function AccountPostsManager({ initialPostType }: { initialPostType?: Pos
       <section className="account-posts-page-header">
         <Link className="account-back-link" href={`/account${previewQuery}`}><CaretLeft /> Back to account</Link>
         <div>
-          <p className="eyebrow">Your publishing</p>
-          <h1>My posts</h1>
-          <p>Review, update, pause, close, or restore anything you have shared through Localized.life.</p>
+          <p className="eyebrow">Your community activity</p>
+          <h1>Requests and posts</h1>
+          <p>Create requests for what you need, and manage anything you shared earlier through Localized.life.</p>
         </div>
-        <button className="button primary" type="button" onClick={() => setPostEditor("new")}><Plus weight="bold" /> New post</button>
+        <button className="button primary" type="button" onClick={() => { setPostFilter("request"); setPostEditor("new"); }}><Plus weight="bold" /> New request</button>
       </section>
 
       {message ? <p className="notice good account-posts-message" aria-live="polite">{message}</p> : null}
@@ -296,24 +296,18 @@ export function AccountPostsManager({ initialPostType }: { initialPostType?: Pos
       {postEditor ? (
         <section className="account-post-editor account-posts-page-editor" aria-labelledby="account-post-editor-title">
           <div className="account-inline-heading">
-            <div><p className="eyebrow">{editingPost ? `Manage ${postTypeLabels[editingPost.post_type]}` : "Create a post"}</p><h2 id="account-post-editor-title">{editingPost ? editingPost.title : "What do you want to share?"}</h2></div>
+            <div><p className="eyebrow">{editingPost ? `Manage ${postTypeLabels[editingPost.post_type]}` : "Create a request"}</p><h2 id="account-post-editor-title">{editingPost ? editingPost.title : "What are you looking for?"}</h2></div>
             <button className="icon-button" type="button" aria-label="Close post editor" onClick={() => setPostEditor(null)}><X /></button>
           </div>
           <form className="form account-owned-post-form" key={editingPost?.id || `new-${editorPostType}`} onSubmit={savePost}>
-            {!editingPost ? (
-              <fieldset className="account-new-post-types">
-                <legend>Post type</legend>
-                {postTypes.map(({ value, singular, Icon }) => <button className={newPostType === value ? "active" : ""} type="button" key={value} onClick={() => { setNewPostType(value); setPostFilter(value); }}><Icon weight="duotone" />{singular}</button>)}
-              </fieldset>
-            ) : null}
             <input type="hidden" name="postType" value={editorPostType} />
-            <label>Title<input name="title" required defaultValue={editingPost?.title || ""} placeholder={`Title for your ${editorDefinition.singular.toLowerCase()}`} /></label>
-            <div className="grid two"><label>Category<input name="category" defaultValue={editingPost?.category || ""} placeholder="How should people find this?" /></label><label>Public link<input name="websiteUrl" type="url" defaultValue={editingPost?.website_url || ""} placeholder="https://..." /></label></div>
-            <label>Description<textarea name="description" rows={5} required defaultValue={editingPost?.description || ""} placeholder="Share the useful details people need to understand this post." /></label>
+            <label>{editingPost ? "Title" : "What do you need?"}<input name="title" required defaultValue={editingPost?.title || ""} placeholder={editingPost ? `Title for your ${editorDefinition.singular.toLowerCase()}` : "For example, meals for Tuesday evening"} /></label>
+            <div className="grid two"><label>Category<input name="category" list="account-request-category-options" defaultValue={editingPost?.category || initialCategory} placeholder="Choose a service or describe the kind of request" /><datalist id="account-request-category-options">{localServices.map((service) => <option key={service.slug} value={service.title} />)}<option value="Goods or supplies" /><option value="Local information or connection" /><option value="Other request" /></datalist></label><label>{editingPost ? "Public link" : "Reference link (optional)"}<input name="websiteUrl" type="url" defaultValue={editingPost?.website_url || ""} placeholder="https://..." /></label></div>
+            <label>{editingPost ? "Description" : "Details"}<textarea name="description" rows={5} required defaultValue={editingPost?.description || ""} placeholder={editingPost ? "Share the useful details people need to understand this post." : "Explain what you are looking for, when you need it, preferences or dietary needs, and whether you are offering payment, trade, or another exchange."} /></label>
             <div className="grid two"><label>Town<input name="city" defaultValue={editingPost?.city || data.person.town || ""} /></label><label>State<input name="state" maxLength={2} defaultValue={editingPost?.state || data.person.state || "IL"} /></label></div>
-            <label>Public contact or next step<input name="contact" defaultValue={editingPost?.contact || ""} placeholder="How should someone respond?" /></label>
+            <label>{editingPost ? "Public contact or next step" : "How should someone respond?"}<input name="contact" defaultValue={editingPost?.contact || ""} placeholder="Message through Localized.life, text, email, or another next step" /></label>
             <div className="account-post-editor-actions">
-              <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : editingPost ? "Save changes" : "Submit for review"}</button>
+              <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : editingPost ? "Save changes" : "Submit request for review"}</button>
               {editingPost?.owner_state === "active" ? <><button className="button compact-button" type="button" disabled={busy} onClick={() => setPostState(editingPost.id, "paused")}>Pause post</button><button className="button compact-button" type="button" disabled={busy} onClick={() => setPostState(editingPost.id, "closed")}>Mark closed</button></> : editingPost ? <button className="button compact-button" type="button" disabled={busy} onClick={() => setPostState(editingPost.id, "active")}>Make active</button> : null}
               {editingPost && editingPost.owner_state !== "removed" ? <button className="button compact-button danger-button" type="button" disabled={busy} onClick={() => setPostState(editingPost.id, "removed")}>Remove post</button> : null}
             </div>
@@ -323,9 +317,9 @@ export function AccountPostsManager({ initialPostType }: { initialPostType?: Pos
       ) : null}
 
       <section className="account-post-library account-posts-page-library" aria-labelledby="account-post-library-title">
-        <div className="account-post-library-heading"><div><h2 id="account-post-library-title">Post history</h2><p>Closed and removed posts remain here so you do not lose the record.</p></div><span>{filteredPosts.length} shown</span></div>
+        <div className="account-post-library-heading"><div><h2 id="account-post-library-title">Request and post history</h2><p>Earlier posts remain here so you do not lose their history. New entries are created as requests.</p></div><span>{filteredPosts.length} shown</span></div>
         <div className="account-post-filters" role="group" aria-label="Filter your posts"><button className={postFilter === "all" ? "active" : ""} type="button" onClick={() => setPostFilter("all")}>All</button>{postTypes.map(({ value, label }) => <button className={postFilter === value ? "active" : ""} type="button" key={value} onClick={() => setPostFilter(value)}>{label}</button>)}</div>
-        {filteredPosts.length ? <div className="account-owned-post-list">{filteredPosts.map((post) => { const Icon = postTypeIcons[post.post_type]; const status = postStatus(post); return <article className="account-owned-post-row" key={post.id}><div className={`account-owned-post-icon account-owned-post-icon-${post.post_type}`} aria-hidden="true"><Icon weight="duotone" /></div><div className="account-owned-post-copy"><div><span>{postTypeLabels[post.post_type]}</span><small>Updated {shortDate(post.updated_at)}</small></div><h3>{post.title}</h3><p>{post.description}</p></div><span className={`account-owned-post-status account-owned-post-status-${status.tone}`}>{status.label}</span><button className="account-manage-post-button" type="button" onClick={() => setPostEditor(post.id)}>Manage<CaretRight /></button></article>; })}</div> : <div className="account-empty-list"><PencilSimple weight="duotone" /><div><h3>No {postFilter === "all" ? "posts" : postTypeLabels[postFilter].toLowerCase()} yet</h3><p>Create one when you have something useful to share.</p></div></div>}
+        {filteredPosts.length ? <div className="account-owned-post-list">{filteredPosts.map((post) => { const Icon = postTypeIcons[post.post_type]; const status = postStatus(post); return <article className="account-owned-post-row" key={post.id}><div className={`account-owned-post-icon account-owned-post-icon-${post.post_type}`} aria-hidden="true"><Icon weight="duotone" /></div><div className="account-owned-post-copy"><div><span>{postTypeLabels[post.post_type]}</span><small>Updated {shortDate(post.updated_at)}</small></div><h3>{post.title}</h3><p>{post.description}</p></div><span className={`account-owned-post-status account-owned-post-status-${status.tone}`}>{status.label}</span><button className="account-manage-post-button" type="button" onClick={() => setPostEditor(post.id)}>Manage<CaretRight /></button></article>; })}</div> : <div className="account-empty-list"><PencilSimple weight="duotone" /><div><h3>No {postFilter === "all" ? "entries" : postTypeLabels[postFilter].toLowerCase()} yet</h3><p>Create a request when you are looking for something from your community.</p></div></div>}
       </section>
     </div>
   );

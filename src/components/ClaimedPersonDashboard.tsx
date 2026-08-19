@@ -7,10 +7,13 @@ import {
   CaretRight,
   ChatCircle,
   CheckCircle,
+  CookingPot,
   Copy,
+  DotsThreeCircle,
   EnvelopeSimple,
   GearSix,
-  GraduationCap,
+  HouseLine,
+  Info,
   LinkSimple,
   ListChecks,
   MapPin,
@@ -22,7 +25,6 @@ import {
   UserCircle,
   UserPlus,
   UsersThree,
-  Wrench,
   X,
 } from "@phosphor-icons/react";
 import { AccountSignIn } from "@/components/AccountSignIn";
@@ -93,12 +95,12 @@ type ViewState =
   | { status: "error"; message: string }
   | { status: "ready"; data: AccountData };
 
-const postTypes = [
-  { value: "service", label: "Service", helper: "Offer practical local help", Icon: Wrench },
-  { value: "goods", label: "Goods", helper: "Sell or share local goods", Icon: Package },
-  { value: "event", label: "Event", helper: "Add something happening nearby", Icon: CalendarBlank },
-  { value: "mentoring", label: "Mentoring", helper: "Teach a skill or offer lessons", Icon: GraduationCap },
-  { value: "request", label: "Request", helper: "Ask for practical local help", Icon: Question },
+const requestKinds = [
+  { value: "Cooking & Meal Sharing", label: "Meals", helper: "Request cooking, meal prep, or a meal exchange", Icon: CookingPot },
+  { value: "Household help", label: "Home help", helper: "Ask for practical help around the household", Icon: HouseLine },
+  { value: "Goods or supplies", label: "Items", helper: "Look for an item, material, or household supply", Icon: Package },
+  { value: "Local information or connection", label: "Information", helper: "Ask for local information or the right connection", Icon: Info },
+  { value: "", label: "Other request", helper: "Describe something that is not already listed", Icon: DotsThreeCircle },
 ] as const;
 
 function isDesignPreview() {
@@ -181,7 +183,7 @@ export function ClaimedPersonDashboard() {
   const [view, setView] = useState<ViewState>(() =>
     isSupabaseBrowserConfigured() ? { status: "loading" } : { status: "config" },
   );
-  const [postType, setPostType] = useState<(typeof postTypes)[number]["value"]>("service");
+  const [requestKind, setRequestKind] = useState<(typeof requestKinds)[number]["value"]>("Cooking & Meal Sharing");
   const [peopleExpanded, setPeopleExpanded] = useState(false);
   const [addPersonOpen, setAddPersonOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -355,6 +357,7 @@ export function ClaimedPersonDashboard() {
   const { data } = view;
   const visiblePeople = peopleExpanded ? data.people : data.people.slice(0, 4);
   const postsQuery = isDesignPreview() ? "?preview=1" : "";
+  const requestHref = `/account/posts?new=request${requestKind ? `&category=${encodeURIComponent(requestKind)}` : ""}${isDesignPreview() ? "&preview=1" : ""}`;
 
   return (
     <div className="account-dashboard">
@@ -393,15 +396,15 @@ export function ClaimedPersonDashboard() {
         <div className="account-primary-column">
           <section className="account-composer" aria-labelledby="account-composer-title">
             <div className="account-composer-top">
-              <div className="account-composer-icon" aria-hidden="true"><PencilSimple weight="bold" /></div>
-              <div className="account-composer-copy"><h2 id="account-composer-title">Share something with your community</h2><p>Choose a type so your post reaches the right people.</p></div>
-              <label className="account-post-select"><span className="sr-only">Post type</span><select value={postType} onChange={(event) => setPostType(event.target.value as typeof postType)}>{postTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</select></label>
-              <Link className="button primary account-start-button" href={`/account/posts?new=${postType}${isDesignPreview() ? "&preview=1" : ""}`}>Start a post</Link>
+              <div className="account-composer-icon" aria-hidden="true"><Question weight="bold" /></div>
+              <div className="account-composer-copy"><h2 id="account-composer-title">Request something from your community</h2><p>Ask for a meal, practical help, an item, information, or something else you need.</p></div>
+              <label className="account-post-select"><span className="sr-only">Request type</span><select value={requestKind} onChange={(event) => setRequestKind(event.target.value as typeof requestKind)}>{requestKinds.map((kind) => <option key={kind.label} value={kind.value}>{kind.label}</option>)}</select></label>
+              <Link className="button primary account-start-button" href={requestHref}>Start a request</Link>
             </div>
-            <div className="account-post-types">
-              {postTypes.map(({ value, label, Icon }) => (
-                <button className={postType === value ? "account-post-type active" : "account-post-type"} type="button" key={value} onClick={() => setPostType(value)}>
-                  <Icon weight={postType === value ? "duotone" : "regular"} />
+            <div className="account-post-types" aria-label="Request categories">
+              {requestKinds.map(({ value, label, helper, Icon }) => (
+                <button className={requestKind === value ? "account-post-type active" : "account-post-type"} type="button" key={label} onClick={() => setRequestKind(value)} title={helper} aria-pressed={requestKind === value}>
+                  <Icon weight={requestKind === value ? "duotone" : "regular"} />
                   <span>{label}</span>
                 </button>
               ))}
@@ -438,7 +441,7 @@ export function ClaimedPersonDashboard() {
           </section>
           <Link className="account-manage-all-posts" href={`/account/posts${postsQuery}`}>
             <PencilSimple weight="duotone" />
-            <span><strong>Manage all posts</strong><small>{data.posts.length} {data.posts.length === 1 ? "post" : "posts"} across services, goods, events, mentoring, and requests</small></span>
+            <span><strong>Manage requests and posts</strong><small>{data.posts.length} {data.posts.length === 1 ? "entry" : "entries"}, including earlier service, goods, event, and mentoring posts</small></span>
             <CaretRight />
           </Link>
         </div>

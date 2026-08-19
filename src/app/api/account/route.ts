@@ -352,6 +352,7 @@ export async function POST(request: Request) {
       const title = text(body.title, 180);
       const description = text(body.description, 5000);
       if (!postTypes.has(postType)) throw new Error("Choose a valid post type.");
+      if (postType !== "request") throw new Error("New account posts must be requests. Add services you provide to your profile.");
       if (!title) throw new Error("Add a title.");
       if (!description) throw new Error("Add a description.");
 
