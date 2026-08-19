@@ -270,8 +270,6 @@ export function ClaimedPersonDashboard() {
       await accountPost({
         action: "update-profile",
         ...Object.fromEntries(values),
-        directoryOptIn: values.has("directoryOptIn"),
-        matchingOptIn: values.has("matchingOptIn"),
       });
       setMessage("Your profile was updated.");
       setProfileOpen(false);
@@ -359,8 +357,8 @@ export function ClaimedPersonDashboard() {
           <form className="form account-profile-form" onSubmit={updateProfile}>
             <PersonProfileFields
               person={data.person}
-              showPrivacy
-              intro="Fill in what is useful now and leave anything else blank. Private contact, birth date, exact address, transportation, and accommodation details are never public by default."
+              manageOwnCalendar
+              intro="Fill in what is useful and leave anything else blank. Access to private details is controlled by system roles and network relationships."
             />
             <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile"}</button>
           </form>
@@ -476,7 +474,7 @@ export function ClaimedPersonDashboard() {
           ) : null}
 
           <section className="account-settings-section">
-            <button className="account-tool-link" type="button" onClick={() => { setSettingsOpen((open) => !open); setProfileOpen(false); }}><GearSix weight="duotone" /><span>Account settings &amp; privacy</span><CaretRight /></button>
+            <button className="account-tool-link" type="button" onClick={() => { setSettingsOpen((open) => !open); setProfileOpen(false); }}><GearSix weight="duotone" /><span>Account settings</span><CaretRight /></button>
             {settingsOpen ? <div className="account-settings-body"><p>Signed in as <strong>{data.user.email}</strong></p><p>Your phone, email, private links, and relationship notes are not shown in the public directory.</p><button className="button compact-button" type="button" onClick={signOut}><SignOut /> Sign out</button></div> : null}
           </section>
         </aside>

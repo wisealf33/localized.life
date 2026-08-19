@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { localServices, serviceOptionField, serviceRadiusOptions } from "@/lib/localServices";
+
 export type PersonProfileValue = {
   display_name?: string | null;
   first_name?: string | null;
@@ -26,32 +29,27 @@ export type PersonProfileValue = {
   availability_notes?: string | null;
   transportation_notes?: string | null;
   accessibility_notes?: string | null;
-  profile_visibility?: string | null;
-  contact_visibility?: string | null;
-  location_visibility?: string | null;
-  directory_opt_in?: boolean | null;
-  matching_opt_in?: boolean | null;
 };
 
 type Props = {
   person?: PersonProfileValue;
   includePrimaryEmail?: boolean;
-  showPrivacy?: boolean;
+  manageOwnCalendar?: boolean;
   intro?: string;
   intake?: boolean;
 };
 
-function listValue(value: string[] | null | undefined) {
-  return value?.join(", ") || "";
-}
-
 export function PersonProfileFields({
   person = {},
   includePrimaryEmail = true,
-  showPrivacy = false,
+  manageOwnCalendar = false,
   intro,
   intake = false,
 }: Props) {
+  const selectedServices = new Set(
+    (person.skills || []).map((value) => value.trim().toLocaleLowerCase()),
+  );
+
   return (
     <div className="person-profile-fields">
       {intro ? <p className="person-profile-intro">{intro}</p> : null}
@@ -73,7 +71,7 @@ export function PersonProfileFields({
 
       <fieldset className="person-profile-section">
         <legend>Contact</legend>
-        <p className="person-profile-section-copy">{intake ? "Add at least a primary phone number or primary email. Contact details remain private." : "Contact details remain private unless the profile owner chooses otherwise."}</p>
+        <p className="person-profile-section-copy">{intake ? "Add at least a primary phone number or primary email. Contact details are protected by system access rules." : "Contact details are shown only to people whose system role and network relationship allow access."}</p>
         <div className="grid two">
           {includePrimaryEmail ? <label>Primary email<input name="email" type="email" maxLength={320} defaultValue={person.email || ""} autoComplete="email" /></label> : null}
           <label>Secondary email<input name="secondaryEmail" type="email" maxLength={320} defaultValue={person.secondary_email || ""} /></label>
@@ -88,7 +86,7 @@ export function PersonProfileFields({
 
       <fieldset className="person-profile-section">
         <legend>Home or base location</legend>
-        <p className="person-profile-section-copy">The exact address is private by default. Structured fields make future distance and map tools possible.</p>
+        <p className="person-profile-section-copy">The exact address is protected by system access rules. Structured fields support distance and map tools.</p>
         <label>Street address<input name="addressLine1" maxLength={240} defaultValue={person.address_line1 || ""} autoComplete="address-line1" /></label>
         <label>Apartment, suite, or unit<input name="addressLine2" maxLength={240} defaultValue={person.address_line2 || ""} autoComplete="address-line2" /></label>
         <div className="person-profile-grid person-profile-location-grid">
@@ -106,34 +104,33 @@ export function PersonProfileFields({
       <fieldset className="person-profile-section">
         <legend>Connecting and matching</legend>
         <p className="person-profile-section-copy">These details can support relevant introductions without treating people as only customers or providers.</p>
-        <label>Skills or services provided<input name="skills" defaultValue={listValue(person.skills)} placeholder="House cleaning, lawn care, bookkeeping, repairs" /><span className="field-note">Add practical tags separated by commas.</span></label>
+        <div>
+          <span className="person-profile-control-label">Skills or services provided</span>
+          <div className="person-service-options">
+            {localServices.map((service) => (
+              <label className="person-service-option" key={service.slug}>
+                <input
+                  name={serviceOptionField(service.slug)}
+                  type="checkbox"
+                  defaultChecked={selectedServices.has(service.slug) || selectedServices.has(service.title.toLocaleLowerCase())}
+                />
+                <span>{service.title}</span>
+              </label>
+            ))}
+          </div>
+          <span className="field-note">Choose every service this person is available to provide.</span>
+        </div>
         <div className="grid two">
-          <label>Services, goods, or help offered<textarea name="servicesOffered" rows={4} maxLength={4000} defaultValue={person.services_offered || ""} placeholder="What this person may be comfortable offering" /></label>
           <label>Help, services, or connections wanted<textarea name="helpWanted" rows={4} maxLength={4000} defaultValue={person.help_wanted || ""} placeholder="Things this person may want help finding" /></label>
+          <label>Travel or service radius<select name="serviceRadiusMiles" defaultValue={person.service_radius_miles ?? ""}><option value="">Not selected</option>{serviceRadiusOptions.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}</select></label>
         </div>
-        <div className="grid two">
-          <label>Availability notes<textarea name="availabilityNotes" rows={3} maxLength={2000} defaultValue={person.availability_notes || ""} placeholder="Weekends, seasonal availability, advance notice…" /></label>
-          <label>Travel or service radius<input name="serviceRadiusMiles" type="number" min={0} max={500} step={1} defaultValue={person.service_radius_miles ?? ""} placeholder="Miles" /></label>
-        </div>
+        {manageOwnCalendar ? <div className="person-availability-link"><div><strong>Availability is managed on the calendar</strong><span>Open days, closed days, and scheduled appointments stay together.</span></div><Link href="/account/calendar">Open calendar</Link></div> : null}
         <div className="grid two">
           <label>Transportation notes<textarea name="transportationNotes" rows={3} maxLength={2000} defaultValue={person.transportation_notes || ""} placeholder="Has a vehicle, needs local pickup, can deliver…" /></label>
           <label>Accessibility or accommodation notes<textarea name="accessibilityNotes" rows={3} maxLength={2000} defaultValue={person.accessibility_notes || ""} placeholder="Only add what the person wants coordinators to know" /></label>
         </div>
       </fieldset>
 
-      {showPrivacy ? (
-        <fieldset className="person-profile-section person-profile-privacy">
-          <legend>Privacy and discovery</legend>
-          <p className="person-profile-section-copy">These preferences are saved now so future search and directory tools can respect them from the beginning.</p>
-          <div className="grid two">
-            <label>Who can discover the profile?<select name="profileVisibility" defaultValue={person.profile_visibility || "connections"}><option value="private">Only me and authorized coordinators</option><option value="connections">My direct connections</option><option value="public">Public profile, when available</option></select></label>
-            <label>Who can see contact details?<select name="contactVisibility" defaultValue={person.contact_visibility || "private"}><option value="private">Only me and authorized coordinators</option><option value="connections">My direct connections</option></select></label>
-            <label>How much location can be shown?<select name="locationVisibility" defaultValue={person.location_visibility || "town_state"}><option value="hidden">Hide my location</option><option value="town_state">City and state only</option><option value="postal_code">City, state, and ZIP code</option><option value="exact">Full address, only where explicitly supported</option></select></label>
-          </div>
-          <label className="person-profile-checkbox"><input name="matchingOptIn" type="checkbox" defaultChecked={person.matching_opt_in !== false} /><span><strong>Use my profile for relevant matching</strong><small>Allow skills, services, needs, and general location to help identify useful direct connections.</small></span></label>
-          <label className="person-profile-checkbox"><input name="directoryOptIn" type="checkbox" defaultChecked={person.directory_opt_in === true} /><span><strong>Include me in a future people directory</strong><small>This does not publish the profile today; it records permission for a future directory.</small></span></label>
-        </fieldset>
-      ) : null}
     </div>
   );
 }

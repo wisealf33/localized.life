@@ -249,7 +249,7 @@ export async function POST(request: Request) {
     if (action === "update-profile") {
       const displayName = text(body.displayName, 120);
       if (!displayName) throw new Error("Add your name.");
-      const profile = personProfilePayload(body, { includePrimaryEmail: true, includePrivacy: true });
+      const profile = personProfilePayload(body, { includePrimaryEmail: true });
       const locationChanged = ["address_line1", "address_line2", "town", "state", "postal_code", "country_code"].some(
         (key) => profile[key] !== (actor.person as Record<string, unknown>)[key],
       );

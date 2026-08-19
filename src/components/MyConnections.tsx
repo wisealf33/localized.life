@@ -33,6 +33,7 @@ type NeedRecord = {
 type Overview = {
   actor: { id: string; displayName: string };
   connector: { slug: string; display_name: string };
+  accessScope: "system" | "relationships";
   people: PersonSummary[];
   needs: NeedRecord[];
   referralIntake: {
@@ -52,6 +53,7 @@ type Overview = {
 };
 
 type PersonDetail = Overview & {
+  relationshipAccess: "direct" | "system";
   person: PersonSummary & {
     how_met: string | null;
     private_notes: string | null;
@@ -253,6 +255,7 @@ export function MyConnections({ personId }: { personId?: string }) {
   if (personId && "person" in data) {
     const detail = data as PersonDetail;
     const person = detail.person;
+    const systemOnly = detail.relationshipAccess === "system";
     const activeInvitationUrl = invitationUrl || detail.activeInvitation?.url || "";
     return (
       <div className="connector-member-shell">
@@ -276,11 +279,11 @@ export function MyConnections({ personId }: { personId?: string }) {
             <h2>{person.claim_status === "claimed" ? "Profile claimed" : "Unclaimed Person"}</h2>
             <dl className="connector-details-list">
               <div><dt>Created</dt><dd>{date(person.created_at)}</dd></div>
-              <div><dt>Connected</dt><dd>{date(detail.relationship.started_at)}</dd></div>
+              <div><dt>{systemOnly ? "Entered system" : "Connected"}</dt><dd>{date(detail.relationship.started_at)}</dd></div>
               <div><dt>Claim status</dt><dd>{person.claim_status === "claimed" ? `Claimed ${date(person.claimed_at)}` : "Unclaimed"}</dd></div>
               <div><dt>How we met</dt><dd>{person.how_met || "Not recorded"}</dd></div>
             </dl>
-            {person.claim_status === "unclaimed" ? (
+            {person.claim_status === "unclaimed" && systemOnly ? <p className="notice">Invitation access stays with this Person&apos;s direct Connector.</p> : person.claim_status === "unclaimed" ? (
               <div className="stack">
                 {activeInvitationUrl ? (
                   <div className="connector-invite-result" id="person-invitation">
@@ -321,17 +324,17 @@ export function MyConnections({ personId }: { personId?: string }) {
                   <div className="connector-need-card-top"><h3>{need.title}</h3><span className={`connector-status connector-status-${need.status}`}>{need.status}</span></div>
                   {need.details ? <p>{need.details}</p> : null}
                   {need.amount_cents !== null ? <strong>{dollars(need.amount_cents)}</strong> : null}
-                  <form className="form connector-need-update-form" onSubmit={(event) => submit(event, "update-need")}>
+                  {!systemOnly ? <form className="form connector-need-update-form" onSubmit={(event) => submit(event, "update-need")}>
                     <input type="hidden" name="needId" value={need.id} />
                     <div className="grid two"><label>Status<select name="status" defaultValue={need.status}><option value="new">New</option><option value="working">Working</option><option value="scheduled">Scheduled</option><option value="completed">Completed</option><option value="closed">Closed</option></select></label><label>Amount, optional<input name="amount" type="number" min="0" step="0.01" defaultValue={need.amount_cents === null ? "" : need.amount_cents / 100} /></label></div>
                     <label>Scheduled time<input name="scheduledFor" type="datetime-local" defaultValue={localDateTime(need.scheduled_for)} /></label>
                     <label>Private Connector note<textarea name="connectorNotes" rows={2} defaultValue={need.connector_notes || ""} /></label>
                     <button className="button compact-button" type="submit" disabled={busy}>Update need</button>
-                  </form>
+                  </form> : need.connector_notes ? <p className="muted">Coordinator note: {need.connector_notes}</p> : null}
                 </article>
               )) : <div className="empty connector-empty"><h3>No Needs yet</h3><p>Add current help or record something already completed.</p></div>}
             </div>
-            <form className="panel form connector-add-need-panel" onSubmit={(event) => submit(event, "add-need")}>
+            {!systemOnly ? <form className="panel form connector-add-need-panel" onSubmit={(event) => submit(event, "add-need")}>
               <p className="eyebrow">Add a Need</p>
               <label>Title<input name="title" required placeholder="Storm cleanup" /></label>
               <label>Details<textarea name="details" rows={3} /></label>
@@ -339,7 +342,7 @@ export function MyConnections({ personId }: { personId?: string }) {
               <label>Scheduled time<input name="scheduledFor" type="datetime-local" /></label>
               <label>Private Connector note<textarea name="connectorNotes" rows={2} /></label>
               <button className="button primary" type="submit" disabled={busy}>Add Need</button>
-            </form>
+            </form> : null}
           </div>
         </section>
 
@@ -350,12 +353,12 @@ export function MyConnections({ personId }: { personId?: string }) {
               {detail.interactions.map((interaction) => <article className="connector-history-item" key={interaction.id}><time>{date(interaction.occurred_at, true)}</time><p>{interaction.note}</p><span>{interaction.visibility === "shared" ? "Shared with this Person" : "Private Connector Note"}</span></article>)}
               {!detail.interactions.length ? <p className="muted">No activity yet.</p> : null}
             </div>
-            <form className="panel form connector-history-form" onSubmit={(event) => submit(event, "add-interaction")}>
+            {!systemOnly ? <form className="panel form connector-history-form" onSubmit={(event) => submit(event, "add-interaction")}>
               <p className="eyebrow">Add activity</p>
               <label>What happened?<textarea name="note" rows={4} required /></label>
               <label>Who can see it?<select name="visibility" defaultValue="private"><option value="private">Private Connector Note</option><option value="shared">Shared Activity / History</option></select></label>
               <button className="button" type="submit" disabled={busy}>Add activity</button>
-            </form>
+            </form> : null}
           </div>
         </section>
       </div>
@@ -367,11 +370,11 @@ export function MyConnections({ personId }: { personId?: string }) {
   return (
     <div className="connector-member-shell">
       <section className="connector-admin-heading">
-        <div><p className="eyebrow">Signed in as {overview.actor.displayName}</p><h1>My Connections</h1><p className="lede">People first. Add someone as soon as you learn about them or their Need, invite them in person, and keep useful history over time.</p></div>
+        <div><p className="eyebrow">Signed in as {overview.actor.displayName}</p><h1>{overview.accessScope === "system" ? "Network People" : "My Connections"}</h1><p className="lede">{overview.accessScope === "system" ? "Founder access includes every Person record. Relationship tools still follow each Person's direct Connector or assigned responsibility." : "People first. Add someone as soon as you learn about them or their Need, invite them in person, and keep useful history over time."}</p></div>
         <div className="toolbar"><Link className="button" href={`/connect/${overview.connector.slug}`}>Public Connector page</Link><button className="button" type="button" onClick={signOut}>Sign out</button></div>
       </section>
       {message ? <p className="notice good">{message}</p> : null}
-      <section className="connector-admin-stats"><div><strong>{overview.people.length}</strong><span>connections</span></div><div><strong>{openNeeds.length}</strong><span>open Needs</span></div><div><strong>{overview.people.filter((person) => person.claim_status === "unclaimed").length}</strong><span>unclaimed</span></div></section>
+      <section className="connector-admin-stats"><div><strong>{overview.people.length}</strong><span>{overview.accessScope === "system" ? "people in system" : "connections"}</span></div><div><strong>{openNeeds.length}</strong><span>open Needs</span></div><div><strong>{overview.people.filter((person) => person.claim_status === "unclaimed").length}</strong><span>unclaimed</span></div></section>
       {overview.referralIntake.canAssign ? <section className="connector-dashboard-section" id="referral-intake">
         <div className="section-heading"><div><p className="eyebrow">Referral intake</p><h2>People waiting for a referrer</h2><p className="muted">Review each person and record the Connector or coordinator who brought them into the community.</p></div><span className="connector-referral-count">{overview.referralIntake.unassigned.length} waiting</span></div>
         {overview.referralIntake.unassigned.length ? <div className="connector-referral-list">{overview.referralIntake.unassigned.map((person) => <article className="card connector-referral-card" key={person.id}>
@@ -394,7 +397,7 @@ export function MyConnections({ personId }: { personId?: string }) {
         </form>
         {invitationUrl && invitationPersonId ? <section className="notice good stack connector-invite-result connector-ready-invitation" id="ready-invitation"><p className="eyebrow">Ready to send now</p><strong>{invitationPersonName || "This Person"} is connected. Their private invitation is below.</strong><label>Secure personalized claim link<input value={invitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label><div className="toolbar"><button className="button primary" type="button" onClick={() => copyInvitation()}>Copy private link</button><button className="button" type="button" onClick={() => shareInvitation(invitationPersonName || "Your connection")}>Text or share now</button><Link className="button" href={`/connections/${invitationPersonId}`}>Open Person</Link></div><p className="muted connector-small-copy">Keep this link private. It lets this Person claim the exact profile and history you started for them.</p></section> : null}
       </section>
-      <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">Relationships</p><h2>People you are connected with</h2></div></div>{overview.people.length ? <div className="connector-people-grid">{overview.people.map((person) => <article className="card connector-person-card" key={person.id}><div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p></div><div className="connector-person-summary"><span>{person.openNeeds} open {person.openNeeds === 1 ? "Need" : "Needs"}</span><span>{person.phone || person.email || "Contact details not added"}</span></div><Link className="button primary compact-button" href={`/connections/${person.id}`}>{person.claim_status === "unclaimed" ? "Open Person and invitation" : "Open Person"}</Link></article>)}</div> : <div className="empty connector-empty"><h3>No connections yet</h3><p>Add the first Person above as soon as you learn about them or their Need.</p></div>}</section>
+      <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">{overview.accessScope === "system" ? "System access" : "Relationships"}</p><h2>{overview.accessScope === "system" ? "People in the network" : "People you are connected with"}</h2></div></div>{overview.people.length ? <div className="connector-people-grid">{overview.people.map((person) => <article className="card connector-person-card" key={person.id}><div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p></div><div className="connector-person-summary"><span>{person.openNeeds} open {person.openNeeds === 1 ? "Need" : "Needs"}</span><span>{person.phone || person.email || "Contact details not added"}</span></div><Link className="button primary compact-button" href={`/connections/${person.id}`}>{person.claim_status === "unclaimed" && overview.accessScope !== "system" ? "Open Person and invitation" : "Open Person"}</Link></article>)}</div> : <div className="empty connector-empty"><h3>No connections yet</h3><p>Add the first Person above as soon as you learn about them or their Need.</p></div>}</section>
       <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">Work queue</p><h2>Open Needs</h2></div></div>{openNeeds.length ? <div className="connector-need-list">{openNeeds.map((need) => { const person = overview.people.find((entry) => entry.id === need.requester_person_id); return <article className="card connector-need-card" key={need.id}><div className="connector-need-card-top"><div><p className="eyebrow">{person?.display_name || "Connected Person"}</p><h3>{need.title}</h3></div><span className={`connector-status connector-status-${need.status}`}>{need.status}</span></div>{person ? <Link className="button compact-button" href={`/connections/${person.id}#needs`}>Open Person</Link> : null}</article>; })}</div> : <p className="muted">No open Needs right now.</p>}</section>
     </div>
   );

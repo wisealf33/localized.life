@@ -1,3 +1,5 @@
+import { selectedServiceSlugs, serviceRadiusOptions } from "./localServices";
+
 export const personProfileColumns = "id, auth_user_id, display_name, first_name, middle_name, last_name, preferred_name, birth_date, email, secondary_email, phone, secondary_phone, preferred_contact_method, contact_time_preferences, address_line1, address_line2, town, state, postal_code, county, country_code, latitude, longitude, location_precision, geocoded_at, timezone, service_radius_miles, skills, services_offered, help_wanted, availability_notes, transportation_notes, accessibility_notes, profile_visibility, contact_visibility, location_visibility, directory_opt_in, matching_opt_in, how_met, private_notes, created_by_person_id, claim_status, claimed_at, created_at, updated_at" as const;
 
 function cleanText(value: unknown, max: number) {
@@ -43,21 +45,6 @@ function date(value: unknown) {
   return next;
 }
 
-function list(value: unknown) {
-  const source = Array.isArray(value) ? value.map(String) : cleanText(value, 3000).split(/[\n,;]+/);
-  const result: string[] = [];
-  const seen = new Set<string>();
-  for (const item of source) {
-    const next = item.trim().slice(0, 100);
-    const key = next.toLocaleLowerCase();
-    if (!next || seen.has(key)) continue;
-    seen.add(key);
-    result.push(next);
-    if (result.length === 40) break;
-  }
-  return result;
-}
-
 function choice<T extends string>(value: unknown, allowed: readonly T[], fallback: T) {
   const next = cleanText(value, 40) as T;
   return allowed.includes(next) ? next : fallback;
@@ -72,14 +59,22 @@ function optionalInteger(value: unknown, minimum: number, maximum: number) {
   return next;
 }
 
+function serviceRadius(value: unknown) {
+  const next = optionalInteger(value, 0, 500);
+  if (next === null) return null;
+  if (!serviceRadiusOptions.some((option) => option.value === next)) {
+    throw new Error("Choose a travel or service radius from the list.");
+  }
+  return next;
+}
+
 type ProfilePayloadOptions = {
   includePrimaryEmail?: boolean;
-  includePrivacy?: boolean;
 };
 
 export function personProfilePayload(
   body: Record<string, unknown>,
-  { includePrimaryEmail = true, includePrivacy = false }: ProfilePayloadOptions = {},
+  { includePrimaryEmail = true }: ProfilePayloadOptions = {},
 ) {
   const state = cleanText(body.state, 2).toUpperCase();
   const countryCode = cleanText(body.countryCode, 2).toUpperCase();
@@ -108,31 +103,14 @@ export function personProfilePayload(
     county: optionalText(body.county, 120),
     country_code: countryCode || null,
     timezone: optionalText(body.timezone, 100),
-    service_radius_miles: optionalInteger(body.serviceRadiusMiles, 0, 500),
-    skills: list(body.skills),
-    services_offered: optionalText(body.servicesOffered, 4000),
+    service_radius_miles: serviceRadius(body.serviceRadiusMiles),
+    skills: selectedServiceSlugs(body),
     help_wanted: optionalText(body.helpWanted, 4000),
-    availability_notes: optionalText(body.availabilityNotes, 2000),
     transportation_notes: optionalText(body.transportationNotes, 2000),
     accessibility_notes: optionalText(body.accessibilityNotes, 2000),
   };
 
   if (includePrimaryEmail) payload.email = email(body.email);
-  if (includePrivacy) {
-    payload.profile_visibility = choice(
-      body.profileVisibility,
-      ["private", "connections", "public"] as const,
-      "connections",
-    );
-    payload.contact_visibility = choice(body.contactVisibility, ["private", "connections"] as const, "private");
-    payload.location_visibility = choice(
-      body.locationVisibility,
-      ["hidden", "town_state", "postal_code", "exact"] as const,
-      "town_state",
-    );
-    payload.directory_opt_in = body.directoryOptIn === true || body.directoryOptIn === "on";
-    payload.matching_opt_in = body.matchingOptIn === true || body.matchingOptIn === "on";
-  }
 
   return payload;
 }

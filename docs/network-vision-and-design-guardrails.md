@@ -60,6 +60,10 @@ Future usefulness alone is not enough reason to collect personal information.
 ### Privacy and Access
 
 - Personal and service details are private unless an explicit feature and permission make them visible.
+- A Person does not choose profile, contact, or location visibility from preference controls. The system determines access from the viewer's role and network relationship.
+- The founder/system manager may access all Person details needed to operate and govern the network.
+- An ordinary Person's management tools are limited to People they directly introduced, People explicitly connected to them, and People explicitly assigned to their responsibility.
+- A Person's details may be available to the system without being available to every member. "Stored in the system" and "visible to this viewer" are separate decisions.
 - A service address belongs with the service relationship or calendar context when it is not the Person's general address.
 - Account access is available to people who have been onboarded; it is findable in the footer without becoming a primary public call to action.
 - Public Local Services requests remain the general entry path for people seeking help.
@@ -139,6 +143,7 @@ These questions should be answered by Garrett. They must not be filled in from s
 
 - Which facts belong to a Person versus a relationship, service record, referral, or appointment?
 - What may a Connector see that another connected Person may not?
+- Which roles, beyond the founder/system manager, may see inherited or multi-level downline relationships rather than only direct relationships?
 - What should happen to information entered by someone else after a Person claims their account?
 - What information, if any, should ever be publicly discoverable?
 

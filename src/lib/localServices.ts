@@ -98,6 +98,27 @@ export const localServices: LocalService[] = [
   },
 ];
 
+export const serviceRadiusOptions = [
+  { value: 0, label: "At my location only" },
+  { value: 5, label: "Within 5 miles" },
+  { value: 10, label: "Within 10 miles" },
+  { value: 15, label: "Within 15 miles" },
+  { value: 25, label: "Within 25 miles" },
+  { value: 50, label: "Within 50 miles" },
+  { value: 100, label: "Within 100 miles" },
+] as const;
+
+export function serviceOptionField(slug: string) {
+  return `serviceOption_${slug}`;
+}
+
+export function selectedServiceSlugs(body: Record<string, unknown>) {
+  return localServices.flatMap((service) => {
+    const value = body[serviceOptionField(service.slug)];
+    return value === true || value === "on" ? [service.slug] : [];
+  });
+}
+
 export function serviceBySlug(slug: string) {
   return localServices.find((service) => service.slug === slug);
 }

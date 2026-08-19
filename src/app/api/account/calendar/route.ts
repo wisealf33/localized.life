@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 const appointmentStatuses = new Set(["scheduled", "completed", "cancelled"]);
 const calendarPersonStatuses = new Set(["active", "archived"]);
+const availabilityStatuses = new Set(["open", "closed"]);
 
 function text(value: unknown, max = 4000) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -20,6 +21,14 @@ function timestamp(value: unknown, label: string) {
   const parsed = new Date(text(value, 80));
   if (Number.isNaN(parsed.getTime())) throw new Error(`Add a valid ${label}.`);
   return parsed;
+}
+
+function calendarDate(value: unknown) {
+  const next = text(value, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(next) || Number.isNaN(Date.parse(`${next}T00:00:00Z`))) {
+    throw new Error("Choose a valid calendar date.");
+  }
+  return next;
 }
 
 function requestedRange(request: Request) {
@@ -139,7 +148,7 @@ export async function GET(request: Request) {
   try {
     const range = requestedRange(request);
     const supabase = getSupabaseAdmin();
-    const [calendarPeopleResult, appointmentsResult, connectionsResult, connectorPeopleResult, createdPeopleResult] = await Promise.all([
+    const [calendarPeopleResult, appointmentsResult, availabilityResult, connectionsResult, connectorPeopleResult, createdPeopleResult] = await Promise.all([
       supabase
         .from("account_calendar_people")
         .select("id, person_id, service_address_line1, service_address_line2, service_city, service_state, service_postal_code, service_country_code, private_notes, status, created_at, updated_at")
@@ -154,6 +163,13 @@ export async function GET(request: Request) {
         .lt("starts_at", range.end)
         .order("starts_at", { ascending: true })
         .limit(2000),
+      supabase
+        .from("account_calendar_availability")
+        .select("availability_date, status, updated_at")
+        .eq("owner_person_id", actor.person.id)
+        .gte("availability_date", range.start.slice(0, 10))
+        .lt("availability_date", range.end.slice(0, 10))
+        .order("availability_date"),
       supabase
         .from("person_connections")
         .select("person_one_id, person_two_id")
@@ -171,6 +187,7 @@ export async function GET(request: Request) {
     const firstError =
       calendarPeopleResult.error ||
       appointmentsResult.error ||
+      availabilityResult.error ||
       connectionsResult.error ||
       connectorPeopleResult.error ||
       createdPeopleResult.error;
@@ -212,6 +229,7 @@ export async function GET(request: Request) {
       range,
       people,
       appointments,
+      availability: availabilityResult.data || [],
     });
   } catch (error) {
     return NextResponse.json(
@@ -229,6 +247,23 @@ export async function POST(request: Request) {
     const body = (await request.json()) as Record<string, unknown>;
     const action = text(body.action, 60);
     const supabase = getSupabaseAdmin();
+
+    if (action === "set-availability") {
+      const availabilityDate = calendarDate(body.availabilityDate);
+      const status = text(body.status, 20);
+      if (!availabilityStatuses.has(status)) throw new Error("Choose open or closed.");
+      const { error } = await supabase.from("account_calendar_availability").upsert(
+        {
+          owner_person_id: actor.person.id,
+          availability_date: availabilityDate,
+          status,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "owner_person_id,availability_date" },
+      );
+      if (error) throw new Error(error.message);
+      return NextResponse.json({ ok: true });
+    }
 
     if (action === "create-person") {
       const { displayName, email: personEmail, phone } = personStartDetails(body);
@@ -346,6 +381,7 @@ export async function POST(request: Request) {
       const startsAt = timestamp(body.startsAt, "start time");
       const endsAt = timestamp(body.endsAt, "end time");
       const status = text(body.status, 20) || "scheduled";
+      const availabilityDate = calendarDate(body.availabilityDate);
       if (action === "update-appointment" && !appointmentId) throw new Error("Choose an appointment to update.");
       if (!personId) throw new Error("Choose a person.");
       if (!title) throw new Error("Add an appointment title.");
@@ -354,6 +390,16 @@ export async function POST(request: Request) {
         throw new Error("An appointment cannot be longer than seven days.");
       }
       if (!appointmentStatuses.has(status)) throw new Error("Choose a valid appointment status.");
+      if (status === "scheduled") {
+        const { data: availability, error: availabilityError } = await supabase
+          .from("account_calendar_availability")
+          .select("status")
+          .eq("owner_person_id", actor.person.id)
+          .eq("availability_date", availabilityDate)
+          .maybeSingle();
+        if (availabilityError) throw new Error(availabilityError.message);
+        if (availability?.status === "closed") throw new Error("Mark this day open before scheduling an appointment.");
+      }
       const calendarPerson = await ensureCalendarPerson(actor.person.id, personId);
       await requireOwnedCalendarPerson(actor.person.id, calendarPerson.id, status === "scheduled");
 

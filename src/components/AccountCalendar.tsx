@@ -61,10 +61,17 @@ type Appointment = {
   updated_at: string;
 };
 
+type CalendarAvailability = {
+  availability_date: string;
+  status: "open" | "closed";
+  updated_at: string;
+};
+
 type CalendarData = {
   person: { id: string; display_name: string };
   people: CalendarPerson[];
   appointments: Appointment[];
+  availability: CalendarAvailability[];
 };
 
 type ViewState =
@@ -152,6 +159,25 @@ function serviceAddress(person: CalendarPerson | undefined) {
   ].filter(Boolean).join(", ");
 }
 
+function isDesignPreview() {
+  return process.env.NODE_ENV === "development" && new URLSearchParams(window.location.search).get("preview") === "1";
+}
+
+function designPreviewData(): CalendarData {
+  const current = new Date();
+  const scheduledStart = new Date(current.getFullYear(), current.getMonth(), current.getDate(), 10, 0);
+  const scheduledEnd = new Date(scheduledStart);
+  scheduledEnd.setHours(11);
+  const closedDate = new Date(current);
+  closedDate.setDate(closedDate.getDate() + 2);
+  return {
+    person: { id: "preview-garrett", display_name: "Garrett" },
+    people: [{ id: "preview-person", display_name: "Cindy Grubbs", email: null, phone: "708-935-5088", town: "Peotone", state: "IL", claim_status: "unclaimed", created_at: current.toISOString(), updated_at: current.toISOString(), calendar: { id: "preview-calendar-person", person_id: "preview-person", service_address_line1: "212 S Rathje Rd", service_address_line2: null, service_city: "Peotone", service_state: "IL", service_postal_code: "60468", service_country_code: "US", private_notes: null, status: "active", created_at: current.toISOString(), updated_at: current.toISOString() } }],
+    appointments: [{ id: "preview-appointment", calendar_person_id: "preview-calendar-person", person_id: "preview-person", title: "House cleaning", starts_at: scheduledStart.toISOString(), ends_at: scheduledEnd.toISOString(), status: "scheduled", location: "212 S Rathje Rd, Peotone, IL 60468", notes: null, created_at: current.toISOString(), updated_at: current.toISOString() }],
+    availability: [{ availability_date: dayKey(closedDate), status: "closed", updated_at: current.toISOString() }],
+  };
+}
+
 export function AccountCalendar() {
   const today = useMemo(() => dayKey(new Date()), []);
   const [cursor, setCursor] = useState(() => monthCursor(new Date()));
@@ -169,6 +195,10 @@ export function AccountCalendar() {
   const [message, setMessage] = useState("");
 
   const loadCalendar = useCallback(async () => {
+    if (isDesignPreview()) {
+      setView({ status: "ready", data: designPreviewData() });
+      return;
+    }
     const supabase = getSupabaseBrowser();
     if (!supabase) {
       setView({ status: "config" });
@@ -213,6 +243,7 @@ export function AccountCalendar() {
   }, [loadCalendar]);
 
   async function calendarPost(body: Record<string, unknown>) {
+    if (isDesignPreview()) return {} as { personId?: string; appointmentId?: string };
     const supabase = getSupabaseBrowser();
     const { data } = (await supabase?.auth.getSession()) || { data: { session: null } };
     if (!data.session) throw new Error("Sign in to continue.");
@@ -292,6 +323,7 @@ export function AccountCalendar() {
         startsAt: new Date(String(values.get("startsAt"))).toISOString(),
         endsAt: new Date(String(values.get("endsAt"))).toISOString(),
         status: editingAppointment?.status || "scheduled",
+        availabilityDate: String(values.get("startsAt")).slice(0, 10),
         location: appointmentLocation,
         notes: values.get("notes"),
       });
@@ -315,6 +347,24 @@ export function AccountCalendar() {
       await loadCalendar();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "This appointment could not be updated.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setDayAvailability(status: CalendarAvailability["status"]) {
+    setBusy(true);
+    setMessage("");
+    try {
+      await calendarPost({ action: "set-availability", availabilityDate: selectedDay, status });
+      if (status === "closed") {
+        setAppointmentFormOpen(false);
+        setEditingAppointment(null);
+      }
+      setMessage(`${longDate(selectedDay)} is marked ${status}.`);
+      await loadCalendar();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Availability could not be saved.");
     } finally {
       setBusy(false);
     }
@@ -362,12 +412,15 @@ export function AccountCalendar() {
   const currentMonth = cursorDate(cursor).getMonth();
   const activePeople = data.people.filter((person) => person.calendar?.status !== "archived");
   const peopleById = new Map(data.people.map((person) => [person.id, person]));
+  const availabilityByDay = new Map(data.availability.map((entry) => [entry.availability_date, entry.status]));
   const appointmentsByDay = new Map<string, Appointment[]>();
   for (const appointment of data.appointments) {
     const key = dayKey(new Date(appointment.starts_at));
     appointmentsByDay.set(key, [...(appointmentsByDay.get(key) || []), appointment]);
   }
   const selectedAppointments = appointmentsByDay.get(selectedDay) || [];
+  const selectedAvailability = availabilityByDay.get(selectedDay) || "open";
+  const selectedScheduledCount = selectedAppointments.filter((appointment) => appointment.status === "scheduled").length;
   const defaults = appointmentDefaults(selectedDay, editingAppointment);
 
   return (
@@ -381,7 +434,7 @@ export function AccountCalendar() {
         </div>
         <div className="calendar-header-actions">
           <button className="button" type="button" onClick={() => { setPersonFormOpen((open) => !open); setEditingPerson(null); }}><UserPlus /> Add person</button>
-          <button className="button primary" type="button" disabled={!activePeople.length} onClick={() => openAppointment(null, activePeople)}><Plus /> New appointment</button>
+          <button className="button primary" type="button" disabled={!activePeople.length || selectedAvailability === "closed"} onClick={() => openAppointment(null, activePeople)}><Plus /> New appointment</button>
         </div>
       </header>
 
@@ -436,9 +489,10 @@ export function AccountCalendar() {
             {days.map((date) => {
               const key = dayKey(date);
               const appointments = appointmentsByDay.get(key) || [];
+              const availability = availabilityByDay.get(key) || "open";
               return (
-                <button className={["calendar-day", date.getMonth() !== currentMonth ? "outside" : "", key === selectedDay ? "selected" : "", key === today ? "today" : ""].filter(Boolean).join(" ")} type="button" key={key} onClick={() => setSelectedDay(key)}>
-                  <span className="calendar-day-number">{date.getDate()}</span>
+                <button className={["calendar-day", availability === "closed" ? "closed" : "", date.getMonth() !== currentMonth ? "outside" : "", key === selectedDay ? "selected" : "", key === today ? "today" : ""].filter(Boolean).join(" ")} type="button" key={key} onClick={() => setSelectedDay(key)}>
+                  <span className="calendar-day-heading"><span className="calendar-day-number">{date.getDate()}</span>{availability === "closed" ? <span className="calendar-day-status closed">Closed</span> : null}</span>
                   <span className="calendar-day-appointments">
                     {appointments.slice(0, 3).map((appointment) => <span className={`calendar-appointment-pill ${appointment.status}`} key={appointment.id}>{new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(new Date(appointment.starts_at))} {peopleById.get(appointment.person_id)?.display_name || appointment.title}</span>)}
                     {appointments.length > 3 ? <small>+{appointments.length - 3} more</small> : null}
@@ -450,7 +504,14 @@ export function AccountCalendar() {
         </section>
 
         <aside className="calendar-day-panel" aria-labelledby="selected-day-title">
-          <div className="account-sidebar-heading"><div><p className="eyebrow">Selected day</p><h2 id="selected-day-title">{longDate(selectedDay)}</h2></div><button className="icon-button" type="button" aria-label="Add appointment on selected day" disabled={!activePeople.length} onClick={() => openAppointment(null, activePeople)}><Plus /></button></div>
+          <div className="account-sidebar-heading"><div><p className="eyebrow">Selected day</p><h2 id="selected-day-title">{longDate(selectedDay)}</h2></div><button className="icon-button" type="button" aria-label="Add appointment on selected day" disabled={!activePeople.length || selectedAvailability === "closed"} onClick={() => openAppointment(null, activePeople)}><Plus /></button></div>
+          <label className="calendar-availability-control">
+            <span><strong>Availability</strong><small>{selectedAvailability === "closed" ? "Closed to new appointments" : selectedScheduledCount ? `${selectedScheduledCount} scheduled appointment${selectedScheduledCount === 1 ? "" : "s"}; remaining time is open` : "Open for appointments"}</small></span>
+            <select value={selectedAvailability} disabled={busy} onChange={(event) => void setDayAvailability(event.target.value as CalendarAvailability["status"])}>
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+            </select>
+          </label>
           {selectedAppointments.length ? (
             <div className="calendar-agenda-list">
               {selectedAppointments.map((appointment) => {
@@ -470,7 +531,7 @@ export function AccountCalendar() {
               })}
             </div>
           ) : (
-            <div className="account-empty-list"><Clock weight="duotone" /><div><h3>No appointments</h3><p>This day is open.</p></div></div>
+            <div className="account-empty-list"><Clock weight="duotone" /><div><h3>No appointments</h3><p>{selectedAvailability === "closed" ? "This day is closed." : "This day is open."}</p></div></div>
           )}
         </aside>
       </div>

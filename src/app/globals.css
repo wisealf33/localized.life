@@ -5734,6 +5734,82 @@ code {
   line-height: 1.35;
 }
 
+.person-profile-control-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.person-service-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.person-service-option {
+  display: flex;
+  grid-template-columns: none;
+  gap: 9px;
+  align-items: center;
+  min-height: 44px;
+  border: 1px solid #d8e1da;
+  border-radius: 7px;
+  padding: 9px 11px;
+  background: #fff;
+  color: var(--account-ink);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.person-service-option:has(input:checked) {
+  border-color: #76a889;
+  background: #eef8ef;
+  box-shadow: inset 0 0 0 1px #b7d4c0;
+}
+
+.person-service-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--account-green);
+}
+
+.person-availability-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-left: 3px solid #6aa47c;
+  padding: 8px 2px 8px 13px;
+}
+
+.person-availability-link > div {
+  display: grid;
+  gap: 2px;
+}
+
+.person-availability-link strong {
+  color: var(--account-ink);
+  font-size: 0.88rem;
+}
+
+.person-availability-link span,
+.person-availability-link a {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.person-availability-link a {
+  flex: none;
+  color: #1768df;
+  font-weight: 850;
+}
+
 .person-profile-privacy {
   border-color: #c7d9cc;
   background: #f4faf5;
@@ -6084,6 +6160,37 @@ code {
   font-weight: 850;
 }
 
+.calendar-day-heading {
+  display: flex;
+  min-height: 27px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.calendar-day-heading .calendar-day-number {
+  margin-bottom: 0;
+}
+
+.calendar-day.closed {
+  background: #f5f6f5;
+}
+
+.calendar-day-status {
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 0.61rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+}
+
+.calendar-day-status.closed {
+  background: #e4e7e5;
+  color: #5d6760;
+}
+
 .calendar-day-appointments {
   display: grid;
   gap: 3px;
@@ -6130,6 +6237,40 @@ code {
 
 .calendar-day-panel .account-sidebar-heading {
   align-items: flex-start;
+}
+
+.calendar-availability-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #d5e0d8;
+  border-radius: 7px;
+  padding: 12px;
+  background: #f7fbf7;
+}
+
+.calendar-availability-control > span {
+  display: grid;
+  gap: 2px;
+}
+
+.calendar-availability-control strong {
+  color: var(--account-ink);
+  font-size: 0.86rem;
+}
+
+.calendar-availability-control small {
+  color: var(--muted);
+  font-size: 0.73rem;
+  font-weight: 550;
+  line-height: 1.35;
+}
+
+.calendar-availability-control select {
+  min-width: 0;
+  padding: 8px 30px 8px 9px;
+  font-size: 0.8rem;
 }
 
 .calendar-agenda-list {
@@ -6364,6 +6505,16 @@ code {
 
   .calendar-customer-list {
     grid-template-columns: 1fr;
+  }
+
+  .person-service-options {
+    grid-template-columns: 1fr;
+  }
+
+  .person-availability-link {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .calendar-customer-directory .account-empty-list {

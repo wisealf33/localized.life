@@ -3,6 +3,7 @@ import { authenticatePerson, isConnectedPerson } from "@/lib/connectionAccess";
 import { personProfileColumns, personProfilePayload, personStartDetails } from "@/lib/personProfile";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { assignReferral, captureReferral, isReferralCoordinator } from "@/lib/referrals";
+import { hasSystemManagementAccess } from "@/lib/systemAccess";
 import { hashSecret, invitationToken } from "@/lib/tokens";
 
 export const dynamic = "force-dynamic";
@@ -89,11 +90,30 @@ export async function GET(request: Request) {
 
   const supabase = getSupabaseAdmin();
   const personId = new URL(request.url).searchParams.get("person_id");
+  const systemManagementAccess = await hasSystemManagementAccess(actor.person.id);
 
   if (personId) {
-    if (!(await isConnectedPerson(actor.person.id, personId))) {
+    const directRelationshipAccess = await isConnectedPerson(actor.person.id, personId);
+    if (!systemManagementAccess && !directRelationshipAccess) {
       return NextResponse.json({ error: "Connection not found." }, { status: 404 });
     }
+    const relationshipQuery = supabase
+      .from("connector_relationships")
+      .select("id, connector_person_id, person_id, household_id, is_primary, status, started_at")
+      .eq("person_id", personId)
+      .eq("status", "active")
+      .order("started_at", { ascending: true })
+      .limit(1);
+    const needsQuery = supabase
+      .from("needs")
+      .select("id, requester_person_id, household_id, connector_person_id, title, details, status, scheduled_for, completed_at, assigned_person_id, connection_made_by_person_id, connector_notes, amount_cents, created_at, updated_at")
+      .eq("requester_person_id", personId)
+      .order("created_at", { ascending: false });
+    const interactionsQuery = supabase
+      .from("connector_interactions")
+      .select("id, person_id, connector_person_id, need_id, note, visibility, occurred_at, created_at")
+      .eq("person_id", personId)
+      .order("occurred_at", { ascending: false });
     const [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult, inviteResult] =
       await Promise.all([
         supabase
@@ -101,25 +121,9 @@ export async function GET(request: Request) {
           .select(personProfileColumns)
           .eq("id", personId)
           .single(),
-        supabase
-          .from("connector_relationships")
-          .select("id, connector_person_id, person_id, household_id, is_primary, status, started_at")
-          .eq("connector_person_id", actor.person.id)
-          .eq("person_id", personId)
-          .eq("status", "active")
-          .single(),
-        supabase
-          .from("needs")
-          .select("id, requester_person_id, household_id, connector_person_id, title, details, status, scheduled_for, completed_at, assigned_person_id, connection_made_by_person_id, connector_notes, amount_cents, created_at, updated_at")
-          .eq("connector_person_id", actor.person.id)
-          .eq("requester_person_id", personId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("connector_interactions")
-          .select("id, person_id, connector_person_id, need_id, note, visibility, occurred_at, created_at")
-          .eq("connector_person_id", actor.person.id)
-          .eq("person_id", personId)
-          .order("occurred_at", { ascending: false }),
+        (systemManagementAccess ? relationshipQuery : relationshipQuery.eq("connector_person_id", actor.person.id)).maybeSingle(),
+        systemManagementAccess ? needsQuery : needsQuery.eq("connector_person_id", actor.person.id),
+        systemManagementAccess ? interactionsQuery : interactionsQuery.eq("connector_person_id", actor.person.id),
         supabase.from("household_memberships").select("person_id, household_id, role").eq("person_id", personId),
         supabase
           .from("connector_claim_invitations")
@@ -135,7 +139,7 @@ export async function GET(request: Request) {
     const firstError = [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult, inviteResult].find(
       (result) => result.error,
     )?.error;
-    if (firstError || !personResult.data || !relationshipResult.data) {
+    if (firstError || !personResult.data || (!relationshipResult.data && !systemManagementAccess)) {
       return NextResponse.json({ error: firstError?.message || "Connection not found." }, { status: 500 });
     }
 
@@ -150,8 +154,10 @@ export async function GET(request: Request) {
     return NextResponse.json({
       actor: { id: actor.person.id, displayName: actor.person.display_name },
       connector: actor.connector,
+      accessScope: systemManagementAccess ? "system" : "relationships",
+      relationshipAccess: directRelationshipAccess ? "direct" : "system",
       person: personResult.data,
-      relationship: relationshipResult.data,
+      relationship: relationshipResult.data || { started_at: personResult.data.created_at },
       needs: needsResult.data || [],
       interactions: interactionsResult.data || [],
       memberships: membershipsResult.data || [],
@@ -165,19 +171,19 @@ export async function GET(request: Request) {
     });
   }
 
+  const relationshipsQuery = supabase
+    .from("connector_relationships")
+    .select("id, person_id, started_at")
+    .eq("status", "active")
+    .not("person_id", "is", null)
+    .order("started_at", { ascending: false });
+  const needsQuery = supabase
+    .from("needs")
+    .select("id, requester_person_id, title, details, status, scheduled_for, amount_cents, created_at, updated_at")
+    .order("updated_at", { ascending: false });
   const [relationshipsResult, needsResult, coordinatorResult] = await Promise.all([
-    supabase
-      .from("connector_relationships")
-      .select("id, person_id, started_at")
-      .eq("connector_person_id", actor.person.id)
-      .eq("status", "active")
-      .not("person_id", "is", null)
-      .order("started_at", { ascending: false }),
-    supabase
-      .from("needs")
-      .select("id, requester_person_id, title, details, status, scheduled_for, amount_cents, created_at, updated_at")
-      .eq("connector_person_id", actor.person.id)
-      .order("updated_at", { ascending: false }),
+    systemManagementAccess ? relationshipsQuery : relationshipsQuery.eq("connector_person_id", actor.person.id),
+    systemManagementAccess ? needsQuery : needsQuery.eq("connector_person_id", actor.person.id),
     supabase
       .from("referral_coordinators")
       .select("person_id")
@@ -191,10 +197,15 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-  const ids = (relationshipsResult.data || []).flatMap((relationship) =>
+  const ids = Array.from(new Set((relationshipsResult.data || []).flatMap((relationship) =>
     relationship.person_id ? [relationship.person_id] : [],
-  );
-  const peopleResult = ids.length
+  )));
+  const peopleResult = systemManagementAccess
+    ? await supabase
+        .from("people")
+        .select("id, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
+        .neq("id", actor.person.id)
+    : ids.length
     ? await supabase
         .from("people")
         .select("id, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
@@ -255,6 +266,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     actor: { id: actor.person.id, displayName: actor.person.display_name },
     connector: actor.connector,
+    accessScope: systemManagementAccess ? "system" : "relationships",
     people,
     needs: needsResult.data || [],
     referralIntake: {
@@ -404,7 +416,16 @@ export async function POST(request: Request) {
 
     const personId = text(body.personId, 80);
     if (!personId) throw new Error("Person is required.");
-    await requireConnection(actor.person.id, personId);
+    const [directRelationshipAccess, systemManagementAccess] = await Promise.all([
+      isConnectedPerson(actor.person.id, personId),
+      hasSystemManagementAccess(actor.person.id),
+    ]);
+    if (!directRelationshipAccess && !systemManagementAccess) {
+      throw new Error("This person is not available to you.");
+    }
+    if (!directRelationshipAccess && action !== "update-person") {
+      throw new Error("A direct relationship is required for invitations, Needs, and activity.");
+    }
 
     if (action === "generate-invite") {
       return NextResponse.json({ ok: true, invitation: await createInvitation(actor.connector!, personId, true) });
