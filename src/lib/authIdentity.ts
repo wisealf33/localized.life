@@ -5,11 +5,12 @@ export type AuthLogin =
   | { type: "phone"; value: string };
 
 export function authLoginFromContact(email: string | null | undefined, phone: string | null | undefined): AuthLogin | null {
+  const normalizedPhone = normalizePhone(phone);
+  if (normalizedPhone) return { type: "phone", value: normalizedPhone };
+
   const normalizedEmail = String(email || "").trim().toLowerCase();
   if (normalizedEmail) return { type: "email", value: normalizedEmail };
-
-  const normalizedPhone = normalizePhone(phone);
-  return normalizedPhone ? { type: "phone", value: normalizedPhone } : null;
+  return null;
 }
 
 export function authLoginFromInput(value: string): AuthLogin | null {
