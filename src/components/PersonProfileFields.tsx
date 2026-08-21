@@ -54,20 +54,55 @@ export function PersonProfileFields({
     (person.services_wanted || []).map((value) => value.trim().toLocaleLowerCase()),
   );
 
+  if (intake) {
+    return (
+      <div className="person-profile-fields person-profile-intake-fields">
+        {intro ? <p className="person-profile-intro">{intro}</p> : null}
+
+        <fieldset className="person-profile-section">
+          <legend>Basic information</legend>
+          <p className="person-profile-section-copy">Add the information you already know. The Person can complete the rest after claiming their profile.</p>
+          <div className="grid two">
+            <label>First name<input name="firstName" maxLength={80} defaultValue={person.first_name || ""} autoComplete="given-name" /></label>
+            <label>Last name<input name="lastName" maxLength={120} defaultValue={person.last_name || ""} autoComplete="family-name" /></label>
+          </div>
+          <div className="grid two">
+            <label>Phone number<input name="phone" type="tel" maxLength={60} defaultValue={person.phone || ""} autoComplete="tel" /></label>
+            {includePrimaryEmail ? <label>Email address<input name="email" type="email" maxLength={320} defaultValue={person.email || ""} autoComplete="email" /></label> : null}
+          </div>
+        </fieldset>
+
+        <fieldset className="person-profile-section">
+          <legend>Home location (optional)</legend>
+          <p className="person-profile-section-copy">Use an address when you have it, or simply add the town and state.</p>
+          <div className="grid two">
+            <label>Street address<input name="addressLine1" maxLength={240} defaultValue={person.address_line1 || ""} autoComplete="address-line1" /></label>
+            <label>Apartment, suite, or unit<input name="addressLine2" maxLength={240} defaultValue={person.address_line2 || ""} autoComplete="address-line2" /></label>
+          </div>
+          <div className="person-profile-grid person-profile-location-grid">
+            <label>City or town<input name="town" maxLength={120} defaultValue={person.town || ""} autoComplete="address-level2" /></label>
+            <label>State<input name="state" maxLength={2} defaultValue={person.state || ""} autoComplete="address-level1" /></label>
+            <label>ZIP or postal code<input name="postalCode" maxLength={20} defaultValue={person.postal_code || ""} autoComplete="postal-code" /></label>
+          </div>
+        </fieldset>
+      </div>
+    );
+  }
+
   return (
     <div className="person-profile-fields">
       {intro ? <p className="person-profile-intro">{intro}</p> : null}
 
       <fieldset className="person-profile-section">
         <legend>Identity</legend>
-        <p className="person-profile-section-copy">{intake ? "Add at least a first name or last name. Both are helpful when available." : "Keep legal and everyday names separate so the same Person record works everywhere."}</p>
+        <p className="person-profile-section-copy">Keep legal and everyday names separate so the same Person record works everywhere.</p>
         <div className="person-profile-grid person-profile-name-grid">
           <label>First name<input name="firstName" maxLength={80} defaultValue={person.first_name || ""} autoComplete="given-name" /></label>
           <label>Middle name<input name="middleName" maxLength={80} defaultValue={person.middle_name || ""} autoComplete="additional-name" /></label>
           <label>Last name<input name="lastName" maxLength={120} defaultValue={person.last_name || ""} autoComplete="family-name" /></label>
         </div>
         <div className="grid two">
-          <label>Profile name<input name="displayName" required={!intake} maxLength={120} defaultValue={person.display_name || ""} autoComplete="name" /><span className="field-note">{intake ? "Optional. If blank, it is created from the first or last name." : "The name shown around Localized.life."}</span></label>
+          <label>Profile name<input name="displayName" required maxLength={120} defaultValue={person.display_name || ""} autoComplete="name" /><span className="field-note">The name shown around Localized.life.</span></label>
           <label>Preferred name<input name="preferredName" maxLength={120} defaultValue={person.preferred_name || ""} /><span className="field-note">What friends and coordinators should call you.</span></label>
         </div>
         <label>Date of birth<input name="birthDate" type="date" defaultValue={person.birth_date || ""} /><span className="field-note">Private and optional.</span></label>
@@ -75,7 +110,7 @@ export function PersonProfileFields({
 
       <fieldset className="person-profile-section">
         <legend>Contact</legend>
-        <p className="person-profile-section-copy">{intake ? "Add at least a primary phone number or primary email. Contact details are protected by system access rules." : "Contact details are shown only to people whose system role and network relationship allow access."}</p>
+        <p className="person-profile-section-copy">Contact details are shown only to people whose system role and network relationship allow access.</p>
         <div className="grid two">
           {includePrimaryEmail ? <label>Primary email<input name="email" type="email" maxLength={320} defaultValue={person.email || ""} autoComplete="email" /></label> : null}
           <label>Secondary email<input name="secondaryEmail" type="email" maxLength={320} defaultValue={person.secondary_email || ""} /></label>
