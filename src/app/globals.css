@@ -6222,6 +6222,11 @@ code {
   color: #5d6760;
 }
 
+.calendar-day-status.custom {
+  background: #dceee0;
+  color: #2d6843;
+}
+
 .calendar-day-appointments {
   display: grid;
   gap: 3px;
@@ -6270,38 +6275,134 @@ code {
   align-items: flex-start;
 }
 
-.calendar-availability-control {
+.calendar-availability-editor {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
-  gap: 12px;
-  align-items: center;
+  gap: 13px;
   border: 1px solid #d5e0d8;
   border-radius: 7px;
   padding: 12px;
   background: #f7fbf7;
 }
 
-.calendar-availability-control > span {
+.calendar-availability-heading {
+  display: grid;
+  gap: 9px;
+}
+
+.calendar-availability-heading > span {
   display: grid;
   gap: 2px;
 }
 
-.calendar-availability-control strong {
+.calendar-availability-editor strong {
   color: var(--account-ink);
   font-size: 0.86rem;
 }
 
-.calendar-availability-control small {
+.calendar-availability-editor small {
   color: var(--muted);
   font-size: 0.73rem;
   font-weight: 550;
   line-height: 1.35;
 }
 
-.calendar-availability-control select {
+.calendar-availability-editor select {
   min-width: 0;
   padding: 8px 30px 8px 9px;
   font-size: 0.8rem;
+}
+
+.calendar-time-windows {
+  display: grid;
+  gap: 9px;
+  border-top: 1px solid #dce5de;
+  padding-top: 11px;
+}
+
+.calendar-time-windows-label {
+  color: var(--account-ink);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.calendar-time-window {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid #dce5de;
+  border-radius: 6px;
+  padding: 8px;
+  background: #fff;
+}
+
+.calendar-time-window > span {
+  display: none;
+}
+
+.calendar-time-window label {
+  grid-column: 1;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.calendar-time-window input {
+  min-width: 0;
+  width: 100%;
+  margin-top: 3px;
+  padding: 7px 9px;
+  font-size: 0.78rem;
+}
+
+.calendar-remove-window {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  width: 28px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #9b4c47;
+  cursor: pointer;
+}
+
+.calendar-remove-window:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.calendar-remove-window svg {
+  width: 18px;
+  height: 18px;
+}
+
+.calendar-add-window {
+  justify-self: start;
+  font-size: 0.74rem;
+}
+
+.calendar-save-availability {
+  width: 100%;
+  justify-content: center;
+}
+
+.calendar-appointment-availability {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #326b46;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.calendar-appointment-availability svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
 }
 
 .calendar-agenda-list {

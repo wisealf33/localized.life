@@ -61,9 +61,12 @@ type Appointment = {
   updated_at: string;
 };
 
+type AvailabilityWindow = { start: string; end: string };
+
 type CalendarAvailability = {
   availability_date: string;
-  status: "open" | "closed";
+  status: "open" | "custom" | "closed";
+  time_windows: AvailabilityWindow[];
   updated_at: string;
 };
 
@@ -125,15 +128,35 @@ function dateTimeInput(value: Date | string) {
   return local.toISOString().slice(0, 16);
 }
 
-function appointmentDefaults(selectedDay: string, appointment: Appointment | null) {
+function appointmentDefaults(selectedDay: string, appointment: Appointment | null, availability: CalendarAvailability) {
   if (appointment) {
     return { startsAt: dateTimeInput(appointment.starts_at), endsAt: dateTimeInput(appointment.ends_at) };
   }
   const start = dateFromDayKey(selectedDay);
-  start.setHours(9, 0, 0, 0);
+  const firstWindow = availability.status === "custom" ? availability.time_windows[0] : null;
+  const [startHour, startMinute] = (firstWindow?.start || "09:00").split(":").map(Number);
+  start.setHours(startHour, startMinute, 0, 0);
   const end = new Date(start);
-  end.setHours(10);
+  end.setHours(end.getHours() + 1);
+  if (firstWindow) {
+    const [endHour, endMinute] = firstWindow.end.split(":").map(Number);
+    const windowEnd = dateFromDayKey(selectedDay);
+    windowEnd.setHours(endHour, endMinute, 0, 0);
+    if (end > windowEnd) end.setTime(windowEnd.getTime());
+  }
   return { startsAt: dateTimeInput(start), endsAt: dateTimeInput(end) };
+}
+
+function formatClock(value: string) {
+  const [hours, minutes] = value.split(":").map(Number);
+  const date = new Date(2000, 0, 1, hours, minutes);
+  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(date);
+}
+
+function availabilitySummary(availability: CalendarAvailability) {
+  if (availability.status === "closed") return "Unavailable for new appointments";
+  if (availability.status === "open") return "Available all day";
+  return availability.time_windows.map((window) => `${formatClock(window.start)}–${formatClock(window.end)}`).join(", ");
 }
 
 function appointmentTime(appointment: Appointment) {
@@ -174,8 +197,61 @@ function designPreviewData(): CalendarData {
     person: { id: "preview-garrett", display_name: "Garrett" },
     people: [{ id: "preview-person", display_name: "Cindy Grubbs", email: null, phone: "708-935-5088", town: "Peotone", state: "IL", claim_status: "unclaimed", created_at: current.toISOString(), updated_at: current.toISOString(), calendar: { id: "preview-calendar-person", person_id: "preview-person", service_address_line1: "212 S Rathje Rd", service_address_line2: null, service_city: "Peotone", service_state: "IL", service_postal_code: "60468", service_country_code: "US", private_notes: null, status: "active", created_at: current.toISOString(), updated_at: current.toISOString() } }],
     appointments: [{ id: "preview-appointment", calendar_person_id: "preview-calendar-person", person_id: "preview-person", title: "House cleaning", starts_at: scheduledStart.toISOString(), ends_at: scheduledEnd.toISOString(), status: "scheduled", location: "212 S Rathje Rd, Peotone, IL 60468", notes: null, created_at: current.toISOString(), updated_at: current.toISOString() }],
-    availability: [{ availability_date: dayKey(closedDate), status: "closed", updated_at: current.toISOString() }],
+    availability: [
+      { availability_date: dayKey(current), status: "custom", time_windows: [{ start: "09:00", end: "12:00" }, { start: "14:00", end: "17:00" }], updated_at: current.toISOString() },
+      { availability_date: dayKey(closedDate), status: "closed", time_windows: [], updated_at: current.toISOString() },
+    ],
   };
+}
+
+function AvailabilityEditor({
+  availability,
+  busy,
+  onSave,
+}: {
+  availability: CalendarAvailability;
+  busy: boolean;
+  onSave: (status: CalendarAvailability["status"], windows: AvailabilityWindow[]) => Promise<void>;
+}) {
+  const [status, setStatus] = useState(availability.status);
+  const [windows, setWindows] = useState<AvailabilityWindow[]>(availability.time_windows);
+
+  function changeStatus(next: CalendarAvailability["status"]) {
+    setStatus(next);
+    if (next === "custom" && windows.length === 0) setWindows([{ start: "09:00", end: "17:00" }]);
+  }
+
+  function updateWindow(index: number, field: keyof AvailabilityWindow, value: string) {
+    setWindows((current) => current.map((window, windowIndex) => windowIndex === index ? { ...window, [field]: value } : window));
+  }
+
+  return (
+    <form className="calendar-availability-editor" onSubmit={(event) => { event.preventDefault(); void onSave(status, status === "custom" ? windows : []); }}>
+      <div className="calendar-availability-heading">
+        <span><strong>Availability</strong><small>{availabilitySummary({ ...availability, status, time_windows: status === "custom" ? windows : [] })}</small></span>
+        <select aria-label="Availability for selected day" value={status} disabled={busy} onChange={(event) => changeStatus(event.target.value as CalendarAvailability["status"])}>
+          <option value="open">Available all day</option>
+          <option value="custom">Specific hours</option>
+          <option value="closed">Unavailable all day</option>
+        </select>
+      </div>
+      {status === "custom" ? (
+        <div className="calendar-time-windows">
+          <span className="calendar-time-windows-label">Times you can accept jobs</span>
+          {windows.map((window, index) => (
+            <div className="calendar-time-window" key={index}>
+              <label><span>From</span><input type="time" required value={window.start} onChange={(event) => updateWindow(index, "start", event.target.value)} /></label>
+              <span aria-hidden="true">to</span>
+              <label><span>Until</span><input type="time" required value={window.end} onChange={(event) => updateWindow(index, "end", event.target.value)} /></label>
+              <button className="calendar-remove-window" type="button" aria-label={`Remove time period ${index + 1}`} disabled={busy || windows.length === 1} onClick={() => setWindows((current) => current.filter((_, windowIndex) => windowIndex !== index))}><XCircle /></button>
+            </div>
+          ))}
+          <button className="account-link-button calendar-add-window" type="button" disabled={busy || windows.length >= 12} onClick={() => setWindows((current) => [...current, { start: "09:00", end: "17:00" }])}><Plus /> Add time period</button>
+        </div>
+      ) : null}
+      <button className="button compact-button calendar-save-availability" type="submit" disabled={busy}>{busy ? "Saving…" : "Save availability"}</button>
+    </form>
+  );
 }
 
 export function AccountCalendar() {
@@ -312,6 +388,8 @@ export function AccountCalendar() {
   async function saveAppointment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = new FormData(event.currentTarget);
+    const startsAtLocal = String(values.get("startsAt"));
+    const endsAtLocal = String(values.get("endsAt"));
     setBusy(true);
     setMessage("");
     try {
@@ -320,10 +398,12 @@ export function AccountCalendar() {
         appointmentId: editingAppointment?.id,
         personId: values.get("personId"),
         title: values.get("title"),
-        startsAt: new Date(String(values.get("startsAt"))).toISOString(),
-        endsAt: new Date(String(values.get("endsAt"))).toISOString(),
+        startsAt: new Date(startsAtLocal).toISOString(),
+        endsAt: new Date(endsAtLocal).toISOString(),
+        startsAtLocal,
+        endsAtLocal,
         status: editingAppointment?.status || "scheduled",
-        availabilityDate: String(values.get("startsAt")).slice(0, 10),
+        availabilityDate: startsAtLocal.slice(0, 10),
         location: appointmentLocation,
         notes: values.get("notes"),
       });
@@ -352,17 +432,27 @@ export function AccountCalendar() {
     }
   }
 
-  async function setDayAvailability(status: CalendarAvailability["status"]) {
+  async function setDayAvailability(status: CalendarAvailability["status"], timeWindows: AvailabilityWindow[]) {
     setBusy(true);
     setMessage("");
     try {
-      await calendarPost({ action: "set-availability", availabilityDate: selectedDay, status });
+      await calendarPost({ action: "set-availability", availabilityDate: selectedDay, status, timeWindows });
       if (status === "closed") {
         setAppointmentFormOpen(false);
         setEditingAppointment(null);
       }
-      setMessage(`${longDate(selectedDay)} is marked ${status}.`);
-      await loadCalendar();
+      const statusLabel = status === "open" ? "available all day" : status === "custom" ? "available during your selected hours" : "unavailable all day";
+      setMessage(`${longDate(selectedDay)} is ${statusLabel}.`);
+      if (isDesignPreview()) {
+        setView((current) => {
+          if (current.status !== "ready") return current;
+          const nextAvailability = current.data.availability.filter((entry) => entry.availability_date !== selectedDay);
+          nextAvailability.push({ availability_date: selectedDay, status, time_windows: timeWindows, updated_at: new Date().toISOString() });
+          return { status: "ready", data: { ...current.data, availability: nextAvailability } };
+        });
+      } else {
+        await loadCalendar();
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Availability could not be saved.");
     } finally {
@@ -412,16 +502,15 @@ export function AccountCalendar() {
   const currentMonth = cursorDate(cursor).getMonth();
   const activePeople = data.people.filter((person) => person.calendar?.status !== "archived");
   const peopleById = new Map(data.people.map((person) => [person.id, person]));
-  const availabilityByDay = new Map(data.availability.map((entry) => [entry.availability_date, entry.status]));
+  const availabilityByDay = new Map(data.availability.map((entry) => [entry.availability_date, entry]));
   const appointmentsByDay = new Map<string, Appointment[]>();
   for (const appointment of data.appointments) {
     const key = dayKey(new Date(appointment.starts_at));
     appointmentsByDay.set(key, [...(appointmentsByDay.get(key) || []), appointment]);
   }
   const selectedAppointments = appointmentsByDay.get(selectedDay) || [];
-  const selectedAvailability = availabilityByDay.get(selectedDay) || "open";
-  const selectedScheduledCount = selectedAppointments.filter((appointment) => appointment.status === "scheduled").length;
-  const defaults = appointmentDefaults(selectedDay, editingAppointment);
+  const selectedAvailability = availabilityByDay.get(selectedDay) || { availability_date: selectedDay, status: "open" as const, time_windows: [], updated_at: "" };
+  const defaults = appointmentDefaults(selectedDay, editingAppointment, selectedAvailability);
 
   return (
     <div className="calendar-account">
@@ -434,7 +523,7 @@ export function AccountCalendar() {
         </div>
         <div className="calendar-header-actions">
           <button className="button" type="button" onClick={() => { setPersonFormOpen((open) => !open); setEditingPerson(null); }}><UserPlus /> Add person</button>
-          <button className="button primary" type="button" disabled={!activePeople.length || selectedAvailability === "closed"} onClick={() => openAppointment(null, activePeople)}><Plus /> New appointment</button>
+          <button className="button primary" type="button" disabled={!activePeople.length || selectedAvailability.status === "closed"} onClick={() => openAppointment(null, activePeople)}><Plus /> New appointment</button>
         </div>
       </header>
 
@@ -471,6 +560,7 @@ export function AccountCalendar() {
               <label>Person<select name="personId" required value={appointmentPersonId} onChange={(event) => { const personId = event.target.value; setAppointmentPersonId(personId); setAppointmentLocation(serviceAddress(peopleById.get(personId))); }}><option value="" disabled>Choose a person</option>{activePeople.map((person) => <option key={person.id} value={person.id}>{person.display_name}</option>)}</select></label>
               <label>Appointment title<input name="title" required defaultValue={editingAppointment?.title || ""} placeholder="Cleaning, lawn visit, consultation…" /></label>
             </div>
+            {selectedAvailability.status === "custom" ? <p className="calendar-appointment-availability"><Clock /> Available {availabilitySummary(selectedAvailability)}</p> : null}
             <div className="grid two"><label>Starts<input name="startsAt" type="datetime-local" required defaultValue={defaults.startsAt} /></label><label>Ends<input name="endsAt" type="datetime-local" required defaultValue={defaults.endsAt} /></label></div>
             <div className="grid two"><label>Location<input name="location" value={appointmentLocation} onChange={(event) => setAppointmentLocation(event.target.value)} /></label><label>Private notes<input name="notes" defaultValue={editingAppointment?.notes || ""} /></label></div>
             <button className="button primary" type="submit" disabled={busy}>{busy ? "Saving…" : editingAppointment ? "Save changes" : "Add to calendar"}</button>
@@ -489,10 +579,10 @@ export function AccountCalendar() {
             {days.map((date) => {
               const key = dayKey(date);
               const appointments = appointmentsByDay.get(key) || [];
-              const availability = availabilityByDay.get(key) || "open";
+              const availability = availabilityByDay.get(key) || { availability_date: key, status: "open" as const, time_windows: [], updated_at: "" };
               return (
-                <button className={["calendar-day", availability === "closed" ? "closed" : "", date.getMonth() !== currentMonth ? "outside" : "", key === selectedDay ? "selected" : "", key === today ? "today" : ""].filter(Boolean).join(" ")} type="button" key={key} onClick={() => setSelectedDay(key)}>
-                  <span className="calendar-day-heading"><span className="calendar-day-number">{date.getDate()}</span>{availability === "closed" ? <span className="calendar-day-status closed">Closed</span> : null}</span>
+                <button className={["calendar-day", availability.status === "closed" ? "closed" : "", availability.status === "custom" ? "custom-hours" : "", date.getMonth() !== currentMonth ? "outside" : "", key === selectedDay ? "selected" : "", key === today ? "today" : ""].filter(Boolean).join(" ")} type="button" key={key} onClick={() => setSelectedDay(key)}>
+                  <span className="calendar-day-heading"><span className="calendar-day-number">{date.getDate()}</span>{availability.status === "closed" ? <span className="calendar-day-status closed">Closed</span> : availability.status === "custom" ? <span className="calendar-day-status custom">Hours</span> : null}</span>
                   <span className="calendar-day-appointments">
                     {appointments.slice(0, 3).map((appointment) => <span className={`calendar-appointment-pill ${appointment.status}`} key={appointment.id}>{new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(new Date(appointment.starts_at))} {peopleById.get(appointment.person_id)?.display_name || appointment.title}</span>)}
                     {appointments.length > 3 ? <small>+{appointments.length - 3} more</small> : null}
@@ -504,14 +594,8 @@ export function AccountCalendar() {
         </section>
 
         <aside className="calendar-day-panel" aria-labelledby="selected-day-title">
-          <div className="account-sidebar-heading"><div><p className="eyebrow">Selected day</p><h2 id="selected-day-title">{longDate(selectedDay)}</h2></div><button className="icon-button" type="button" aria-label="Add appointment on selected day" disabled={!activePeople.length || selectedAvailability === "closed"} onClick={() => openAppointment(null, activePeople)}><Plus /></button></div>
-          <label className="calendar-availability-control">
-            <span><strong>Availability</strong><small>{selectedAvailability === "closed" ? "Closed to new appointments" : selectedScheduledCount ? `${selectedScheduledCount} scheduled appointment${selectedScheduledCount === 1 ? "" : "s"}; remaining time is open` : "Open for appointments"}</small></span>
-            <select value={selectedAvailability} disabled={busy} onChange={(event) => void setDayAvailability(event.target.value as CalendarAvailability["status"])}>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-            </select>
-          </label>
+          <div className="account-sidebar-heading"><div><p className="eyebrow">Selected day</p><h2 id="selected-day-title">{longDate(selectedDay)}</h2></div><button className="icon-button" type="button" aria-label="Add appointment on selected day" disabled={!activePeople.length || selectedAvailability.status === "closed"} onClick={() => openAppointment(null, activePeople)}><Plus /></button></div>
+          <AvailabilityEditor key={`${selectedDay}-${selectedAvailability.updated_at}`} availability={selectedAvailability} busy={busy} onSave={setDayAvailability} />
           {selectedAppointments.length ? (
             <div className="calendar-agenda-list">
               {selectedAppointments.map((appointment) => {
@@ -531,7 +615,7 @@ export function AccountCalendar() {
               })}
             </div>
           ) : (
-            <div className="account-empty-list"><Clock weight="duotone" /><div><h3>No appointments</h3><p>{selectedAvailability === "closed" ? "This day is closed." : "This day is open."}</p></div></div>
+            <div className="account-empty-list"><Clock weight="duotone" /><div><h3>No appointments</h3><p>{selectedAvailability.status === "closed" ? "This day is unavailable." : selectedAvailability.status === "custom" ? `Available ${availabilitySummary(selectedAvailability)}.` : "Available all day."}</p></div></div>
           )}
         </aside>
       </div>

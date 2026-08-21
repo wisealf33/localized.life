@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 
 const appointmentStatuses = new Set(["scheduled", "completed", "cancelled"]);
 const calendarPersonStatuses = new Set(["active", "archived"]);
-const availabilityStatuses = new Set(["open", "closed"]);
+const availabilityStatuses = new Set(["open", "custom", "closed"]);
+
+type AvailabilityWindow = { start: string; end: string };
 
 function text(value: unknown, max = 4000) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -29,6 +31,43 @@ function calendarDate(value: unknown) {
     throw new Error("Choose a valid calendar date.");
   }
   return next;
+}
+
+function minutesFromTime(value: string) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return null;
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function availabilityWindows(value: unknown) {
+  if (!Array.isArray(value) || value.length > 12) {
+    throw new Error("Add no more than 12 available time periods.");
+  }
+  const windows = value.map((entry) => {
+    const candidate = entry && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+    const start = text(candidate.start, 5);
+    const end = text(candidate.end, 5);
+    const startMinutes = minutesFromTime(start);
+    const endMinutes = minutesFromTime(end);
+    if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+      throw new Error("Each available time period needs a valid start and end time.");
+    }
+    return { start, end, startMinutes, endMinutes };
+  });
+  windows.sort((first, second) => first.startMinutes - second.startMinutes);
+  if (windows.some((window, index) => index > 0 && window.startMinutes < windows[index - 1].endMinutes)) {
+    throw new Error("Available time periods cannot overlap.");
+  }
+  return windows.map(({ start, end }) => ({ start, end })) satisfies AvailabilityWindow[];
+}
+
+function localDateTime(value: unknown, label: string) {
+  const next = text(value, 40);
+  const match = /^(\d{4}-\d{2}-\d{2})T([0-2]\d:[0-5]\d)/.exec(next);
+  if (!match) throw new Error(`Add a valid local ${label}.`);
+  const minutes = minutesFromTime(match[2]);
+  if (minutes === null) throw new Error(`Add a valid local ${label}.`);
+  return { date: calendarDate(match[1]), minutes };
 }
 
 function requestedRange(request: Request) {
@@ -165,7 +204,7 @@ export async function GET(request: Request) {
         .limit(2000),
       supabase
         .from("account_calendar_availability")
-        .select("availability_date, status, updated_at")
+        .select("availability_date, status, time_windows, updated_at")
         .eq("owner_person_id", actor.person.id)
         .gte("availability_date", range.start.slice(0, 10))
         .lt("availability_date", range.end.slice(0, 10))
@@ -251,12 +290,17 @@ export async function POST(request: Request) {
     if (action === "set-availability") {
       const availabilityDate = calendarDate(body.availabilityDate);
       const status = text(body.status, 20);
-      if (!availabilityStatuses.has(status)) throw new Error("Choose open or closed.");
+      if (!availabilityStatuses.has(status)) throw new Error("Choose all day, specific hours, or unavailable.");
+      const timeWindows = status === "custom" ? availabilityWindows(body.timeWindows) : [];
+      if (status === "custom" && timeWindows.length === 0) {
+        throw new Error("Add at least one available time period.");
+      }
       const { error } = await supabase.from("account_calendar_availability").upsert(
         {
           owner_person_id: actor.person.id,
           availability_date: availabilityDate,
           status,
+          time_windows: timeWindows,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "owner_person_id,availability_date" },
@@ -393,12 +437,28 @@ export async function POST(request: Request) {
       if (status === "scheduled") {
         const { data: availability, error: availabilityError } = await supabase
           .from("account_calendar_availability")
-          .select("status")
+          .select("status, time_windows")
           .eq("owner_person_id", actor.person.id)
           .eq("availability_date", availabilityDate)
           .maybeSingle();
         if (availabilityError) throw new Error(availabilityError.message);
-        if (availability?.status === "closed") throw new Error("Mark this day open before scheduling an appointment.");
+        if (availability?.status === "closed") throw new Error("Add availability before scheduling an appointment.");
+        if (availability?.status === "custom") {
+          const localStart = localDateTime(body.startsAtLocal, "start time");
+          const localEnd = localDateTime(body.endsAtLocal, "end time");
+          const windows = availabilityWindows(availability.time_windows);
+          const fitsAvailableWindow =
+            localStart.date === availabilityDate &&
+            localEnd.date === availabilityDate &&
+            windows.some((window) => {
+              const windowStart = minutesFromTime(window.start) ?? 0;
+              const windowEnd = minutesFromTime(window.end) ?? 0;
+              return localStart.minutes >= windowStart && localEnd.minutes <= windowEnd;
+            });
+          if (!fitsAvailableWindow) {
+            throw new Error("This appointment must fit within one of your available time periods.");
+          }
+        }
       }
       const calendarPerson = await ensureCalendarPerson(actor.person.id, personId);
       await requireOwnedCalendarPerson(actor.person.id, calendarPerson.id, status === "scheduled");
