@@ -6,6 +6,38 @@ import { AccountSignIn } from "./AccountSignIn";
 import { PersonProfileFields } from "./PersonProfileFields";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { formatPersonNumber } from "@/lib/phone";
+import { localServices } from "@/lib/localServices";
+
+type ActivityStatus = "active" | "needs_follow_up" | "not_onboarded";
+
+type OperationalSummary = {
+  activityStatus: ActivityStatus;
+  lastActivityAt: string | null;
+  upcomingAppointments: number;
+  completedAppointments: number;
+  nextAppointmentAt: string | null;
+  configuredAvailabilityDays: number;
+  availableDays: number;
+  openRequests: number;
+};
+
+type AvailabilityWindow = { start: string; end: string };
+
+type ManagedAvailability = {
+  availability_date: string;
+  status: "open" | "custom" | "closed";
+  time_windows: AvailabilityWindow[] | null;
+  updated_at: string;
+};
+
+type ManagedAppointment = {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  status: "scheduled" | "completed" | "cancelled";
+  updated_at: string;
+};
 
 type PersonSummary = {
   id: string;
@@ -16,7 +48,10 @@ type PersonSummary = {
   town: string | null;
   state: string | null;
   claim_status: "claimed" | "unclaimed";
+  skills: string[] | null;
+  services_offered: string | null;
   openNeeds: number;
+  operational: OperationalSummary;
 };
 
 type NeedRecord = {
@@ -79,8 +114,15 @@ type PersonDetail = Overview & {
     occurred_at: string;
   }>;
   households: Array<{ id: string; name: string | null }>;
+  operational: {
+    summary: OperationalSummary;
+    availability: ManagedAvailability[];
+    appointments: ManagedAppointment[];
+  };
   activeInvitation: { url: string } | null;
 };
+
+const serviceTitles = new Map(localServices.map((service) => [service.slug, service.title]));
 
 function date(value: string | null | undefined, withTime = false) {
   if (!value) return "";
@@ -102,9 +144,187 @@ function localDateTime(value: string | null) {
   return new Date(dateValue.getTime() - dateValue.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
+function activityLabel(status: ActivityStatus) {
+  if (status === "active") return "Active";
+  if (status === "not_onboarded") return "Not onboarded";
+  return "Needs follow-up";
+}
+
+function serviceTitle(slug: string) {
+  return serviceTitles.get(slug) || slug.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function time(value: string) {
+  const [hours, minutes] = value.split(":").map(Number);
+  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(
+    new Date(2026, 0, 1, hours, minutes),
+  );
+}
+
+function appointmentRange(start: string, end: string) {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const sameDay = startDate.toDateString() === endDate.toDateString();
+  const startLabel = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(startDate);
+  const endLabel = new Intl.DateTimeFormat("en-US", {
+    ...(sameDay ? {} : { month: "short", day: "numeric" }),
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(endDate);
+  return `${startLabel}–${endLabel}`;
+}
+
+function availabilityText(entry: ManagedAvailability) {
+  if (entry.status === "closed") return "Unavailable";
+  if (entry.status === "open") return "Open availability";
+  if (!entry.time_windows?.length) return "Custom availability";
+  return entry.time_windows.map((window) => `${time(window.start)}–${time(window.end)}`).join(", ");
+}
+
 async function accessToken() {
   const { data } = (await getSupabaseBrowser()?.auth.getSession()) || { data: { session: null } };
   return data.session?.access_token || "";
+}
+
+function isDesignPreview() {
+  return ["localhost", "127.0.0.1"].includes(window.location.hostname) && new URLSearchParams(window.location.search).has("preview");
+}
+
+function previewOperational(overrides: Partial<OperationalSummary> = {}): OperationalSummary {
+  return {
+    activityStatus: "active",
+    lastActivityAt: "2026-08-21T14:30:00.000Z",
+    upcomingAppointments: 2,
+    completedAppointments: 4,
+    nextAppointmentAt: "2026-08-24T14:00:00.000Z",
+    configuredAvailabilityDays: 4,
+    availableDays: 3,
+    openRequests: 1,
+    ...overrides,
+  };
+}
+
+function previewPerson(overrides: Partial<PersonSummary> = {}): PersonSummary {
+  return {
+    id: "preview-jamie",
+    personal_number: 1042,
+    display_name: "Jamie Carter",
+    email: "jamie@example.com",
+    phone: "(555) 014-2098",
+    town: "Paw Paw",
+    state: "IL",
+    claim_status: "claimed",
+    skills: ["house-cleaning", "cooking-meal-sharing", "yard-cleanup"],
+    services_offered: null,
+    openNeeds: 1,
+    operational: previewOperational(),
+    ...overrides,
+  };
+}
+
+function previewOverview(): Overview {
+  return {
+    actor: { id: "preview-connector", displayName: "Alex Morgan" },
+    connector: { slug: "alex-morgan", display_name: "Alex Morgan" },
+    accessScope: "relationships",
+    people: [
+      previewPerson(),
+      previewPerson({
+        id: "preview-robin",
+        personal_number: 1043,
+        display_name: "Robin Lee",
+        email: null,
+        phone: "(555) 018-4492",
+        town: "DeKalb",
+        skills: ["handyman-repairs", "furniture-assembly"],
+        openNeeds: 0,
+        operational: previewOperational({
+          activityStatus: "needs_follow_up",
+          lastActivityAt: "2026-07-02T18:00:00.000Z",
+          upcomingAppointments: 0,
+          completedAppointments: 1,
+          nextAppointmentAt: null,
+          configuredAvailabilityDays: 0,
+          availableDays: 0,
+          openRequests: 0,
+        }),
+      }),
+      previewPerson({
+        id: "preview-taylor",
+        personal_number: 1044,
+        display_name: "Taylor Brooks",
+        email: "taylor@example.com",
+        phone: null,
+        town: "Rochelle",
+        claim_status: "unclaimed",
+        skills: [],
+        openNeeds: 1,
+        operational: previewOperational({
+          activityStatus: "not_onboarded",
+          lastActivityAt: "2026-08-19T16:20:00.000Z",
+          upcomingAppointments: 0,
+          completedAppointments: 0,
+          nextAppointmentAt: null,
+          configuredAvailabilityDays: 0,
+          availableDays: 0,
+          openRequests: 1,
+        }),
+      }),
+    ],
+    needs: [],
+    referralIntake: { canAssign: false, unassigned: [], referrerOptions: [] },
+  };
+}
+
+function previewDetail(): PersonDetail {
+  const overview = previewOverview();
+  const person = previewPerson({
+    how_met: "Introduced after a neighborhood cleanup",
+    private_notes: null,
+    created_at: "2026-05-18T16:00:00.000Z",
+    claimed_at: "2026-05-19T13:00:00.000Z",
+  } as Partial<PersonDetail["person"]>);
+  return {
+    ...overview,
+    relationshipAccess: "direct",
+    person: person as PersonDetail["person"],
+    relationship: { started_at: "2026-05-18T16:00:00.000Z" },
+    needs: [
+      {
+        id: "preview-need",
+        requester_person_id: person.id,
+        title: "Meal exchange for Thursday",
+        details: "Looking to trade two prepared dinners this week.",
+        status: "working",
+        scheduled_for: null,
+        amount_cents: null,
+        connector_notes: null,
+        created_at: "2026-08-20T15:00:00.000Z",
+      },
+    ],
+    interactions: [],
+    households: [],
+    operational: {
+      summary: person.operational,
+      availability: [
+        { availability_date: "2026-08-24", status: "custom", time_windows: [{ start: "09:00", end: "12:30" }, { start: "15:00", end: "18:00" }], updated_at: "2026-08-21T14:30:00.000Z" },
+        { availability_date: "2026-08-25", status: "open", time_windows: [], updated_at: "2026-08-21T14:30:00.000Z" },
+        { availability_date: "2026-08-27", status: "closed", time_windows: [], updated_at: "2026-08-21T14:30:00.000Z" },
+      ],
+      appointments: [
+        { id: "preview-appointment-1", title: "Recurring house cleaning", starts_at: "2026-08-24T14:00:00.000Z", ends_at: "2026-08-24T16:30:00.000Z", status: "scheduled", updated_at: "2026-08-21T14:30:00.000Z" },
+        { id: "preview-appointment-2", title: "Meal preparation", starts_at: "2026-08-26T21:00:00.000Z", ends_at: "2026-08-26T23:00:00.000Z", status: "scheduled", updated_at: "2026-08-21T14:30:00.000Z" },
+        { id: "preview-appointment-3", title: "Yard cleanup", starts_at: "2026-08-18T15:00:00.000Z", ends_at: "2026-08-18T18:00:00.000Z", status: "completed", updated_at: "2026-08-18T18:05:00.000Z" },
+      ],
+    },
+    activeInvitation: null,
+  };
 }
 
 export function MyConnections({ personId }: { personId?: string }) {
@@ -117,6 +337,11 @@ export function MyConnections({ personId }: { personId?: string }) {
   const [invitationPersonName, setInvitationPersonName] = useState("");
 
   const load = useCallback(async () => {
+    if (isDesignPreview()) {
+      setData(personId ? previewDetail() : previewOverview());
+      setAuthState("signed-in");
+      return;
+    }
     const token = await accessToken();
     if (!token) {
       setAuthState("signed-out");
@@ -136,6 +361,10 @@ export function MyConnections({ personId }: { personId?: string }) {
   }, [personId]);
 
   useEffect(() => {
+    if (isDesignPreview()) {
+      const previewTimer = window.setTimeout(() => void load(), 0);
+      return () => window.clearTimeout(previewTimer);
+    }
     const supabase = getSupabaseBrowser();
     if (!supabase) {
       const unavailableTimer = window.setTimeout(() => setAuthState("signed-out"), 0);
@@ -265,6 +494,7 @@ export function MyConnections({ personId }: { personId?: string }) {
   if (personId && "person" in data) {
     const detail = data as PersonDetail;
     const person = detail.person;
+    const operational = detail.operational;
     const systemOnly = detail.relationshipAccess === "system";
     const activeInvitationUrl = invitationUrl || detail.activeInvitation?.url || "";
     return (
@@ -313,6 +543,74 @@ export function MyConnections({ personId }: { personId?: string }) {
               </div>
             ) : <p className="notice good">This Person claimed the profile and now manages their own account information.</p>}
           </article>
+        </section>
+
+        <section className="connector-dashboard-section managed-visibility-section" id="operational-visibility">
+          <div className="managed-visibility-heading">
+            <div>
+              <p className="eyebrow">Read-only management view</p>
+              <h2>Operational visibility</h2>
+              <p className="muted">See enough to guide, teach, and encourage {person.display_name} without taking control of their account.</p>
+            </div>
+            <span className={`managed-activity-badge ${operational.summary.activityStatus}`}>
+              <span aria-hidden="true" />{activityLabel(operational.summary.activityStatus)}
+            </span>
+          </div>
+
+          <div className="managed-operational-stats" aria-label="Recent activity summary">
+            <div><strong>{operational.summary.upcomingAppointments}</strong><span>upcoming appointments</span></div>
+            <div><strong>{operational.summary.completedAppointments}</strong><span>completed in 30 days</span></div>
+            <div><strong>{operational.summary.availableDays}</strong><span>available days set</span></div>
+            <div><strong>{operational.summary.openRequests}</strong><span>open requests</span></div>
+          </div>
+
+          <div className="managed-operational-grid">
+            <article className="panel managed-operational-panel">
+              <div className="managed-panel-heading">
+                <div><p className="eyebrow">Calendar</p><h3>Availability</h3></div>
+                <span>Next 60 days</span>
+              </div>
+              {operational.availability.length ? (
+                <div className="managed-availability-list">
+                  {operational.availability.map((entry) => (
+                    <div className="managed-availability-row" key={entry.availability_date}>
+                      <time dateTime={entry.availability_date}>{date(`${entry.availability_date}T12:00:00`)}</time>
+                      <span className={`managed-availability-value ${entry.status}`}>{availabilityText(entry)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="managed-inline-empty"><strong>No availability preferences recorded</strong><p>Their calendar currently accepts appointments by default.</p></div>
+              )}
+            </article>
+
+            <article className="panel managed-operational-panel">
+              <div className="managed-panel-heading">
+                <div><p className="eyebrow">Work activity</p><h3>Schedule</h3></div>
+                <span>Recent and upcoming</span>
+              </div>
+              {operational.appointments.length ? (
+                <div className="managed-schedule-list">
+                  {operational.appointments.map((appointment) => (
+                    <div className="managed-schedule-row" key={appointment.id}>
+                      <div><strong>{appointment.title}</strong><time>{appointmentRange(appointment.starts_at, appointment.ends_at)}</time></div>
+                      <span className={`connector-status connector-status-${appointment.status}`}>{appointment.status}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="managed-inline-empty"><strong>No recent or upcoming appointments</strong><p>New calendar activity will appear here automatically.</p></div>
+              )}
+            </article>
+          </div>
+
+          <article className="panel managed-skills-panel">
+            <div><p className="eyebrow">Profile</p><h3>Skills and services</h3></div>
+            {person.skills?.length ? <div className="managed-skill-list">{person.skills.map((skill) => <span key={skill}>{serviceTitle(skill)}</span>)}</div> : <p className="muted">No skills or services have been selected yet.</p>}
+            {person.services_offered ? <p className="managed-services-note">{person.services_offered}</p> : null}
+          </article>
+
+          <p className="managed-privacy-note"><strong>Private by design:</strong> wallet activity, customer contact details, service addresses, and private appointment notes are not included. Only {person.display_name} can change this calendar information.</p>
         </section>
 
         <section className="connector-dashboard-section" id="needs">
@@ -370,11 +668,11 @@ export function MyConnections({ personId }: { personId?: string }) {
   return (
     <div className="connector-member-shell">
       <section className="connector-admin-heading">
-        <div><p className="eyebrow">Signed in as {overview.actor.displayName}</p><h1>{overview.accessScope === "system" ? "Network People" : "My Connections"}</h1><p className="lede">{overview.accessScope === "system" ? "Founder access includes every Person record. Relationship tools still follow each Person's direct Connector or assigned responsibility." : "People first. Add someone as soon as you learn about them or their Need, invite them in person, and keep useful history over time."}</p></div>
-        <div className="toolbar"><Link className="button" href="/account">Open my account</Link><button className="button" type="button" onClick={signOut}>Sign out</button></div>
+        <div><p className="eyebrow">Signed in as {overview.actor.displayName}</p><h1>{overview.accessScope === "system" ? "Network People" : "People I manage"}</h1><p className="lede">{overview.accessScope === "system" ? "Founder access includes every Person record. Relationship tools still follow each Person's direct Connector or assigned responsibility." : "See the availability and work activity of People assigned to you, so you can guide, teach, and encourage them without controlling their accounts."}</p></div>
+        <div className="toolbar"><a className="button primary" href="#managed-people">View managed People</a><Link className="button" href="/account">Open my account</Link><button className="button" type="button" onClick={signOut}>Sign out</button></div>
       </section>
       {message ? <p className="notice good">{message}</p> : null}
-      <section className="connector-admin-stats"><div><strong>{overview.people.length}</strong><span>{overview.accessScope === "system" ? "people in system" : "connections"}</span></div><div><strong>{openNeeds.length}</strong><span>open Needs</span></div><div><strong>{overview.people.filter((person) => person.claim_status === "unclaimed").length}</strong><span>unclaimed</span></div></section>
+      <section className="connector-admin-stats"><div><strong>{overview.people.length}</strong><span>{overview.accessScope === "system" ? "people in system" : "people managed"}</span></div><div><strong>{openNeeds.length}</strong><span>open Needs</span></div><div><strong>{overview.people.filter((person) => person.claim_status === "unclaimed").length}</strong><span>unclaimed</span></div></section>
       {overview.referralIntake.canAssign ? <section className="connector-dashboard-section" id="referral-intake">
         <div className="section-heading"><div><p className="eyebrow">Internal referral intake</p><h2>People waiting for an assigned sponsor</h2><p className="muted">The system places People with fewer assigned referrals first. Review the evidence and make the final assignment.</p></div><span className="connector-referral-count">{overview.referralIntake.unassigned.length} waiting</span></div>
         {overview.referralIntake.unassigned.length ? <div className="connector-referral-list">{overview.referralIntake.unassigned.map((person) => <article className="card connector-referral-card" key={person.id}>
@@ -398,7 +696,48 @@ export function MyConnections({ personId }: { personId?: string }) {
         </form>
         {invitationUrl && invitationPersonId ? <section className="notice good stack connector-invite-result connector-ready-invitation" id="ready-invitation"><p className="eyebrow">Ready to send now</p><strong>{invitationPersonName || "This Person"} is connected. Their private invitation is below.</strong><label>Secure personalized claim link<input value={invitationUrl} readOnly onFocus={(event) => event.currentTarget.select()} /></label><div className="toolbar"><button className="button primary" type="button" onClick={() => copyInvitation()}>Copy private link</button><button className="button" type="button" onClick={() => shareInvitation(invitationPersonName || "Your connection")}>Text or share now</button><Link className="button" href={`/connections/${invitationPersonId}`}>Open connection</Link></div><p className="muted connector-small-copy">Keep this link private. It lets this Person create a password, claim this exact profile, and complete their own information.</p></section> : null}
       </section>
-      <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">{overview.accessScope === "system" ? "System access" : "Relationships"}</p><h2>{overview.accessScope === "system" ? "People in the network" : "People you are connected with"}</h2></div></div>{overview.people.length ? <div className="connector-people-grid">{overview.people.map((person) => <article className="card connector-person-card" key={person.id}><div><div className="connector-person-title"><h3>{person.display_name}</h3><span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span></div><p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p></div><div className="connector-person-summary"><span>{person.openNeeds} open {person.openNeeds === 1 ? "Need" : "Needs"}</span><span>{person.phone || person.email || "Contact details not added"}</span></div><Link className="button primary compact-button" href={`/connections/${person.id}`}>{person.claim_status === "unclaimed" && overview.accessScope !== "system" ? "Open connection and claim link" : "Open connection"}</Link></article>)}</div> : <div className="empty connector-empty"><h3>No connections yet</h3><p>Add the first Person above as soon as you learn about them or their Need.</p></div>}</section>
+      <section className="connector-dashboard-section" id="managed-people">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">{overview.accessScope === "system" ? "System access" : "Connector assignments"}</p>
+            <h2>{overview.accessScope === "system" ? "People in the network" : "People you manage"}</h2>
+            <p className="muted">Operational visibility is read-only and helps you notice who is active, available, or may need encouragement.</p>
+          </div>
+        </div>
+        {overview.people.length ? (
+          <div className="connector-people-grid">
+            {overview.people.map((person) => (
+              <article className="card connector-person-card" key={person.id}>
+                <div>
+                  <div className="connector-person-title">
+                    <h3>{person.display_name}</h3>
+                    <span className={`connector-claim-badge ${person.claim_status}`}>{person.claim_status}</span>
+                  </div>
+                  <p className="muted">{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p>
+                </div>
+                <div className="managed-person-status-row">
+                  <span className={`managed-activity-badge ${person.operational.activityStatus}`}>
+                    <span aria-hidden="true" />{activityLabel(person.operational.activityStatus)}
+                  </span>
+                  <span>{person.operational.lastActivityAt ? `Last activity ${date(person.operational.lastActivityAt)}` : "No activity recorded"}</span>
+                </div>
+                <div className="connector-person-metrics">
+                  <div><strong>{person.operational.upcomingAppointments}</strong><span>Upcoming</span></div>
+                  <div><strong>{person.operational.availableDays}</strong><span>Available days</span></div>
+                  <div><strong>{person.openNeeds}</strong><span>Open {person.openNeeds === 1 ? "Need" : "Needs"}</span></div>
+                </div>
+                <div className="connector-person-summary">
+                  <span>{person.skills?.length ? person.skills.slice(0, 2).map(serviceTitle).join(" · ") : "Skills not added"}</span>
+                  <span>{person.phone || person.email || "Contact details not added"}</span>
+                </div>
+                <Link className="button primary compact-button" href={`/connections/${person.id}`}>
+                  {person.claim_status === "unclaimed" && overview.accessScope !== "system" ? "Open Person and claim link" : "View activity"}
+                </Link>
+              </article>
+            ))}
+          </div>
+        ) : <div className="empty connector-empty"><h3>No managed People yet</h3><p>People assigned to you as their Connector will appear here.</p></div>}
+      </section>
       <section className="connector-dashboard-section"><div className="section-heading"><div><p className="eyebrow">Work queue</p><h2>Open Needs</h2></div></div>{openNeeds.length ? <div className="connector-need-list">{openNeeds.map((need) => { const person = overview.people.find((entry) => entry.id === need.requester_person_id); return <article className="card connector-need-card" key={need.id}><div className="connector-need-card-top"><div><p className="eyebrow">{person?.display_name || "Connected Person"}</p><h3>{need.title}</h3></div><span className={`connector-status connector-status-${need.status}`}>{need.status}</span></div>{person ? <Link className="button compact-button" href={`/connections/${person.id}#needs`}>Open Person</Link> : null}</article>; })}</div> : <p className="muted">No open Needs right now.</p>}</section>
     </div>
   );

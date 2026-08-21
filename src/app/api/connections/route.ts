@@ -10,6 +10,94 @@ import { hashSecret, invitationToken } from "@/lib/tokens";
 export const dynamic = "force-dynamic";
 
 const statuses = new Set(["new", "working", "scheduled", "completed", "closed"]);
+const openNeedStatuses = new Set(["new", "working", "scheduled"]);
+const dayInMilliseconds = 24 * 60 * 60 * 1000;
+
+type OperationalAppointment = {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+  updated_at: string;
+};
+
+type OperationalAvailability = {
+  availability_date: string;
+  status: string;
+  time_windows: unknown;
+  updated_at: string;
+};
+
+type OperationalNeed = {
+  requester_person_id: string;
+  assigned_person_id?: string | null;
+  status: string;
+  completed_at?: string | null;
+  updated_at: string;
+};
+
+function addDays(value: Date, days: number) {
+  return new Date(value.getTime() + days * dayInMilliseconds);
+}
+
+function latestDate(values: Array<string | null | undefined>) {
+  return values.filter((value): value is string => Boolean(value)).sort().at(-1) || null;
+}
+
+function operationalSummary({
+  person,
+  appointments,
+  availability,
+  needs,
+  now,
+}: {
+  person: { claim_status: string; updated_at: string };
+  appointments: OperationalAppointment[];
+  availability: OperationalAvailability[];
+  needs: OperationalNeed[];
+  now: Date;
+}) {
+  const recentStart = addDays(now, -30).toISOString();
+  const upcomingEnd = addDays(now, 30).toISOString();
+  const today = now.toISOString().slice(0, 10);
+  const availabilityEnd = addDays(now, 30).toISOString().slice(0, 10);
+  const upcoming = appointments.filter(
+    (appointment) =>
+      appointment.status !== "cancelled" &&
+      appointment.starts_at >= now.toISOString() &&
+      appointment.starts_at < upcomingEnd,
+  );
+  const completed = appointments.filter(
+    (appointment) => appointment.status === "completed" && appointment.starts_at >= recentStart,
+  );
+  const configuredAvailability = availability.filter(
+    (entry) => entry.availability_date >= today && entry.availability_date < availabilityEnd,
+  );
+  const lastActivityAt = latestDate([
+    person.updated_at,
+    ...appointments.map((appointment) => appointment.updated_at),
+    ...availability.map((entry) => entry.updated_at),
+    ...needs.map((need) => need.completed_at || need.updated_at),
+  ]);
+  const recentlyActive = Boolean(lastActivityAt && lastActivityAt >= recentStart);
+
+  return {
+    activityStatus:
+      person.claim_status === "unclaimed"
+        ? "not_onboarded"
+        : upcoming.length || recentlyActive
+          ? "active"
+          : "needs_follow_up",
+    lastActivityAt,
+    upcomingAppointments: upcoming.length,
+    completedAppointments: completed.length,
+    nextAppointmentAt: upcoming[0]?.starts_at || null,
+    configuredAvailabilityDays: configuredAvailability.length,
+    availableDays: configuredAvailability.filter((entry) => entry.status !== "closed").length,
+    openRequests: needs.filter((need) => openNeedStatuses.has(need.status)).length,
+  };
+}
 
 function text(value: unknown, max = 4000) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -94,6 +182,11 @@ export async function GET(request: Request) {
   const systemManagementAccess = await hasSystemManagementAccess(actor.person.id);
 
   if (personId) {
+    const now = new Date();
+    const calendarStart = addDays(now, -30).toISOString();
+    const calendarEnd = addDays(now, 90).toISOString();
+    const availabilityStart = now.toISOString().slice(0, 10);
+    const availabilityEnd = addDays(now, 60).toISOString().slice(0, 10);
     const directRelationshipAccess = await isConnectedPerson(actor.person.id, personId);
     if (!systemManagementAccess && !directRelationshipAccess) {
       return NextResponse.json({ error: "Connection not found." }, { status: 404 });
@@ -115,7 +208,7 @@ export async function GET(request: Request) {
       .select("id, person_id, connector_person_id, need_id, note, visibility, occurred_at, created_at")
       .eq("person_id", personId)
       .order("occurred_at", { ascending: false });
-    const [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult, inviteResult] =
+    const [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult, inviteResult, availabilityResult, appointmentsResult] =
       await Promise.all([
         supabase
           .from("people")
@@ -136,8 +229,22 @@ export async function GET(request: Request) {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from("account_calendar_availability")
+          .select("availability_date, status, time_windows, updated_at")
+          .eq("owner_person_id", personId)
+          .gte("availability_date", availabilityStart)
+          .lt("availability_date", availabilityEnd)
+          .order("availability_date", { ascending: true }),
+        supabase
+          .from("account_appointments")
+          .select("id, title, starts_at, ends_at, status, updated_at")
+          .eq("owner_person_id", personId)
+          .gte("starts_at", calendarStart)
+          .lt("starts_at", calendarEnd)
+          .order("starts_at", { ascending: true }),
       ]);
-    const firstError = [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult, inviteResult].find(
+    const firstError = [personResult, relationshipResult, needsResult, interactionsResult, membershipsResult, inviteResult, availabilityResult, appointmentsResult].find(
       (result) => result.error,
     )?.error;
     if (firstError || !personResult.data || (!relationshipResult.data && !systemManagementAccess)) {
@@ -161,6 +268,17 @@ export async function GET(request: Request) {
       relationship: relationshipResult.data || { started_at: personResult.data.created_at },
       needs: needsResult.data || [],
       interactions: interactionsResult.data || [],
+      operational: {
+        summary: operationalSummary({
+          person: personResult.data,
+          appointments: appointmentsResult.data || [],
+          availability: availabilityResult.data || [],
+          needs: needsResult.data || [],
+          now,
+        }),
+        availability: availabilityResult.data || [],
+        appointments: appointmentsResult.data || [],
+      },
       memberships: membershipsResult.data || [],
       households: householdsResult.data || [],
       activeInvitation: inviteResult.data
@@ -180,7 +298,7 @@ export async function GET(request: Request) {
     .order("started_at", { ascending: false });
   const needsQuery = supabase
     .from("needs")
-    .select("id, requester_person_id, title, details, status, scheduled_for, amount_cents, created_at, updated_at")
+    .select("id, requester_person_id, assigned_person_id, title, details, status, scheduled_for, completed_at, amount_cents, created_at, updated_at")
     .order("updated_at", { ascending: false });
   const [relationshipsResult, needsResult, coordinatorResult] = await Promise.all([
     systemManagementAccess ? relationshipsQuery : relationshipsQuery.eq("connector_person_id", actor.person.id),
@@ -204,24 +322,66 @@ export async function GET(request: Request) {
   const peopleResult = systemManagementAccess
     ? await supabase
         .from("people")
-        .select("id, personal_number, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
+        .select("id, personal_number, display_name, email, phone, town, state, claim_status, claimed_at, skills, services_offered, created_at, updated_at")
         .neq("id", actor.person.id)
     : ids.length
     ? await supabase
         .from("people")
-        .select("id, personal_number, display_name, email, phone, town, state, claim_status, claimed_at, created_at, updated_at")
+        .select("id, personal_number, display_name, email, phone, town, state, claim_status, claimed_at, skills, services_offered, created_at, updated_at")
         .in("id", ids)
     : { data: [], error: null };
   if (peopleResult.error) return NextResponse.json({ error: peopleResult.error.message }, { status: 500 });
 
-  const open = new Set(["new", "working", "scheduled"]);
+  const now = new Date();
+  const managedPersonIds = (peopleResult.data || []).map((person) => person.id);
+  const [availabilityResult, appointmentsResult] = managedPersonIds.length
+    ? await Promise.all([
+        supabase
+          .from("account_calendar_availability")
+          .select("owner_person_id, availability_date, status, time_windows, updated_at")
+          .in("owner_person_id", managedPersonIds)
+          .gte("availability_date", now.toISOString().slice(0, 10))
+          .lt("availability_date", addDays(now, 30).toISOString().slice(0, 10))
+          .order("availability_date", { ascending: true }),
+        supabase
+          .from("account_appointments")
+          .select("owner_person_id, id, title, starts_at, ends_at, status, updated_at")
+          .in("owner_person_id", managedPersonIds)
+          .gte("starts_at", addDays(now, -30).toISOString())
+          .lt("starts_at", addDays(now, 30).toISOString())
+          .order("starts_at", { ascending: true }),
+      ])
+    : [{ data: [], error: null }, { data: [], error: null }];
+  if (availabilityResult.error || appointmentsResult.error) {
+    return NextResponse.json(
+      { error: availabilityResult.error?.message || appointmentsResult.error?.message },
+      { status: 500 },
+    );
+  }
+
   const people = (peopleResult.data || [])
-    .map((person) => ({
-      ...person,
-      openNeeds: (needsResult.data || []).filter(
-        (need) => need.requester_person_id === person.id && open.has(need.status),
-      ).length,
-    }))
+    .map((person) => {
+      const personNeeds = (needsResult.data || []).filter(
+        (need) => need.requester_person_id === person.id || need.assigned_person_id === person.id,
+      );
+      const personAvailability = (availabilityResult.data || []).filter(
+        (entry) => entry.owner_person_id === person.id,
+      );
+      const personAppointments = (appointmentsResult.data || []).filter(
+        (appointment) => appointment.owner_person_id === person.id,
+      );
+      return {
+        ...person,
+        openNeeds: personNeeds.filter((need) => openNeedStatuses.has(need.status)).length,
+        operational: operationalSummary({
+          person,
+          appointments: personAppointments,
+          availability: personAvailability,
+          needs: personNeeds,
+          now,
+        }),
+      };
+    })
     .sort((a, b) => a.display_name.localeCompare(b.display_name));
 
   let unassignedReferrals: Array<Record<string, unknown>> = [];
