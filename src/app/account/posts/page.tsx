@@ -8,12 +8,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AccountPostsPage({ searchParams }: { searchParams: Promise<{ new?: string; category?: string }> }) {
+export default async function AccountPostsPage({ searchParams }: { searchParams: Promise<{ new?: string; category?: string; request?: string }> }) {
   const query = await searchParams;
   return (
     <main className="page account-page account-posts-page">
       <SiteHeader product="Project hub" />
-      <AccountPostsManager openNewRequest={query.new === "request"} initialCategory={(query.category || "").slice(0, 180)} />
+      <AccountPostsManager
+        openNewRequest={query.new === "request"}
+        initialCategory={(query.category || "").slice(0, 80)}
+        initialRequestId={(query.request || "").slice(0, 80)}
+      />
     </main>
   );
 }

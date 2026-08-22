@@ -31,6 +31,16 @@ import { AccountSignIn } from "@/components/AccountSignIn";
 import { PersonProfileFields, type PersonProfileValue } from "@/components/PersonProfileFields";
 import { getSupabaseBrowser, isSupabaseBrowserConfigured } from "@/lib/supabase-browser";
 import { formatPersonNumber } from "@/lib/phone";
+import {
+  createEmptyRequestDraft,
+  getRequestCategory,
+  recordTimingLabel,
+  requestDatabasePayload,
+  requestDisplayStatus,
+  requestNextStep,
+  type RequestDraft,
+  type StructuredRequestRecord,
+} from "@/lib/requestSystem";
 
 type AccountPerson = PersonProfileValue & {
   id: string;
@@ -85,6 +95,7 @@ type AccountData = {
   people: ConnectionPerson[];
   activity: ActivityItem[];
   posts: Array<{ id: string }>;
+  requests: StructuredRequestRecord[];
 };
 
 type ViewState =
@@ -96,17 +107,21 @@ type ViewState =
   | { status: "ready"; data: AccountData };
 
 const requestKinds = [
-  { value: "Cooking & Meal Sharing", label: "Meals", helper: "Request cooking, meal prep, or a meal exchange", Icon: CookingPot },
-  { value: "Household help", label: "Home help", helper: "Ask for practical help around the household", Icon: HouseLine },
-  { value: "Goods or supplies", label: "Items", helper: "Look for an item, material, or household supply", Icon: Package },
-  { value: "Local information or connection", label: "Information", helper: "Ask for local information or the right connection", Icon: Info },
-  { value: "", label: "Other request", helper: "Describe something that is not already listed", Icon: DotsThreeCircle },
+  { value: "meals", label: "Meals", helper: "Request cooking, meal prep, or a meal exchange", Icon: CookingPot },
+  { value: "home_help", label: "Home help", helper: "Ask for practical help around the household", Icon: HouseLine },
+  { value: "items", label: "Items", helper: "Look for an item, material, or household supply", Icon: Package },
+  { value: "information", label: "Information", helper: "Ask for local information or the right connection", Icon: Info },
+  { value: "other_request", label: "Other request", helper: "Describe something that is not already listed", Icon: DotsThreeCircle },
 ] as const;
 
 function isDesignPreview() {
   return process.env.NODE_ENV === "development"
     && typeof window !== "undefined"
     && new URLSearchParams(window.location.search).get("preview") === "1";
+}
+
+function designPreviewState() {
+  return typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("previewState") || "";
 }
 
 const statusLabels: Record<ActivityItem["status"], string> = {
@@ -142,6 +157,18 @@ function activityIcon(item: ActivityItem) {
 }
 
 function designPreviewData(): AccountData {
+  const structuredDraft: RequestDraft = {
+    ...createEmptyRequestDraft({ broadType: "home_help", categoryId: "cleaning", city: "Peotone", state: "IL" }),
+    answers: { cleaningType: "regular", cleaningScope: "selected_areas", areas: ["kitchen", "main_living_area", "bathrooms"], bathrooms: 2, bedrooms: 0, cleaningTasks: ["floors", "kitchen", "bathrooms"], suppliesAvailable: "yes", petsInHome: "yes" },
+    serviceIntent: "ongoing",
+    cadenceFrequency: "every_other_week",
+    cadenceDays: ["tuesday"],
+    cadenceTimeWindows: ["morning"],
+    desiredStartPeriod: "within_two_weeks",
+    scheduleFlexibility: "somewhat_flexible",
+  };
+  const structuredFields = requestDatabasePayload(structuredDraft);
+  const requestBase = { post_type: "request" as const, admin_notes: null, created_at: "2026-08-22T12:00:00Z", updated_at: "2026-08-22T12:00:00Z" };
   return {
     user: { email: "garrett@example.com" },
     person: {
@@ -177,7 +204,41 @@ function designPreviewData(): AccountData {
       { id: "activity-4", title: "Peotone Plant Swap", details: "Bring extra tomatoes and herbs.", status: "scheduled", scheduled_for: "2026-08-22T18:00:00-05:00", completed_at: null, updated_at: "2026-08-13T12:00:00Z", requester_name: "Garrett", perspective: "Your request" },
       { id: "activity-5", title: "Honey pickup window", details: "Orders can be picked up at your porch.", status: "scheduled", scheduled_for: "2026-08-23T09:00:00-05:00", completed_at: null, updated_at: "2026-08-12T12:00:00Z", requester_name: "Garrett", perspective: "Your request" },
     ],
-    posts: [{ id: "post-1" }, { id: "post-2" }, { id: "post-3" }, { id: "post-4" }, { id: "post-5" }],
+    posts: [{ id: "request-structured" }, { id: "post-1" }, { id: "post-2" }, { id: "post-3" }, { id: "post-4" }, { id: "post-5" }],
+    requests: [
+      { ...requestBase, ...structuredFields, id: "request-structured", owner_state: "active", status: "pending" },
+      {
+        ...requestBase,
+        id: "post-5",
+        owner_state: "closed",
+        title: "Help assembling shelves",
+        category: "Furniture assembly",
+        city: "Peotone",
+        state: "IL",
+        description: "Looking for help assembling two shelving units.",
+        status: "approved",
+        request_schema_version: null,
+        request_broad_type: null,
+        request_category_id: null,
+        request_subcategory_id: null,
+        request_answers: {},
+        service_intent: null,
+        timing_preference: null,
+        requested_date: null,
+        requested_date_end: null,
+        time_windows: [],
+        cadence_frequency: null,
+        cadence_days: [],
+        cadence_time_windows: [],
+        desired_start_period: null,
+        schedule_flexibility: null,
+        generated_summary: null,
+        request_status: null,
+        workflow_status: null,
+        created_at: "2026-08-01T12:00:00Z",
+        updated_at: "2026-08-11T12:00:00Z",
+      },
+    ],
   };
 }
 
@@ -185,7 +246,7 @@ export function ClaimedPersonDashboard() {
   const [view, setView] = useState<ViewState>(() =>
     isSupabaseBrowserConfigured() ? { status: "loading" } : { status: "config" },
   );
-  const [requestKind, setRequestKind] = useState<(typeof requestKinds)[number]["value"]>("Cooking & Meal Sharing");
+  const [requestKind, setRequestKind] = useState<(typeof requestKinds)[number]["value"]>("meals");
   const [peopleExpanded, setPeopleExpanded] = useState(false);
   const [addPersonOpen, setAddPersonOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -196,7 +257,11 @@ export function ClaimedPersonDashboard() {
 
   const loadAccount = useCallback(async () => {
     if (isDesignPreview()) {
-      setView({ status: "ready", data: designPreviewData() });
+      const state = designPreviewState();
+      if (state === "loading") { setView({ status: "loading" }); return; }
+      if (state === "error") { setView({ status: "error", message: "Your account could not be opened." }); return; }
+      const data = designPreviewData();
+      setView({ status: "ready", data: state === "empty" ? { ...data, activity: [], posts: [], requests: [] } : data });
       return;
     }
 
@@ -358,6 +423,7 @@ export function ClaimedPersonDashboard() {
 
   const { data } = view;
   const visiblePeople = peopleExpanded ? data.people : data.people.slice(0, 4);
+  const accountRequests = (data.requests || []).filter((request) => request.owner_state !== "removed");
   const postsQuery = isDesignPreview() ? "?preview=1" : "";
   const requestHref = `/account/posts?new=request${requestKind ? `&category=${encodeURIComponent(requestKind)}` : ""}${isDesignPreview() ? "&preview=1" : ""}`;
 
@@ -419,6 +485,31 @@ export function ClaimedPersonDashboard() {
             <CaretRight />
           </Link>
 
+          {accountRequests.length ? (
+            <section className="account-requests" id="my-requests" aria-labelledby="account-requests-title">
+              <div className="account-section-heading"><h2 id="account-requests-title">My requests</h2><Link className="account-link-button" href={`/account/posts${postsQuery}`}>View all<CaretRight /></Link></div>
+              <div className="account-request-list">
+                {accountRequests.slice(0, 5).map((request) => {
+                  const category = getRequestCategory(request.request_category_id);
+                  const location = [request.city, request.state].filter(Boolean).join(", ") || "Location not specified";
+                  return (
+                    <Link className="account-request-row" href={`/account/posts?request=${encodeURIComponent(request.id)}${isDesignPreview() ? "&preview=1" : ""}`} key={request.id}>
+                      <div className="account-request-row-icon" aria-hidden="true"><Question weight="duotone" /></div>
+                      <div className="account-request-main">
+                        <h3>{request.title}</h3>
+                        <p>{category?.label || request.category || "Earlier request"} · {request.service_intent === "ongoing" ? "Ongoing help" : "One-time request"}</p>
+                        <div><span><CalendarBlank />{recordTimingLabel(request)}</span><span><MapPin />{location}</span></div>
+                      </div>
+                      <div className="account-request-state"><span>{requestDisplayStatus(request)}</span><small>Next step</small><strong>{requestNextStep(request)}</strong></div>
+                      <div className="account-request-updated"><small>Updated</small><span>{shortDate(request.updated_at)}</span></div>
+                      <CaretRight className="account-row-caret" aria-hidden="true" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
           <section className="account-activity" aria-labelledby="account-activity-title">
             <div className="account-section-heading"><h2 id="account-activity-title">Today and next</h2></div>
             {data.activity.length ? (
@@ -438,7 +529,7 @@ export function ClaimedPersonDashboard() {
                 })}
               </div>
             ) : (
-              <div className="account-empty-list"><ListChecks weight="duotone" /><div><h3>Nothing needs your attention</h3><p>Posts, requests, and upcoming plans will appear here.</p></div></div>
+              <div className="account-empty-list"><ListChecks weight="duotone" /><div><h3>Nothing needs your attention</h3><p>Upcoming plans and items that need action will appear here.</p></div></div>
             )}
           </section>
           <Link className="account-manage-all-posts" href={`/account/posts${postsQuery}`}>

@@ -6,6 +6,7 @@ import { captureReferral } from "@/lib/referrals";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashSecret, invitationToken } from "@/lib/tokens";
 import { normalizePhone } from "@/lib/phone";
+import { parseRequestDraft, requestDatabasePayload } from "@/lib/requestSystem";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,8 @@ const postAreaByType = {
   mentoring: "mentor",
   request: "service",
 } as const;
+
+const accountPostColumns = "id, post_type, owner_state, title, category, contact, city, state, website_url, description, status, admin_notes, created_at, updated_at, request_schema_version, request_broad_type, request_category_id, request_subcategory_id, request_answers, service_intent, timing_preference, requested_date, requested_date_end, time_windows, cadence_frequency, cadence_days, cadence_time_windows, desired_start_period, schedule_flexibility, generated_summary, request_status, workflow_status";
 
 function text(value: unknown, max = 4000) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -118,7 +121,7 @@ export async function GET(request: Request) {
       .limit(30),
     supabase
       .from("local_submissions")
-      .select("id, post_type, owner_state, title, category, contact, city, state, website_url, description, status, admin_notes, created_at, updated_at")
+      .select(accountPostColumns)
       .eq("owner_person_id", actorPersonId)
       .order("updated_at", { ascending: false })
       .limit(100),
@@ -269,6 +272,7 @@ export async function GET(request: Request) {
     people,
     activity,
     posts: postsResult.data || [],
+    requests: (postsResult.data || []).filter((post) => post.post_type === "request"),
   });
 }
 
@@ -338,6 +342,64 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, postId: post.id });
     }
 
+    if (action === "create-request") {
+      const draft = parseRequestDraft(body.request);
+      const requestFields = requestDatabasePayload(draft);
+      const { data: post, error } = await supabase
+        .from("local_submissions")
+        .insert({
+          submission_area: "service",
+          post_type: "request",
+          owner_person_id: actor.person.id,
+          owner_state: "active",
+          name: actor.person.display_name,
+          submitter_email: actor.person.email || actor.user.email || null,
+          status: "pending",
+          ...requestFields,
+        })
+        .select("id")
+        .single();
+      if (error || !post) throw new Error(error?.message || "Your request could not be saved.");
+      return NextResponse.json({ ok: true, postId: post.id });
+    }
+
+    if (action === "update-request") {
+      const requestId = text(body.requestId, 80);
+      if (!requestId) throw new Error("Choose a request to update.");
+      const draft = parseRequestDraft(body.request);
+      const requestFields = requestDatabasePayload(draft);
+      const editableFields: Partial<typeof requestFields> = { ...requestFields };
+      delete editableFields.request_status;
+      delete editableFields.workflow_status;
+      const { data: existingRequest, error: existingRequestError } = await supabase
+        .from("local_submissions")
+        .select("id, owner_state, request_status, workflow_status")
+        .eq("id", requestId)
+        .eq("owner_person_id", actor.person.id)
+        .eq("post_type", "request")
+        .maybeSingle();
+      if (existingRequestError || !existingRequest) throw new Error(existingRequestError?.message || "This request is not available in your account.");
+      const reopening = existingRequest.owner_state === "closed" || existingRequest.owner_state === "removed";
+      const { data: post, error } = await supabase
+        .from("local_submissions")
+        .update({
+          ...editableFields,
+          owner_state: "active",
+          request_status: reopening ? "open" : existingRequest.request_status || "open",
+          workflow_status: reopening ? "finding_right_person" : existingRequest.workflow_status || "finding_right_person",
+          status: "pending",
+          admin_notes: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", requestId)
+        .eq("owner_person_id", actor.person.id)
+        .eq("post_type", "request")
+        .select("id")
+        .maybeSingle();
+      if (error || !post) throw new Error(error?.message || "This request is not available in your account.");
+      return NextResponse.json({ ok: true, postId: post.id });
+    }
+
     if (action === "update-post") {
       const postId = text(body.postId, 80);
       const title = text(body.title, 180);
@@ -374,9 +436,30 @@ export async function POST(request: Request) {
       const ownerState = text(body.ownerState, 20);
       if (!postId || !postOwnerStates.has(ownerState)) throw new Error("Choose a valid post update.");
 
+      const { data: existingPost, error: existingError } = await supabase
+        .from("local_submissions")
+        .select("id, post_type, owner_state, request_status, workflow_status")
+        .eq("id", postId)
+        .eq("owner_person_id", actor.person.id)
+        .maybeSingle();
+      if (existingError || !existingPost) throw new Error(existingError?.message || "This post is not available in your account.");
+      const requestLifecycle = existingPost.post_type === "request"
+        ? ownerState === "closed"
+          ? { request_status: "closed", workflow_status: "closed" }
+          : ownerState === "removed"
+            ? { request_status: "cancelled", workflow_status: "cancelled" }
+            : ownerState === "active"
+              ? existingPost.owner_state === "paused"
+                ? {
+                    request_status: existingPost.request_status || "open",
+                    workflow_status: existingPost.workflow_status || "finding_right_person",
+                  }
+                : { request_status: "open", workflow_status: "finding_right_person" }
+              : {}
+        : {};
       const { data: post, error } = await supabase
         .from("local_submissions")
-        .update({ owner_state: ownerState, updated_at: new Date().toISOString() })
+        .update({ owner_state: ownerState, ...requestLifecycle, updated_at: new Date().toISOString() })
         .eq("id", postId)
         .eq("owner_person_id", actor.person.id)
         .select("id")
