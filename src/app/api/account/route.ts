@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson } from "@/lib/connectionAccess";
 import { personProfilePayload, personStartDetails } from "@/lib/personProfile";
+import { ensurePersonConnection, orderedPersonPair } from "@/lib/personConnections";
+import { captureReferral } from "@/lib/referrals";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashSecret, invitationToken } from "@/lib/tokens";
 import { normalizePhone } from "@/lib/phone";
@@ -41,51 +43,6 @@ function publicUrl(value: unknown) {
 function siteUrl(path: string) {
   const origin = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.localized.life").replace(/\/$/, "");
   return `${origin}${path}`;
-}
-
-function orderedPair(firstPersonId: string, secondPersonId: string) {
-  return firstPersonId < secondPersonId
-    ? { person_one_id: firstPersonId, person_two_id: secondPersonId }
-    : { person_one_id: secondPersonId, person_two_id: firstPersonId };
-}
-
-async function createConnection(actorPersonId: string, connectedPersonId: string) {
-  const pair = orderedPair(actorPersonId, connectedPersonId);
-  const { error } = await getSupabaseAdmin().from("person_connections").upsert(
-    {
-      ...pair,
-      introduced_by_person_id: actorPersonId,
-      connection_source: "personal_introduction",
-      status: "active",
-      ended_at: null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "person_one_id,person_two_id", ignoreDuplicates: false },
-  );
-  if (error) throw new Error(error.message);
-}
-
-async function captureReferral(actorPersonId: string, referredPersonId: string) {
-  const supabase = getSupabaseAdmin();
-  const { data: current, error: lookupError } = await supabase
-    .from("person_referral_attributions")
-    .select("id")
-    .eq("referred_person_id", referredPersonId)
-    .in("status", ["captured", "confirmed"])
-    .maybeSingle();
-  if (lookupError) throw new Error(lookupError.message);
-  if (current) return;
-
-  const { error } = await supabase.from("person_referral_attributions").insert({
-    referred_person_id: referredPersonId,
-    referrer_person_id: actorPersonId,
-    referral_type: "sponsored",
-    source_type: "personal_introduction",
-    source_reference: `person:${actorPersonId}`,
-    status: "captured",
-    metadata: { entry_method: "claimed_dashboard" },
-  });
-  if (error) throw new Error(error.message);
 }
 
 async function activeInvitation(referringPersonId: string, personId: string) {
@@ -480,8 +437,19 @@ export async function POST(request: Request) {
         throw new Error("This person already has a private profile. Ask them to share their Localized.life account after they claim it.");
       }
 
-      await createConnection(actor.person.id, personId);
-      await captureReferral(actor.person.id, personId);
+      await ensurePersonConnection({
+        firstPersonId: actor.person.id,
+        secondPersonId: personId,
+        introducedByPersonId: actor.person.id,
+        connectionSource: "personal_introduction",
+      });
+      await captureReferral({
+        referredPersonId: personId,
+        referrerPersonId: actor.person.id,
+        sourceType: "personal_introduction",
+        sourceReference: `person:${actor.person.id}`,
+        metadata: { entry_method: "claimed_dashboard" },
+      });
       const invitation = existingPerson?.claim_status === "claimed"
         ? null
         : await createInvitation(actor.person.id, personId);
@@ -498,7 +466,7 @@ export async function POST(request: Request) {
     if (action === "regenerate-invite") {
       const personId = text(body.personId, 80);
       if (!personId) throw new Error("Choose a person first.");
-      const pair = orderedPair(actor.person.id, personId);
+      const pair = orderedPersonPair(actor.person.id, personId);
       const { data: connection, error: connectionError } = await supabase
         .from("person_connections")
         .select("id")

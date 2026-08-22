@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticatePerson, isConnectedPerson } from "@/lib/connectionAccess";
 import { personProfileColumns, personProfilePayload, personStartDetails } from "@/lib/personProfile";
+import { ensurePersonConnection } from "@/lib/personConnections";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { assignReferral, captureReferral, isReferralCoordinator } from "@/lib/referrals";
 import { formatReferralNumber, normalizePhone } from "@/lib/phone";
@@ -584,6 +585,13 @@ export async function POST(request: Request) {
         });
         if (result.error) throw new Error(result.error.message);
       }
+
+      await ensurePersonConnection({
+        firstPersonId: actor.person.id,
+        secondPersonId: personId,
+        introducedByPersonId: actor.person.id,
+        connectionSource: "connector_relationship",
+      });
 
       await captureReferral({
         referredPersonId: personId,

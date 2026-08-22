@@ -25,6 +25,9 @@ When a proposed feature conflicts with this document, stop and confirm the direc
 - Unassigned incoming referrals are reviewed and assigned manually by Garrett at the current stage.
 - Automated rotation, priority, or assignment rules should not be invented until the referral and Connector model is explicitly defined.
 - A direct sponsored referral and a Connector assignment are separate relationships. Changing a household's Connector does not change the Person's original referral sponsor.
+- A captured or confirmed direct referral, whether sponsored or system-assigned, creates a mutual Person Connection between the referral sponsor and the referred Person.
+- That Person Connection supports connection-safe profile visibility in both directions. It does not grant Connector tools, management authority, household access, calendar visibility, private notes, or wallet visibility.
+- People do not freely connect to arbitrary profiles. A Connection must come from a recognized introduction, referral, Connector assignment, or another explicitly established relationship.
 - A Person entering through public intake may receive a system-assigned referral sponsor and a separately assigned Connector.
 - During the founder-led phase, the system may rank or rotate eligible assigned-referral sponsors, but Garrett makes the final decision and the decision is recorded.
 
@@ -82,6 +85,8 @@ Future usefulness alone is not enough reason to collect personal information.
 - The founder/system manager may access all Person details needed to operate and govern the network.
 - An ordinary Person's management tools are limited to People they directly introduced, People explicitly connected to them, and People explicitly assigned to their responsibility.
 - A Person's details may be available to the system without being available to every member. "Stored in the system" and "visible to this viewer" are separate decisions.
+- Connected People may see a connection-safe view containing the Person's profile name, town and state, primary contact methods, selected skills or services, and selected services wanted.
+- Exact addresses, household details, calendar activity, private notes, management information, and wallet activity are not part of the ordinary connected-Person view.
 - A service address belongs with the service relationship or calendar context when it is not the Person's general address.
 - Account access is available to people who have been onboarded; it is findable in the footer without becoming a primary public call to action.
 - Public Local Services requests remain the general entry path for people seeking help.
@@ -135,7 +140,7 @@ These questions should be answered by Garrett. They must not be filled in from s
 
 ### Relationship Structure
 
-- What precisely creates a Connection?
+- Which recognized relationships beyond direct referrals, personal introductions, and Connector assignments should create a Connection?
 - What is an upline referral, and what rights or responsibilities travel with it?
 - How do Connector, coordinator, referrer, service provider, and member differ?
 - Can relationships have direction, levels, territories, or duration?

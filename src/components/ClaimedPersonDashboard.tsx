@@ -104,7 +104,9 @@ const requestKinds = [
 ] as const;
 
 function isDesignPreview() {
-  return process.env.NODE_ENV === "development" && new URLSearchParams(window.location.search).get("preview") === "1";
+  return process.env.NODE_ENV === "development"
+    && typeof window !== "undefined"
+    && new URLSearchParams(window.location.search).get("preview") === "1";
 }
 
 const statusLabels: Record<ActivityItem["status"], string> = {
@@ -449,7 +451,7 @@ export function ClaimedPersonDashboard() {
         <aside className="account-sidebar" aria-label="People and account tools">
           <section className="account-people-section">
             <div className="account-sidebar-heading"><h2>People</h2><button className="account-link-button account-add-person-button" type="button" onClick={() => setAddPersonOpen((open) => !open)}><UserPlus /> Add someone</button></div>
-            <p className="account-sidebar-intro">Start one shared Person profile with a first or last name and a phone number or email.</p>
+            <p className="account-sidebar-intro">People connected through an introduction, direct referral, or assigned relationship appear here.</p>
 
             {addPersonOpen ? (
               <form className="form account-add-person-form" onSubmit={addPerson}>
@@ -482,11 +484,11 @@ export function ClaimedPersonDashboard() {
                   <article className="account-person-row" key={person.id}>
                     <div className={`account-small-avatar account-small-avatar-${(index % 3) + 1}`} aria-hidden="true"><UserCircle weight="duotone" /></div>
                     <div><h3>{person.display_name}</h3><p>{[person.town, person.state].filter(Boolean).join(", ") || "Location not added"}</p><small>{person.claim_status === "claimed" ? `Connected ${shortDate(person.connected_at)}` : "Profile not claimed"}</small></div>
-                    {person.invitation_url ? <button className="icon-button" type="button" aria-label={`Copy private link for ${person.display_name}`} title="Copy private link" onClick={() => copyInvitation(person.invitation_url!)}><LinkSimple /></button> : person.claim_status === "unclaimed" ? <button className="icon-button" type="button" disabled={busy} aria-label={`Create private link for ${person.display_name}`} title="Create private link" onClick={() => createPersonInvitation(person)}><LinkSimple /></button> : person.email ? <a className="icon-button" href={`mailto:${person.email}`} aria-label={`Email ${person.display_name}`}><EnvelopeSimple /></a> : null}
+                    {person.invitation_url ? <button className="icon-button" type="button" aria-label={`Copy private link for ${person.display_name}`} title="Copy private link" onClick={() => copyInvitation(person.invitation_url!)}><LinkSimple /></button> : person.claim_status === "unclaimed" ? <button className="icon-button" type="button" disabled={busy} aria-label={`Create private link for ${person.display_name}`} title="Create private link" onClick={() => createPersonInvitation(person)}><LinkSimple /></button> : <Link className="icon-button" href={`/account/people/${person.id}${isDesignPreview() ? "?preview=1" : ""}`} aria-label={`View shared profile for ${person.display_name}`} title="View shared profile"><CaretRight /></Link>}
                   </article>
                 ))}
               </div>
-            ) : <div className="account-sidebar-empty"><UsersThree weight="duotone" /><p>People you add will appear here.</p></div>}
+            ) : <div className="account-sidebar-empty"><UsersThree weight="duotone" /><p>Your established connections will appear here.</p></div>}
 
             {data.people.length > 4 ? <button className="account-link-button account-view-all" type="button" onClick={() => setPeopleExpanded((expanded) => !expanded)}>{peopleExpanded ? "Show fewer people" : "View all people"}<CaretRight /></button> : null}
           </section>

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getSupabaseAdmin } from "./supabase";
+import { ensurePersonConnection } from "./personConnections";
 
 type ReferralInput = {
   referredPersonId: string;
@@ -28,7 +29,15 @@ export async function captureReferral(input: ReferralInput) {
   if (input.referredPersonId === input.referrerPersonId) return { captured: false };
 
   const current = await currentReferral(input.referredPersonId);
-  if (current) return { captured: false, current };
+  if (current) {
+    await ensurePersonConnection({
+      firstPersonId: current.referrer_person_id,
+      secondPersonId: input.referredPersonId,
+      introducedByPersonId: current.referrer_person_id,
+      connectionSource: "direct_referral",
+    });
+    return { captured: false, current };
+  }
 
   const { data, error } = await getSupabaseAdmin()
     .from("person_referral_attributions")
@@ -46,6 +55,12 @@ export async function captureReferral(input: ReferralInput) {
     .select("id, referral_type, internal_sequence_number")
     .single();
   if (error || !data) throw new Error(error?.message || "Referral could not be recorded.");
+  await ensurePersonConnection({
+    firstPersonId: input.referrerPersonId,
+    secondPersonId: input.referredPersonId,
+    introducedByPersonId: input.referrerPersonId,
+    connectionSource: "direct_referral",
+  });
   return { captured: true, attribution: data };
 }
 

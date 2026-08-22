@@ -6,6 +6,7 @@ import { requireAdmin } from "./admin";
 import { sendConnectorInviteEmail } from "./email";
 import { getSupabaseAdmin } from "./supabase";
 import { captureReferral } from "./referrals";
+import { ensurePersonConnection } from "./personConnections";
 import type { NeedStatus } from "./connectorTypes";
 import { hashSecret, invitationToken } from "./tokens";
 import { normalizePhone } from "./phone";
@@ -202,6 +203,13 @@ async function connectPerson({
     });
     if (error) throw new Error(error.message);
   }
+
+  await ensurePersonConnection({
+    firstPersonId: connector.person_id,
+    secondPersonId: personId,
+    introducedByPersonId: connector.person_id,
+    connectionSource: "connector_relationship",
+  });
 
   await captureReferral({
     referredPersonId: personId,
